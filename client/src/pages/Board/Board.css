@@ -1,0 +1,46 @@
+.Board {
+    display: grid;
+    grid-template:
+            "gif qrcode"
+            "track qrcode"
+            "challengers qrcode";
+    grid-template-columns: auto 20%;
+    grid-column-gap: 20px;
+    width: 100vw;
+    max-width: 980px;
+}
+
+.Board .gif {
+    grid-area: gif;
+    text-align: center;
+    margin: 0 auto;
+}
+
+.Board .track {
+    grid-area: track;
+    background-color: var(--translucent-white);
+    border: 1px solid var(--white);
+    border-radius: var(--default-border-radius);
+    text-align: center;
+    padding: 10px;
+}
+
+.Board .track span {
+    display: block;
+}
+
+.Board .track span:first-child {
+    font-size: 18px;
+}
+
+.Board .challengers {
+    grid-area: challengers;
+}
+
+.Board .active-challenger {
+    border: 3px solid var(--white);
+}
+
+.Board .qrcode {
+    grid-area: qrcode;
+}

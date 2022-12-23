@@ -1,0 +1,50 @@
+.Create-Or-Select-Playlist .option {
+    background-color: var(--translucent-white);
+    border: 1px solid var(--translucent-white);
+}
+
+.Create-Or-Select-Playlist .playlists-container {
+    display: flex;
+    flex-direction: column;
+}
+
+.playlists-container span, .playlists-container button {
+    height: 40px;
+    line-height: 40px;
+    margin-bottom: 5px;
+    color: inherit;
+    border-radius: var(--default-border-radius);
+    text-align: center;
+    font-weight: bold;
+}
+
+.playlists-container button {
+    background-color: transparent;
+    border:  1px solid var(--indigo-dye);
+    color: var(--metallic-seaweed);
+}
+
+.Create-Or-Select-Playlist .playlists-container span {
+    border: 1px solid var(--african-violet);
+    background-color: var(--translucent-african-violet);
+    color: var(--african-violet);
+}
+
+.Create-Playlist {
+    display: flex;
+    flex-direction: column;
+}
+
+.Create-Playlist input {
+    height: 28px;
+    padding: 4px 8px;
+    margin: 10px 0;
+}
+
+.Create-Playlist button {
+    width: 150px;
+    margin: 10px auto;
+    background-color: var(--yellow-green);
+    border: 1px solid var(--yellow-green);
+    color: var(--white);
+}

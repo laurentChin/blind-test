@@ -1,0 +1,11 @@
+.Home .option-block {
+    text-align: right;
+}
+
+.Home .option-block p {
+    text-align: left;
+}
+
+.Home p {
+    margin: 0;
+}

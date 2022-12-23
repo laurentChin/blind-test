@@ -1,0 +1,71 @@
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap');
+@import 'colors.css';
+
+:root {
+  --white: rgba(255, 255, 255, 1);
+  --translucent-white: rgba(255, 255, 255, 0.2);
+  --sunglow: rgba(255, 202, 58, 1);
+  --brick-red: rgba(209, 73, 91, 1);
+  --metallic-seaweed: rgba(0, 121, 140, 1);
+  --indigo-dye: rgba(0, 61, 91, 1);
+  --cyan-process: rgba(1, 186, 239, 1);
+  --green-blue-crayola: rgba(25, 130, 196, 1);
+  --azure: rgba(58, 134, 255 ,1);
+  --african-violet: rgba(170, 123, 195, 1);
+  --translucent-african-violet: rgba(170, 123, 195, 0.2);
+  --sizzling-red: rgba(255, 89, 94, 1);
+  --davys-grey: rgba(70, 73, 76, 1);
+  --translucent-davys-grey: rgba(70, 73, 76, 0.8);
+  --yellow-green: rgba(138, 201, 38, 1);
+
+  --default-border-radius: 4px;
+}
+
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Open Sans', sans-serif;
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--cyan-process);
+  color: var(--white);
+}
+
+@media all and (max-width: 980px) {
+  body {
+    padding: 5px;
+  }
+}
+
+a {
+  color: inherit;
+}
+
+.option-block {
+  padding: 10px;
+  border: 1px solid var(--white);
+  background-color: var(--translucent-white);
+  border-radius: var(--default-border-radius);
+}
+
+.option-block-separator {
+  display: block;
+  text-align: center;
+  margin: 10px 0;
+}
+
+button {
+  height: 40px;
+  border-radius: 2px;
+  padding: 0 10px;
+  color: var(--davys-grey);
+  font-weight: bold;
+  cursor: pointer;
+  border: none;
+}
+
+button:focus {
+  outline: none;
+}

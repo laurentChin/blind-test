@@ -1,0 +1,65 @@
+.Session-Step {
+    display: grid;
+    grid-template: "controls qrcode" "challengers qrcode";
+    grid-template-columns: auto 20%;
+    grid-column-gap: 20px;
+}
+
+.Session-Step > .controls-container {
+    grid-area: controls;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.controls-container .start-session-btn {
+    background-color: var(--yellow-green);
+    color: var(--white);
+}
+
+.challenge-button {
+    color: var(--white);
+}
+
+.challenge-button-wrong, .challenge-button-half {
+    margin-right: 10px;
+}
+
+.challenge-button-wrong {
+    background-color: var(--sizzling-red);
+}
+
+.challenge-button-half {
+    background-color: var(--azure);
+}
+
+.challenge-button-full {
+    background-color: var(--green-blue-crayola);
+}
+
+.Session-Step .QRCode {
+    grid-area: qrcode;
+    text-align: center;
+}
+
+.QRCode a {
+    display: inline-flex;
+    align-items: center;
+    text-align: center;
+}
+
+.QRCode a svg {
+    margin-left: 4px;
+}
+
+@media all and (max-width: 980px) {
+    .Session-Step {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .QRCode canvas {
+        display: none;
+    }
+}

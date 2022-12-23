@@ -1,0 +1,51 @@
+.Manage-Tracks {
+    border: 1px solid var(--white);
+    background-color: var(--translucent-white);
+    border-radius: var(--default-border-radius);
+    padding: 10px;
+    text-align: center;
+}
+
+.Manage-Tracks .track {
+    display: flex;
+    align-items: center;
+    text-align: left;
+    width: 100%;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--white);
+}
+
+.Manage-Tracks > button {
+    background-color: var(--african-violet);
+    color: var(--white);
+    border: none;
+    margin-top: 10px;
+}
+
+.Manage-Tracks .trash-button {
+    background-color: transparent;
+    border: none;
+    color: var(--brick-red)
+}
+
+.search-pop-in {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.Search-container {
+    position: relative;
+    z-index: 1;
+    max-width: 980px;
+}
+
+.search-overlay {
+    position: absolute;
+    width: 100vw; height: 100vh;
+    background-color: var(--translucent-davys-grey);
+    z-index: 0;
+}

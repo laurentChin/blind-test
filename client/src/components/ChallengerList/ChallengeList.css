@@ -1,0 +1,33 @@
+.challenger-list {
+    grid-area: challengers;
+}
+
+.challenger-list p {
+    grid-area: challengers;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+p.active-challenger {
+    padding: 5px;
+    border-radius: 4px;
+    text-align: center;
+    font-weight: bold;
+    justify-content: center;
+}
+
+.challenger-list p.first {
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.challenger-list span:last-child {
+    margin: 0 0 0 auto;
+}
+
+.challenger-list svg {
+    font-size: 20px;
+    margin-right: 5px;
+    color: var(--sunglow)
+}

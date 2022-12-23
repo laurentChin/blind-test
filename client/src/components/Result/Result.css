@@ -1,0 +1,18 @@
+.Result {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.Result > * {
+    display: block;
+}
+
+.Result button {
+    background-color: var(--yellow-green);
+}
+
+.Result .preview-control {
+    margin: 0 5px 0 auto;
+}
