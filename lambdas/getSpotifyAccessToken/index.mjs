@@ -1,4 +1,4 @@
-const https = require('https');
+import https from 'https';
 
 exports.handler = (event, context, callback) => {
   const { CLIENT_ID, CLIENT_SECRET, SPOTIFY_TOKEN_ENDPOINT } = process.env;
