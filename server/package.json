@@ -1,0 +1,38 @@
+{
+  "name": "blind-test-websocket",
+  "version": "1.0.0",
+  "description": "The websocket part of the Blind App",
+  "main": "index.js",
+  "scripts": {
+    "start:watch": "nodemon index.js",
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/laurentChin/blind-test-websocket.git"
+  },
+  "keywords": [
+    "node",
+    "express",
+    "socket.io",
+    "websocket"
+  ],
+  "author": "Laurent Janet <laurent.janet@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/laurentChin/blind-test-websocket/issues"
+  },
+  "homepage": "https://github.com/laurentChin/blind-test-websocket#readme",
+  "devDependencies": {
+    "eslint": "^6.8.0",
+    "eslint-config-prettier": "^6.11.0",
+    "eslint-plugin-prettier": "^3.1.3",
+    "nodemon": "^2.0.4",
+    "prettier": "^2.0.5"
+  },
+  "dependencies": {
+    "express": "^4.17.1",
+    "socket.io": "^2.3.0"
+  }
+}

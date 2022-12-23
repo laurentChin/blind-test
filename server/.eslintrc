@@ -1,0 +1,7 @@
+{
+  "extends": ["plugin:prettier/recommended"],
+  "parserOptions": { "ecmaVersion": 2020 },
+  "rules": {
+    "arrow-parens": ["error","as-needed"]
+  }
+}
