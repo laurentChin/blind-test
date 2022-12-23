@@ -1,5 +1,5 @@
+const { createServer } = require("http");
 const { Server } = require("socket.io");
-const io = new Server(8888);
 
 const sessions = new Map();
 
@@ -22,6 +22,14 @@ const colors = [
   "197, 195, 198", // #c5c3c6
   "147, 94, 56", // #935e38
 ];
+
+const httpServer = createServer();
+const io = new Server(httpServer, {
+  cors: {
+    origin: "http://localhost:3000",
+    credentials: true,
+  },
+});
 
 io.on("connection", socket => {
   socket.on("join", ({ sessionUuid, player }) => {
@@ -85,3 +93,5 @@ io.on("connection", socket => {
     io.to(sessionUuid).emit("startNewChallenge");
   });
 });
+
+httpServer.listen(8888);
