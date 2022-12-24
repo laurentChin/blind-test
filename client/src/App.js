@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 import { Home } from "./pages/Home/Home";
 import { Master } from "./pages/Master/Master";
@@ -16,12 +16,12 @@ function App() {
       </header>
       <div className="main">
         <Router>
-          <Switch>
-            <Route path="/" exact component={Home} />
-            <Route path="/create-session" exact component={Master} />
-            <Route path="/session/:uuid" exact component={Session} />
-            <Route path="/board/:uuid" exact component={Board} />
-          </Switch>
+          <Routes>
+            <Route path="/" exact element={<Home />} />
+            <Route path="/create-session" exact element={<Master />} />
+            <Route path="/session/:uuid" exact element={<Session />} />
+            <Route path="/board/:uuid" exact element={<Board />} />
+          </Routes>
         </Router>
       </div>
     </div>
