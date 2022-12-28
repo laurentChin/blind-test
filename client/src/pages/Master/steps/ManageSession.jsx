@@ -48,7 +48,7 @@ const ManageSession = ({ sessionUuid, ...props }) => {
     if (qrCode.current) {
       QRCodeGenerator.toCanvas(
         qrCode.current,
-        `${window.origin}/session/${sessionUuid}`
+        `${process.env.REACT_APP_URL}/session/${sessionUuid}`
       );
     }
   }, [qrCode, sessionUuid]);

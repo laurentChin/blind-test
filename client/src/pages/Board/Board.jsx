@@ -45,7 +45,7 @@ const Board = () => {
     if (qrCode.current) {
       QRCodeGenerator.toCanvas(
         qrCode.current,
-        `${window.origin}/session/${uuid}`
+        `${process.env.REACT_APP_URL}/session/${uuid}`
       );
     }
   }, [uuid]);
