@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "The websocket part of the Blind App",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "start:watch": "nodemon index.js",
     "start": "node index.js"

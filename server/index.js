@@ -1,5 +1,5 @@
-const { createServer } = require("http");
-const { Server } = require("socket.io");
+import { createServer } from "http";
+import { Server } from "socket.io";
 
 const sessions = new Map();
 
