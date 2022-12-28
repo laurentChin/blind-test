@@ -5,7 +5,8 @@ import { SpotifyContext } from "../../contexts/Spotify";
 
 describe("<Search />", () => {
   it("should display a list of results", async () => {
-    const mockSearch = jest.fn().mockResolvedValue({
+    const mockSearch = jest.fn();
+    mockSearch.mockResolvedValue({
       items: [
         {
           id: "12345",
@@ -28,7 +29,7 @@ describe("<Search />", () => {
       ],
     });
 
-    const { getByText, queryByText, container, rerender } = render(
+    const { getByText, queryByText, container } = render(
       <SpotifyContext.Provider value={{ search: mockSearch }}>
         <Search
           addTrackCallback={jest.fn()}
@@ -43,18 +44,10 @@ describe("<Search />", () => {
 
     await act(async () => {
       fireEvent(searchInput, changeEvent);
-      await process.nextTick(() => {});
-      rerender(
-        <SpotifyContext.Provider value={{ search: mockSearch }}>
-          <Search
-            addTrackCallback={jest.fn()}
-            excludedTracks={[{ id: "toexclude" }]}
-          />
-        </SpotifyContext.Provider>
-      );
-      expect(getByText(/name1/)).toBeTruthy();
-      expect(getByText(/name2/)).toBeTruthy();
-      expect(queryByText(/name3/)).toBeFalsy();
     });
+
+    expect(getByText(/name1/)).toBeTruthy();
+    expect(getByText(/name2/)).toBeTruthy();
+    expect(queryByText(/name3/)).toBeFalsy();
   });
 });

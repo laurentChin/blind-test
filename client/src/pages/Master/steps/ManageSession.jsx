@@ -18,10 +18,6 @@ let socket = io(process.env.REACT_APP_SOCKET_URI);
 let challengersUpdateHandler = () => {};
 let lockChallengeHandler = () => {};
 
-socket.on("challengersUpdate", (msg) => challengersUpdateHandler(msg));
-
-socket.on("lockChallenge", (msg) => lockChallengeHandler(msg));
-
 socket.on("challengerRelease", (msg) => challengersUpdateHandler(msg));
 
 const ManageSession = ({ sessionUuid, ...props }) => {
@@ -39,7 +35,6 @@ const ManageSession = ({ sessionUuid, ...props }) => {
   const [deviceId, setDeviceId] = useState(props.deviceId || "");
   const [hasSessionStart, setSessionStartStatus] = useState(false);
 
-  challengersUpdateHandler = setChallengers;
   const qrCode = useRef();
 
   if (!document.querySelector(`[src="${SPOTIFY_PLAYER_SRC}"]`)) {
@@ -71,10 +66,14 @@ const ManageSession = ({ sessionUuid, ...props }) => {
     };
   }, [spotifyContext, isPlayerScriptLoaded, sessionUuid]);
 
-  lockChallengeHandler = (msg) => {
-    player.pause();
-    setChallengerUuid(msg);
-  };
+  socket.on("challengersUpdate", setChallengers);
+
+  if (player.pause) {
+    socket.on("lockChallenge", (msg) => {
+      player.pause();
+      setChallengerUuid(msg);
+    });
+  }
 
   const releaseChallenger = (score) => {
     player.getCurrentState().then((playerState) => {

@@ -5,9 +5,9 @@
   "dependencies": {
     "@giphy/js-fetch-api": "^4.7.1",
     "@giphy/react-components": "^6.5.1",
-    "@testing-library/jest-dom": "^4.2.4",
-    "@testing-library/react": "^10.2.0",
-    "@testing-library/user-event": "^7.1.2",
+    "@testing-library/jest-dom": "^5.16.5",
+    "@testing-library/react": "^13.4.0",
+    "@testing-library/user-event": "^14.4.3",
     "prop-types": "^15.8.1",
     "qrcode": "^1.5.1",
     "react": "^18.2.0",

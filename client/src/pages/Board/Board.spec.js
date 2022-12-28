@@ -24,12 +24,10 @@ describe("<Board />", () => {
         track: { name: "Hallelujah", artists: "Jeff Buckley" },
         score: 1,
       });
-
-      await process.nextTick(() => {});
-
-      expect(getByText("Hallelujah")).toBeTruthy();
-      expect(getByText("Jeff Buckley")).toBeTruthy();
     });
+
+    expect(getByText("Hallelujah")).toBeTruthy();
+    expect(getByText("Jeff Buckley")).toBeTruthy();
 
     await act(async () => {
       io().emit("challengeResult", {
@@ -42,11 +40,9 @@ describe("<Board />", () => {
           <Board />
         </Router>
       );
-
-      await process.nextTick(() => {});
-
-      expect(queryByText("Hallelujah")).toBeFalsy();
-      expect(queryByText("Jeff Buckley")).toBeFalsy();
     });
+
+    expect(queryByText("Hallelujah")).toBeFalsy();
+    expect(queryByText("Jeff Buckley")).toBeFalsy();
   });
 });

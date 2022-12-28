@@ -51,8 +51,7 @@ const Master = () => {
       <h2>{title}</h2>
       {step.name === STEPS.CREATE_OR_SELECT_PLAYLIST.name && (
         <CreateOrSelectPlaylist
-          playlistId={playlistId}
-          setPlaylistId={setPlaylistId}
+          onSelectPlaylist={setPlaylistId}
           setStep={setStep}
           isAuthenticated={isAuthenticated}
           setTitle={setTitle}

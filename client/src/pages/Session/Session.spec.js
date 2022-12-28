@@ -1,12 +1,18 @@
 import React from "react";
-import { createEvent, render, fireEvent, act } from "@testing-library/react";
+import {
+  createEvent,
+  render,
+  fireEvent,
+  act,
+  prettyDOM,
+} from "@testing-library/react";
 import { BrowserRouter as Router } from "react-router-dom";
 import io from "socket.io-client";
 import { Session } from "./Session";
 
 describe("<Session />", () => {
   it("Should display join button if the user has given a name and picked a color", async () => {
-    const { getByText, queryByText, container, rerender } = render(
+    const { getByText, queryByText, container } = render(
       <Router>
         <Session colors={["#e6194B", "#f58231"]} />
       </Router>
@@ -24,21 +30,13 @@ describe("<Session />", () => {
     await act(async () => {
       fireEvent(nameInput, changeEvent);
       fireEvent.click(colorInput);
-
-      await process.nextTick(() => {});
-
-      rerender(
-        <Router>
-          <Session colors={["#e6194B", "#f58231"]} />
-        </Router>
-      );
-
-      expect(getByText("Join")).toBeTruthy();
     });
+
+    expect(getByText("Join")).toBeTruthy();
   });
 
   it("Should display join button if the user has selected a team", async () => {
-    const { getByText, queryByText, container, rerender } = render(
+    const { getByText, queryByText, container } = render(
       <Router>
         <Session
           colors={["#e6194B", "#f58231"]}
@@ -55,21 +53,13 @@ describe("<Session />", () => {
       fireEvent.change(container.querySelector("select"), {
         target: { value: "qqqwqq-qeqeq-qeqw" },
       });
-
-      await process.nextTick(() => {});
-
-      rerender(
-        <Router>
-          <Session colors={["#e6194B", "#f58231"]} />
-        </Router>
-      );
-
-      expect(getByText("Join")).toBeTruthy();
     });
+
+    expect(getByText("Join")).toBeTruthy();
   });
 
   it("Should hide 'challenge' button if an user is trying to answer", async () => {
-    const { getByText, queryByText, container, rerender } = render(
+    const { getByText, queryByText, container } = render(
       <Router>
         <Session
           colors={["#e6194B", "#f58231"]}
@@ -89,25 +79,15 @@ describe("<Session />", () => {
         container.querySelector("option[value='qqqwqq-qeqeq-qeqw']")
       );
 
-      await process.nextTick(() => {});
-
       fireEvent.click(getByText("Join"));
-
-      await process.nextTick(() => {});
-
-      expect(getByText("Challenge")).toBeTruthy();
-
-      io().emit("lockChallenge", "qqqwqq-qeqeq-qeqw");
-
-      await process.nextTick(() => {});
-
-      rerender(
-        <Router>
-          <Session colors={["#e6194B", "#f58231"]} />
-        </Router>
-      );
-
-      expect(queryByText("Challenge")).toBeFalsy();
     });
+
+    expect(getByText("Challenge")).toBeTruthy();
+
+    await act(async () => {
+      io().emit("lockChallenge", "qqqwqq-qeqeq-qeqw");
+    });
+
+    expect(queryByText("Challenge")).toBeFalsy();
   });
 });

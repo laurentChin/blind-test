@@ -55,11 +55,9 @@ describe("<ManageSession />", () => {
         { uuid: "qwewrw-1232553", name: "name1", score: 1 },
         { uuid: "wuefgeew-82687234", name: "name2", score: 3 },
       ]);
-      await process.nextTick(() => {});
-      expect(container.querySelectorAll(".challenger-list p").length).toEqual(
-        2
-      );
     });
+
+    expect(container.querySelectorAll(".challenger-list p").length).toEqual(2);
   });
 
   it("should display the challenge actions buttons when a user try to answer", async () => {
@@ -102,47 +100,58 @@ describe("<ManageSession />", () => {
       ]);
 
       socket.emit("lockChallenge", "qwewrw-1232553");
-      await process.nextTick(() => {});
-      expect(getAllByTestId("challenge-button").length).toEqual(3);
+    });
+
+    expect(getAllByTestId("challenge-button").length).toEqual(3);
+
+    await act(async () => {
       fireEvent.click(getAllByTestId("challenge-button")[0]);
-      await process.nextTick(() => {});
-      expect(emitSpy.mock.calls[2][0]).toEqual("setScore");
-      expect(emitSpy.mock.calls[2][1]).toEqual({
-        sessionUuid: "1112345678",
-        score: 0,
-        track: {
-          ...track,
-          artists: "Jeff Buckley",
-        },
-      });
+    });
 
+    expect(emitSpy.mock.calls[2][0]).toEqual("setScore");
+    expect(emitSpy.mock.calls[2][1]).toEqual({
+      sessionUuid: "1112345678",
+      score: 0,
+      track: {
+        ...track,
+        artists: "Jeff Buckley",
+      },
+    });
+
+    await act(async () => {
       socket.emit("lockChallenge", "qwewrw-1232553");
-      await process.nextTick(() => {});
+    });
+
+    await act(async () => {
       fireEvent.click(getAllByTestId("challenge-button")[1]);
-      await process.nextTick(() => {});
-      expect(emitSpy.mock.calls[4][0]).toEqual("setScore");
-      expect(emitSpy.mock.calls[4][1]).toEqual({
-        sessionUuid: "1112345678",
-        score: 0.5,
-        track: {
-          ...track,
-          artists: "Jeff Buckley",
-        },
-      });
+    });
 
+    expect(emitSpy.mock.calls[4][0]).toEqual("setScore");
+    expect(emitSpy.mock.calls[4][1]).toEqual({
+      sessionUuid: "1112345678",
+      score: 0.5,
+      track: {
+        ...track,
+        artists: "Jeff Buckley",
+      },
+    });
+
+    await act(async () => {
       socket.emit("lockChallenge", "qwewrw-1232553");
-      await process.nextTick(() => {});
+    });
+
+    await act(async () => {
       fireEvent.click(getAllByTestId("challenge-button")[2]);
-      await process.nextTick(() => {});
-      expect(emitSpy.mock.calls[6][0]).toEqual("setScore");
-      expect(emitSpy.mock.calls[6][1]).toEqual({
-        sessionUuid: "1112345678",
-        score: 1,
-        track: {
-          ...track,
-          artists: "Jeff Buckley",
-        },
-      });
+    });
+
+    expect(emitSpy.mock.calls[6][0]).toEqual("setScore");
+    expect(emitSpy.mock.calls[6][1]).toEqual({
+      sessionUuid: "1112345678",
+      score: 1,
+      track: {
+        ...track,
+        artists: "Jeff Buckley",
+      },
     });
   });
 });

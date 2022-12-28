@@ -11,19 +11,6 @@ import "./Session.css";
 
 const socket = io(process.env.REACT_APP_SOCKET_URI);
 
-let challengersUpdateHandler = () => {};
-let challengerReleaseHandler = () => {};
-let lockChallengeHandler = () => {};
-let availableColorsUpdateHandler = () => {};
-
-socket.on("challengersUpdate", (msg) => challengersUpdateHandler(msg));
-
-socket.on("challengerRelease", (msg) => challengerReleaseHandler(msg));
-
-socket.on("lockChallenge", (msg) => lockChallengeHandler(msg));
-
-socket.on("availableColorsUpdate", (msg) => availableColorsUpdateHandler(msg));
-
 const Session = (props) => {
   const persistedSessionUuid = sessionStorage.getItem("sessionUuid");
   const { uuid } = useParams();
@@ -52,11 +39,11 @@ const Session = (props) => {
 
   const teamSelector = useRef();
 
-  challengersUpdateHandler = setChallengers;
-  availableColorsUpdateHandler = setColors;
+  socket.on("challengersUpdate", setChallengers);
+  socket.on("availableColorsUpdate", setColors);
 
   useEffect(() => {
-    if (persistedSessionUuid && persistedSessionUuid !== uuid) {
+    if (persistedSessionUuid && persistedSessionUuid !== `${uuid}`) {
       setInSession(false);
     }
   }, [uuid, persistedSessionUuid]);
@@ -107,16 +94,16 @@ const Session = (props) => {
     socket.emit("challenge", { sessionUuid: uuid, playerUuid });
   };
 
-  lockChallengeHandler = (msg) => {
+  socket.on("lockChallenge", (msg) => {
     setChallengeLock(true);
     setChallengerUuid(msg);
-  };
+  });
 
-  challengerReleaseHandler = (msg) => {
+  socket.on("challengerRelease", (msg) => {
     setChallengeLock(false);
     setChallengerUuid("");
     setChallengers(msg);
-  };
+  });
 
   return (
     <div className="Session">
@@ -153,35 +140,37 @@ const Session = (props) => {
                 ))}
             </div>
           </div>
-          <span className="option-block-separator">OR</span>
-          <div className="option-block">
-            <h2>Join a team</h2>
-            {challengers.length > 0 && (
-              <select
-                ref={teamSelector}
-                onChange={({ target: { value } }) => {
-                  setPlayerUuid(value);
-                  if (value !== "-") {
-                    setPlayerColor(
-                      challengers.find(
-                        (challenger) => challenger.uuid === value
-                      ).color
-                    );
-                  } else {
-                    setPlayerColor(undefined);
-                  }
-                }}
-                defaultValue={"-"}
-              >
-                <option value="-">-</option>
-                {challengers.map((challenger) => (
-                  <option key={challenger.uuid} value={challenger.uuid}>
-                    {challenger.name}
-                  </option>
-                ))}
-              </select>
-            )}
-          </div>
+          {challengers.length > 0 && (
+            <>
+              <span className="option-block-separator">OR</span>
+              <div className="option-block">
+                <h2>Join a team</h2>
+                <select
+                  ref={teamSelector}
+                  onChange={({ target: { value } }) => {
+                    setPlayerUuid(value);
+                    if (value !== "-") {
+                      setPlayerColor(
+                        challengers.find(
+                          (challenger) => challenger.uuid === value
+                        ).color
+                      );
+                    } else {
+                      setPlayerColor(undefined);
+                    }
+                  }}
+                  defaultValue={"-"}
+                >
+                  <option value="-">-</option>
+                  {challengers.map((challenger) => (
+                    <option key={challenger.uuid} value={challenger.uuid}>
+                      {challenger.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </>
+          )}
           {playerUuid !== "-" && (
             <button onClick={() => joinSession()}>Join</button>
           )}

@@ -6,21 +6,23 @@ import "./CreateOrSelectPlaylist.css";
 
 const CreateOrSelectPlaylist = ({
   isAuthenticated,
-  playlistId,
-  setPlaylistId,
+  onSelectPlaylist,
   setTitle,
 }) => {
   const spotifyContext = useContext(SpotifyContext);
 
   const [sessionName, setSessionName] = useState("");
   const [playlists, setPlaylists] = useState([]);
+  const [playlistId, setPlaylistId] = useState(
+    sessionStorage.getItem("playlistId") || ""
+  );
 
   useEffect(() => {
     if (isAuthenticated) {
-      spotifyContext.getPlaylists().then((playlists) => {
-        setPlaylists(playlists);
+      spotifyContext.getPlaylists().then((response) => {
+        setPlaylists(response);
         setTitle(
-          playlists.find((playlist) => playlist.id === playlistId)?.name ||
+          response.find((playlist) => playlist.id === playlistId)?.name ||
             sessionName
         );
       });
@@ -31,6 +33,7 @@ const CreateOrSelectPlaylist = ({
     if (playlistId) {
       sessionStorage.setItem("playlistId", playlistId);
       spotifyContext.setCurrentPlaylist(playlistId);
+      onSelectPlaylist(playlistId);
     }
   }, [playlistId, spotifyContext]);
 
@@ -57,37 +60,40 @@ const CreateOrSelectPlaylist = ({
           Create the playlist
         </button>
       </div>
-      <span className="option-block-separator">OR</span>
-      <div className="Select-Playlist option-block">
-        <h3>Choose an existing playlist</h3>
-        <div className="playlists-container">
-          {playlists.map((playlist) =>
-            playlist.id === playlistId ? (
-              <span data-testid="selected-playlist" key={playlist.id}>
-                {playlist.name}
-              </span>
-            ) : (
-              <button
-                key={playlist.id}
-                onClick={() => {
-                  setPlaylistId(playlist.id);
-                  setTitle(playlist.name);
-                }}
-              >
-                {playlist.name}
-              </button>
-            )
-          )}
-        </div>
-      </div>
+      {playlists.length > 0 && (
+        <>
+          <span className="option-block-separator">OR</span>
+          <div className="Select-Playlist option-block">
+            <h3>Choose an existing playlist</h3>
+            <div className="playlists-container">
+              {playlists.map((playlist) =>
+                playlist.id === playlistId ? (
+                  <span data-testid="selected-playlist" key={playlist.id}>
+                    {playlist.name}
+                  </span>
+                ) : (
+                  <button
+                    key={playlist.id}
+                    onClick={() => {
+                      setPlaylistId(playlist.id);
+                      setTitle(playlist.name);
+                    }}
+                  >
+                    {playlist.name}
+                  </button>
+                )
+              )}
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 };
 
 CreateOrSelectPlaylist.propTypes = {
-  playlistId: PropTypes.string.isRequired,
   isAuthenticated: PropTypes.bool.isRequired,
-  setPlaylistId: PropTypes.func.isRequired,
+  onSelectPlaylist: PropTypes.func.isRequired,
   setTitle: PropTypes.func.isRequired,
 };
 
