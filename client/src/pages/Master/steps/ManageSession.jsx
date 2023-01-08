@@ -16,7 +16,6 @@ script.setAttribute("src", SPOTIFY_PLAYER_SRC);
 
 let socket = io(process.env.REACT_APP_SOCKET_URI);
 let challengersUpdateHandler = () => {};
-let lockChallengeHandler = () => {};
 
 socket.on("challengerRelease", (msg) => challengersUpdateHandler(msg));
 
