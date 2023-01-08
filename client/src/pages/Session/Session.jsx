@@ -33,9 +33,8 @@ const Session = (props) => {
       ? sessionStorage.getItem("playerColor") || null
       : null
   );
-  const [isChallengerListVisible, setChallengerListVisibility] = useState(
-    false
-  );
+  const [isChallengerListVisible, setChallengerListVisibility] =
+    useState(false);
 
   const teamSelector = useRef();
 
