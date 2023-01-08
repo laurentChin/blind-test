@@ -2,6 +2,7 @@ import * as dotenv from "dotenv";
 dotenv.config();
 import { createServer } from "http";
 import { Server } from "socket.io";
+import * as logger from "./src/logger.js";
 
 const sessions = new Map();
 
@@ -33,8 +34,14 @@ const io = new Server(httpServer, {
   },
 });
 
+const verboseOutput = process.env.VERBOSE;
+
 io.on("connection", socket => {
   socket.on("join", ({ sessionUuid, player }) => {
+    if (verboseOutput) {
+      logger.info(`join event received for session ${sessionUuid}`);
+    }
+
     if (!sessions.has(sessionUuid)) {
       sessions.set(sessionUuid, {
         currentChallenger: null,
@@ -51,6 +58,11 @@ io.on("connection", socket => {
         1
       );
       io.to(sessionUuid).emit("availableColorsUpdate", session.colors);
+      if (verboseOutput) {
+        logger.notice(
+          `availableColorsUpdate has been emitted to session ${sessionUuid}`
+        );
+      }
     } else {
       socket.join(sessionUuid);
     }
@@ -59,9 +71,18 @@ io.on("connection", socket => {
       "challengersUpdate",
       Array.from(session.challengers.values())
     );
+    if (verboseOutput) {
+      logger.notice(
+        `challengersUpdate has been emitted to session ${sessionUuid}`
+      );
+    }
   });
 
   socket.on("joinWaitingRoom", (sessionUuid, ack) => {
+    if (verboseOutput) {
+      logger.info(`joinWaitingRoom event received for session ${sessionUuid}`);
+    }
+
     socket.join(sessionUuid);
     const session = sessions.get(sessionUuid);
     ack({
@@ -73,26 +94,68 @@ io.on("connection", socket => {
   });
 
   socket.on("challenge", ({ sessionUuid, playerUuid }) => {
+    if (verboseOutput) {
+      logger.info(
+        `challenge event received for session ${sessionUuid} and player ${playerUuid}`
+      );
+    }
+
     const session = sessions.get(sessionUuid);
     session.currentChallenger = playerUuid;
     io.to(sessionUuid).emit("lockChallenge", playerUuid);
   });
 
   socket.on("setScore", ({ sessionUuid, score, track }) => {
+    if (verboseOutput) {
+      logger.info(
+        `setScore event received for session ${sessionUuid} with score ${score}`
+      );
+    }
+
     const session = sessions.get(sessionUuid);
     const challenger = session.challengers.get(session.currentChallenger);
+
     session.currentChallenger = null;
     challenger.score = parseFloat(challenger.score) + parseFloat(score);
+
+    if (verboseOutput) {
+      logger.notice(
+        `challenger ${challenger.name} will be update with score ${challenger.score}`
+      );
+    }
+
     io.to(sessionUuid).emit(
       "challengerRelease",
       Array.from(session.challengers.values())
     );
 
+    if (verboseOutput) {
+      logger.notice(
+        `challengerRelease event has been emitted to session ${sessionUuid}`
+      );
+    }
+
     io.to(sessionUuid).emit("challengeResult", { score, track });
+
+    if (verboseOutput) {
+      logger.notice(
+        `challengeResult event has been emitted to session ${sessionUuid} with score ${score}`
+      );
+    }
   });
 
   socket.on("startNewChallenge", sessionUuid => {
+    if (verboseOutput) {
+      logger.info(`startNewChallenge received for session ${sessionUuid}`);
+    }
+
     io.to(sessionUuid).emit("startNewChallenge");
+
+    if (verboseOutput) {
+      logger.notice(
+        `startNewChallenge event has been emitted to session ${sessionUuid}`
+      );
+    }
   });
 });
 
