@@ -56,10 +56,10 @@ const Session = (props) => {
   useEffect(() => {
     if (!inSession && !inWaitingRoom) {
       socket.emit("joinWaitingRoom", uuid, (response) => {
+        setInWaitingRoom(true);
         setChallengers(response.challengers);
         setColors(response.colors);
       });
-      setInWaitingRoom(true);
     }
   }, [challengers, inSession, inWaitingRoom, uuid]);
 
