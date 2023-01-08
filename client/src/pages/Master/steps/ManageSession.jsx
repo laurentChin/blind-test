@@ -15,9 +15,6 @@ const script = document.createElement("script");
 script.setAttribute("src", SPOTIFY_PLAYER_SRC);
 
 let socket = io(process.env.REACT_APP_SOCKET_URI);
-let challengersUpdateHandler = () => {};
-
-socket.on("challengerRelease", (msg) => challengersUpdateHandler(msg));
 
 const ManageSession = ({ sessionUuid, ...props }) => {
   const spotifyContext = useContext(SpotifyContext);
@@ -66,6 +63,7 @@ const ManageSession = ({ sessionUuid, ...props }) => {
   }, [spotifyContext, isPlayerScriptLoaded, sessionUuid]);
 
   socket.on("challengersUpdate", setChallengers);
+  socket.on("challengerRelease", setChallengers);
 
   if (player.pause) {
     socket.on("lockChallenge", (msg) => {
