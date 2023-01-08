@@ -10,7 +10,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/laurentChin/blind-test-websocket.git"
+    "url": "git+https://github.com/laurentChin/blind-test.git"
   },
   "keywords": [
     "node",
@@ -21,9 +21,9 @@
   "author": "Laurent Janet <laurent.janet@gmail.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/laurentChin/blind-test-websocket/issues"
+    "url": "https://github.com/laurentChin/blind-test/issues"
   },
-  "homepage": "https://github.com/laurentChin/blind-test-websocket#readme",
+  "homepage": "https://github.com/laurentChin/blind-test#readme",
   "devDependencies": {
     "eslint": "^8.30.0",
     "eslint-config-prettier": "^8.5.0",
