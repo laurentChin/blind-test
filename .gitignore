@@ -1,6 +1,7 @@
 # Client
 client/.env
 client/node_modules
+client/build
 
 # Server
 server/.env
