@@ -1,6 +1,6 @@
 import https from 'https';
 
-exports.handler = (event, context, callback) => {
+export const handler = (event, context, callback) => {
   const { CLIENT_ID, CLIENT_SECRET, SPOTIFY_TOKEN_ENDPOINT } = process.env;
   const { code,  refreshToken, redirectUri} = event.body ? JSON.parse(event.body) : event;
   const commonFormData = `redirect_uri=${redirectUri}&client_id=${CLIENT_ID}&client_secret=${CLIENT_SECRET}`
