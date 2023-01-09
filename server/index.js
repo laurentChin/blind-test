@@ -159,4 +159,7 @@ io.on("connection", socket => {
   });
 });
 
-httpServer.listen(8888);
+httpServer.listen(process.env.PORT, () => {
+  logger.notice(`Server listening on PORT ${process.env.PORT}`);
+  logger.info(`CORS allowed for ${process.env.CLIENT_URL}`);
+});
