@@ -39,6 +39,12 @@
     margin: 15px auto 0 auto;
 }
 
+.Join-Session-Form > button[disabled] {
+    background-color: var(--translucent-white);
+    color: var(--davys-grey);
+    cursor: not-allowed;
+}
+
 .Join-Session-Form select {
     box-sizing: border-box;
     height: 40px;
@@ -48,25 +54,25 @@
 .Session {
     width: 100%;
     max-width: 980px;
-    height: calc(100vh - 40px);
+    overflow: hidden;
+    height: calc(100vh - 50px);
 }
 
 .Session-challenge-button, .Session .challenger-list-wrapper {
     width: 100vw;
     max-width: 980px;
-    margin-left: -5px;
 }
 
 .Session-challenge-button {
     box-sizing: border-box;
-    height: 100%;
+    height: calc(100vh/3*2);
     max-height: 980px;
 }
 
 .Session .challenger-list-wrapper {
-    position: absolute;
-    overflow: visible;
-    top : calc(100% - 40px);
+    position: fixed;
+    top : calc(100vh - 40px);
+    left: 0;
     max-width: 980px;
     will-change: top;
     transition: top .4s;

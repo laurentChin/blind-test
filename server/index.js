@@ -1,7 +1,9 @@
 import * as dotenv from "dotenv";
+
 dotenv.config();
 import { createServer } from "http";
 import { Server } from "socket.io";
+import { v4 } from "uuid";
 import * as logger from "./src/logger.js";
 
 const sessions = new Map();
@@ -37,7 +39,7 @@ const io = new Server(httpServer, {
 const verboseOutput = process.env.VERBOSE;
 
 io.on("connection", socket => {
-  socket.on("join", ({ sessionUuid, player }) => {
+  socket.on("join", ({ sessionUuid, player }, callback) => {
     if (verboseOutput) {
       logger.info(`join event received for session ${sessionUuid}`);
     }
@@ -51,8 +53,15 @@ io.on("connection", socket => {
     }
 
     const session = sessions.get(sessionUuid);
-    if (player && player.name !== "" && !session.challengers.has(player.uuid)) {
-      session.challengers.set(player.uuid, { ...player, score: 0 });
+    const playerUuid =
+      player && player.teamUuid !== "" ? player.teamUuid : v4();
+
+    if (player?.teamUuid === "" && player?.name) {
+      session.challengers.set(playerUuid, {
+        ...player,
+        score: 0,
+        uuid: playerUuid,
+      });
       session.colors.splice(
         session.colors.findIndex(color => color === player.color),
         1
@@ -63,18 +72,36 @@ io.on("connection", socket => {
           `availableColorsUpdate has been emitted to session ${sessionUuid}`
         );
       }
-    } else {
+    }
+
+    if (!player) {
       socket.join(sessionUuid);
+    }
+
+    if (callback) {
+      callback({
+        player: {
+          uuid: playerUuid,
+          color:
+            player && player.teamUuid !== ""
+              ? session.challengers.get(playerUuid).color
+              : player.color,
+        },
+        sessionUuid,
+      });
     }
 
     io.to(sessionUuid).emit(
       "challengersUpdate",
       Array.from(session.challengers.values())
     );
+
     if (verboseOutput) {
       logger.notice(
         `challengersUpdate has been emitted to session ${sessionUuid}`
       );
+
+      console.table(Array.from(session.challengers.values()));
     }
   });
 
