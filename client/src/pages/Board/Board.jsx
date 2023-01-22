@@ -38,9 +38,15 @@ const Board = () => {
   const qrCode = useRef();
 
   useEffect(() => {
-    socket.emit("join", {
-      sessionUuid: uuid,
-    });
+    socket.emit(
+      "joinAfterRefresh",
+      {
+        sessionUuid: uuid,
+      },
+      (response) => {
+        setChallengers(response.challengers);
+      }
+    );
 
     if (qrCode.current) {
       QRCodeGenerator.toCanvas(

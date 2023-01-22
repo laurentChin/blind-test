@@ -58,7 +58,7 @@ const ManageSession = ({ sessionUuid, ...props }) => {
 
       setPlayer(spotifyPlayer);
 
-      socket.emit("join", { sessionUuid });
+      socket.emit("createSession", { sessionUuid });
     };
   }, [spotifyContext, isPlayerScriptLoaded, sessionUuid]);
 
@@ -153,6 +153,7 @@ const ManageSession = ({ sessionUuid, ...props }) => {
         >
           Open the board <MdOpenInNew />
         </a>
+        <p>{sessionUuid}</p>
       </div>
     </div>
   );

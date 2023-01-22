@@ -69,6 +69,13 @@
     max-height: 980px;
 }
 
+.Session-leave-button {
+    text-align: center;
+    margin: 0 auto;
+    background-color: var(--brick-red);
+    color: var(--white);
+}
+
 .Session .challenger-list-wrapper {
     position: fixed;
     top : calc(100vh - 40px);

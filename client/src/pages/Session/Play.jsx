@@ -4,8 +4,8 @@ import { MdExpandMore, MdExpandLess } from "react-icons/md";
 
 import "./Session.css";
 
-const Play = ({ sessionUuid, socket, player }) => {
-  const [challengers, setChallengers] = useState([]);
+const Play = ({ sessionUuid, socket, player, onLeave, ...props }) => {
+  const [challengers, setChallengers] = useState(props.challengers || []);
   const [isChallengeLocked, setChallengeLock] = useState(false);
   const [challengerUuid, setChallengerUuid] = useState();
 
@@ -25,6 +25,16 @@ const Play = ({ sessionUuid, socket, player }) => {
     setChallengers(msg);
   });
 
+  const leave = () => {
+    if (window.confirm("Are you sure want to leave the session?")) {
+      socket.emit("leave", { sessionUuid, playerUuid: player.uuid }, () => {
+        sessionStorage.removeItem("player");
+        sessionStorage.removeItem("sessionUuid");
+        onLeave();
+      });
+    }
+  };
+
   return (
     <div className="Play-Session">
       <button
@@ -40,6 +50,9 @@ const Play = ({ sessionUuid, socket, player }) => {
           ? challengers.find((challenger) => challenger.uuid === challengerUuid)
               ?.name
           : `Challenge`}
+      </button>
+      <button className="Session-leave-button" onClick={leave}>
+        Leave the game
       </button>
       <div
         className={`challenger-list-wrapper ${
@@ -82,6 +95,13 @@ Play.propTypes = {
     emit: PropTypes.func.isRequired,
     on: PropTypes.func.isRequired,
   }),
+  onLeave: PropTypes.func.isRequired,
+  challengers: PropTypes.arrayOf(
+    PropTypes.shape({
+      name: PropTypes.string.isRequired,
+      color: PropTypes.string.isRequired,
+    })
+  ),
 };
 
 export { Play };

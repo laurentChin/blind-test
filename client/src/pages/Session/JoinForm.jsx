@@ -38,10 +38,7 @@ const JoinForm = ({ socket, onJoin, sessionUuid }) => {
         const { player } = response;
         sessionStorage.setItem("player", JSON.stringify(player));
         sessionStorage.setItem("sessionUuid", response.sessionUuid);
-        onJoin({
-          uuid: player.uuid,
-          color: player.color,
-        });
+        onJoin(response);
       }
     );
 
