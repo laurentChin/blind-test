@@ -39,24 +39,25 @@ const io = new Server(httpServer, {
 const verboseOutput = process.env.VERBOSE;
 
 io.on("connection", socket => {
+  socket.on("createSession", ({ sessionUuid }, callback) => {
+    sessions.set(sessionUuid, {
+      currentChallenger: null,
+      challengers: new Map(),
+      colors: [...colors],
+    });
+
+    socket.join(sessionUuid);
+  });
+
   socket.on("join", ({ sessionUuid, player }, callback) => {
     if (verboseOutput) {
       logger.info(`join event received for session ${sessionUuid}`);
     }
 
-    if (!sessions.has(sessionUuid)) {
-      sessions.set(sessionUuid, {
-        currentChallenger: null,
-        challengers: new Map(),
-        colors: [...colors],
-      });
-    }
-
     const session = sessions.get(sessionUuid);
-    const playerUuid =
-      player && player.teamUuid !== "" ? player.teamUuid : v4();
+    const playerUuid = player.teamUuid !== "" ? player.teamUuid : v4();
 
-    if (player?.teamUuid === "" && player?.name) {
+    if (player.name !== "") {
       session.challengers.set(playerUuid, {
         ...player,
         score: 0,
@@ -74,27 +75,20 @@ io.on("connection", socket => {
       }
     }
 
-    if (!player) {
-      socket.join(sessionUuid);
-    }
+    const challengers = Array.from(session.challengers.values());
+    callback({
+      player: {
+        uuid: playerUuid,
+        color:
+          player && player.teamUuid !== ""
+            ? session.challengers.get(player.teamUuid).color
+            : player.color,
+      },
+      challengers,
+      sessionUuid,
+    });
 
-    if (callback) {
-      callback({
-        player: {
-          uuid: playerUuid,
-          color:
-            player && player.teamUuid !== ""
-              ? session.challengers.get(playerUuid).color
-              : player.color,
-        },
-        sessionUuid,
-      });
-    }
-
-    io.to(sessionUuid).emit(
-      "challengersUpdate",
-      Array.from(session.challengers.values())
-    );
+    io.to(sessionUuid).emit("challengersUpdate", challengers);
 
     if (verboseOutput) {
       logger.notice(
@@ -102,6 +96,20 @@ io.on("connection", socket => {
       );
 
       console.table(Array.from(session.challengers.values()));
+    }
+  });
+
+  socket.on("joinAfterRefresh", ({ sessionUuid }, callback) => {
+    if (verboseOutput) {
+      logger.info(`joinAfterRefresh event received for session ${sessionUuid}`);
+    }
+
+    const session = sessions.get(sessionUuid);
+    if (session) {
+      socket.join(sessionUuid);
+      if (callback) {
+        callback({ challengers: Array.from(session.challengers.values()) });
+      }
     }
   });
 

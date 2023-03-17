@@ -22,6 +22,11 @@ jest.mock("socket.io-client", () => {
             sessionUuid: "session-12345",
           });
           break;
+        case "joinAfterRefresh":
+          callback({
+            challengers: []
+          });
+          break;
       }
     },
     on: (event, callback) => {
@@ -49,28 +54,15 @@ describe("<Session />", () => {
   });
 
   it("Should display the play screen when user is in a session", async () => {
+    Object.defineProperty(window, 'sessionStorage', {
+      value: {
+        getItem: jest.fn().mockReturnValue(JSON.stringify({ uuid: "player-12345", color: "#f58231" }))
+      }
+    })
     const emit = (event, data) => {
       listeners[event]?.forEach((listener) => listener(data));
     };
     const { getByTestId, getAllByTestId } = render(<Session />);
-
-    await act(async () => {
-      emit("availableColorsUpdate", ["#e6194B", "#f58231"]);
-    });
-
-    await act(async () => {
-      const nameInput = getByTestId("player-name-input");
-      const changeEvent = createEvent.change(nameInput, {
-        target: { value: "John" },
-      });
-      const colorInput = getAllByTestId("color-button");
-      fireEvent(nameInput, changeEvent);
-      fireEvent.click(colorInput[0]);
-    });
-
-    await act(async () => {
-      fireEvent.click(getByTestId("join-session-btn"));
-    });
 
     expect(getByTestId("challenge-button")).toBeInTheDocument();
   });

@@ -4,8 +4,8 @@ import { MdExpandMore, MdExpandLess } from "react-icons/md";
 
 import "./Session.css";
 
-const Play = ({ sessionUuid, socket, player }) => {
-  const [challengers, setChallengers] = useState([]);
+const Play = ({ sessionUuid, socket, player, ...props }) => {
+  const [challengers, setChallengers] = useState(props.challengers || []);
   const [isChallengeLocked, setChallengeLock] = useState(false);
   const [challengerUuid, setChallengerUuid] = useState();
 
@@ -82,6 +82,12 @@ Play.propTypes = {
     emit: PropTypes.func.isRequired,
     on: PropTypes.func.isRequired,
   }),
+  challengers: PropTypes.arrayOf(
+    PropTypes.shape({
+      name: PropTypes.string.isRequired,
+      color: PropTypes.string.isRequired,
+    })
+  ),
 };
 
 export { Play };
