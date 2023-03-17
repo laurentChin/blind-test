@@ -58,7 +58,7 @@ const ManageSession = ({ sessionUuid, ...props }) => {
 
       setPlayer(spotifyPlayer);
 
-      socket.emit("join", { sessionUuid });
+      socket.emit("createSession", { sessionUuid });
     };
   }, [spotifyContext, isPlayerScriptLoaded, sessionUuid]);
 

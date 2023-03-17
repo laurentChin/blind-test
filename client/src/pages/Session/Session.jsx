@@ -14,32 +14,37 @@ const Session = () => {
     JSON.parse(sessionStorage.getItem("player")) || {}
   );
   const [inSession, setInSession] = useState(false);
+  const [challengers, setChallengers] = useState([]);
 
   useEffect(() => {
     if (player.uuid && !inSession) {
-      socket.emit("join", { sessionUuid: uuid }, (response) => {
-        setPlayer(response.player);
+      socket.emit("joinAfterRefresh", { sessionUuid: uuid }, (response) => {
+        setChallengers(response.challengers);
       });
       setInSession(true);
     }
   }, [player, inSession]);
-
-  // console.log({ player });
 
   return (
     <div className="Session">
       {!player.uuid && (
         <JoinForm
           sessionUuid={uuid}
-          onJoin={(p) => {
-            setPlayer(p);
+          onJoin={(response) => {
+            setPlayer(response.player);
             setInSession(true);
+            setChallengers(response.challengers);
           }}
           socket={socket}
         />
       )}
       {player.uuid && (
-        <Play sessionUuid={uuid} player={player} socket={socket} />
+        <Play
+          sessionUuid={uuid}
+          player={player}
+          socket={socket}
+          challengers={challengers}
+        />
       )}
     </div>
   );

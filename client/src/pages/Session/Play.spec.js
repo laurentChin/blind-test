@@ -34,6 +34,7 @@ describe("<Play />", () => {
         sessionUuid="session-12345"
         player={{ uuid: "player-12345", name: "bob", color: "#e6194B" }}
         socket={socket}
+        challengers={[]}
       />
     );
 

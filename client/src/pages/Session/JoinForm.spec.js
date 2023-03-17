@@ -116,8 +116,11 @@ describe("<JoinForm />", () => {
 
     fireEvent.click(getByText("Join"));
     expect(onJoin).toHaveBeenCalledWith({
-      color: "#f58231",
-      uuid: "player-12345",
+      player: {
+        color: "#f58231",
+        uuid: "player-12345",
+      },
+      sessionUuid: 'session-12345'
     });
   });
 });
