@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { useParams } from "react-router-dom";
 import PropTypes from "prop-types";
 
-import "./Session.css";
+import "./JoinForm.css";
 
 const JoinForm = ({ socket, onJoin, sessionUuid }) => {
   const { uuid } = useParams();

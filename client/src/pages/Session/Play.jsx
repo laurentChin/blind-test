@@ -2,9 +2,9 @@ import React, { useState } from "react";
 import PropTypes from "prop-types";
 import { MdExpandMore, MdExpandLess } from "react-icons/md";
 
-import "./Session.css";
+import "./Play.css";
 
-const Play = ({ sessionUuid, socket, player, ...props }) => {
+const Play = ({ sessionUuid, socket, player, onLeave, ...props }) => {
   const [challengers, setChallengers] = useState(props.challengers || []);
   const [isChallengeLocked, setChallengeLock] = useState(false);
   const [challengerUuid, setChallengerUuid] = useState();
@@ -25,8 +25,18 @@ const Play = ({ sessionUuid, socket, player, ...props }) => {
     setChallengers(msg);
   });
 
+  const leave = () => {
+    if (window.confirm("Are you sure want to leave the session?")) {
+      socket.emit("leave", { sessionUuid, playerUuid: player.uuid }, () => {
+        sessionStorage.removeItem("player");
+        sessionStorage.removeItem("sessionUuid");
+        onLeave();
+      });
+    }
+  };
+
   return (
-    <div className="Play-Session">
+    <div className="Play">
       <button
         style={{ backgroundColor: `rgb(${player.color})` }}
         disabled={isChallengeLocked}
@@ -40,6 +50,9 @@ const Play = ({ sessionUuid, socket, player, ...props }) => {
           ? challengers.find((challenger) => challenger.uuid === challengerUuid)
               ?.name
           : `Challenge`}
+      </button>
+      <button className="Session-leave-button" data-testid="leave-session-button" onClick={leave}>
+        Leave the game
       </button>
       <div
         className={`challenger-list-wrapper ${
@@ -82,6 +95,7 @@ Play.propTypes = {
     emit: PropTypes.func.isRequired,
     on: PropTypes.func.isRequired,
   }),
+  onLeave: PropTypes.func.isRequired,
   challengers: PropTypes.arrayOf(
     PropTypes.shape({
       name: PropTypes.string.isRequired,

@@ -1,0 +1,71 @@
+.Session-challenge-button, .Session .challenger-list-wrapper {
+    width: 100vw;
+    max-width: 980px;
+}
+
+.Session-challenge-button {
+    box-sizing: border-box;
+    height: calc(100vh/3*2);
+    max-height: 980px;
+    padding: 0;
+}
+
+.Session-leave-button {
+    text-align: center;
+    margin: 20px auto 0 auto;
+    background-color: var(--brick-red);
+    color: var(--white);
+}
+
+.Play .challenger-list-wrapper {
+    position: fixed;
+    top : calc(100vh - 40px);
+    left: 0;
+    max-width: 980px;
+    will-change: top;
+    transition: top .4s;
+    height: 100vh;
+    background-color: var(--indigo-dye);
+}
+
+.Play .challenger-list-wrapper.open {
+    top: 0;
+}
+
+.challenger-list-opener {
+    background-color: var(--indigo-dye);
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 40px;
+    line-height: 40px;
+    box-sizing: border-box;
+    padding: 10px;
+    border-top-left-radius: var(--default-border-radius);
+    border-top-right-radius: var(--default-border-radius);
+}
+
+.Play .challenger-list {
+    padding: 0 10px 10px 10px;
+    max-height: calc(100vh - 40px);
+    overflow: scroll;
+}
+
+@media all and (min-width: 980px) {
+    .challenger-list-opener{
+        display: none;
+    }
+
+    .Play .challenger-list-wrapper {
+        position: initial;
+        top : initial;
+        max-width: 980px;
+        height: auto;
+        background-color: transparent;
+    }
+
+    .Session-challenge-button, .Session .challenger-list-wrapper {
+        margin-left: 0;
+    }
+}
