@@ -65,6 +65,7 @@ describe("<Play />", () => {
         onLeave={onLeaveCb}
         socket={mockSocket}
         player={{ uuid: "player-12345", name: "bob", color: "255,255,255" }}
+        challengers={[]}
       />
     );
 
@@ -86,6 +87,7 @@ describe("<Play />", () => {
         onLeave={onLeaveCb}
         socket={mockSocket}
         player={{ uuid: "player-12345", name: "bob", color: "255,255,255" }}
+        challengers={[]}
       />
     );
 
