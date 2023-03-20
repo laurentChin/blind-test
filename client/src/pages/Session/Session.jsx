@@ -44,6 +44,10 @@ const Session = () => {
           player={player}
           socket={socket}
           challengers={challengers}
+          onLeave={() => {
+            setPlayer({});
+            setInSession(false);
+          }}
         />
       )}
     </div>

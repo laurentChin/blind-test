@@ -192,6 +192,28 @@ io.on("connection", socket => {
       );
     }
   });
+
+  socket.on("leave", ({ playerUuid, sessionUuid }, callback) => {
+    if (verboseOutput) {
+      logger.info(
+        `disconnect event received for player ${playerUuid} on session ${sessionUuid}`
+      );
+    }
+
+    const session = sessions.get(sessionUuid);
+    if (session && session.challengers.has(playerUuid)) {
+      session.colors.push(session.challengers.get(playerUuid).color);
+      session.challengers.delete(playerUuid);
+      sessions.set(sessionUuid, session);
+
+      io.to(sessionUuid).emit(
+        "challengersUpdate",
+        Array.from(session.challengers.values())
+      );
+
+      callback();
+    }
+  });
 });
 
 httpServer.listen(process.env.PORT, () => {

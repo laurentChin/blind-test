@@ -33,12 +33,6 @@ body {
   color: var(--white);
 }
 
-@media all and (max-width: 980px) {
-  body {
-    padding: 5px;
-  }
-}
-
 a {
   color: inherit;
 }

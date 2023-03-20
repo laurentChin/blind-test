@@ -1,0 +1,52 @@
+.Join-Session-Form {
+    display: flex;
+    flex-direction: column;
+}
+
+.Join-Session-Form .option-block {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.Join-Session-Form .option-block h2 {
+    margin: 0 0 10px 0;
+}
+
+.Join-Session-Form input {
+    box-sizing: border-box;
+    margin-bottom: 15px;
+    height: 40px;
+    line-height: 40px;
+    padding: 4px 8px;
+}
+
+.Join-Session-Form .colors {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+}
+
+.colors button {
+    flex-basis: 40px;
+}
+
+.Join-Session-Form > button {
+    width: 150px;
+    background-color: var(--yellow-green);
+    color: var(--white);
+    align-self: center;
+    margin: 15px auto 0 auto;
+}
+
+.Join-Session-Form > button[disabled] {
+    background-color: var(--translucent-white);
+    color: var(--davys-grey);
+    cursor: not-allowed;
+}
+
+.Join-Session-Form select {
+    box-sizing: border-box;
+    height: 40px;
+    padding: 4px;
+}
