@@ -5,7 +5,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "start:watch": "nodemon index.js",
+    "start:watch": "nodemon -- --inspect index.js",
     "start": "node index.js"
   },
   "repository": {
