@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import { MdExpandMore, MdExpandLess } from "react-icons/md";
 
@@ -11,6 +11,10 @@ const Play = ({ sessionUuid, socket, player, onLeave, ...props }) => {
 
   const [isChallengerListVisible, setChallengerListVisibility] =
     useState(false);
+
+  useEffect(() => {
+    setChallengers(props.challengers)
+  }, [props.challengers])
 
   socket.on("challengersUpdate", setChallengers);
 
