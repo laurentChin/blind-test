@@ -1,0 +1,112 @@
+name: Deploy
+concurrency:
+  group: deploy
+  cancel-in-progress: true
+
+on:
+  push:
+    branches: ['master']
+  workflow_dispatch:
+
+jobs:
+  run-client-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run client unit tests
+        working-directory: client
+        run: |
+          CI=true yarn && yarn test
+  copy-src:
+    runs-on: ubuntu-latest
+    needs: [ "run-client-tests"]
+    steps:
+      - uses: actions/checkout@v3
+      - name: Create release directory
+        uses: appleboy/ssh-action@v0.1.8
+        with:
+          host: ${{ vars.REMOTE_HOST }}
+          username: ${{ vars.REMOTE_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: mkdir -p ${{ vars.TARGET }}/${{ github.run_id }}-${{ github.run_number }}
+      - name: Deploy server to Kimsufi server
+        uses: easingthemes/ssh-deploy@main
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          REMOTE_HOST: ${{ vars.REMOTE_HOST }}
+          REMOTE_USER: ${{ vars.REMOTE_USER }}
+          TARGET: ${{ vars.TARGET }}/${{ github.run_id }}-${{ github.run_number }}
+          EXCLUDE: .git, .github, .gitignore, LICENSE, lambdas
+  setup-client-release:
+    runs-on: ubuntu-latest
+    needs: [ "copy-src"]
+    steps:
+      - name: Build client
+        uses: appleboy/ssh-action@v0.1.8
+        with:
+          host: ${{ vars.REMOTE_HOST }}
+          username: ${{ vars.REMOTE_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd ${{ vars.TARGET }}/${{ github.run_id }}-${{ github.run_number }}/client
+            touch .env
+            echo REACT_APP_SPOTIFY_API_ENDPONT=${{ vars.SPOTIFY_API_ENDPONT }} >> .env
+            echo REACT_APP_SPOTIFY_AUTHORIZE_ENDPOINT=${{ vars.SPOTIFY_AUTHORIZE_ENDPOINT }}  >> .env
+            echo REACT_APP_SPOTIFY_CLIENT_ID=${{ vars.SPOTIFY_CLIENT_ID }} >> .env
+            echo REACT_APP_SPOTIFY_TOKEN_ENDPOINT=${{ vars.SPOTIFY_TOKEN_ENDPOINT }} >> .env
+            echo REACT_APP_SOCKET_URI=${{ vars.SOCKET_URI }} >> .env
+            echo REACT_APP_URL=${{ vars.CLIENT_URL }} >> .env
+            echo REACT_APP_GIPHY_API_KEY=${{ vars.GIPHY_API_KEY }} >> .env
+            yarn && yarn build
+  setup-server-release:
+    runs-on: ubuntu-latest
+    needs: [ "copy-src" ]
+    steps:
+      - name: Install server dependencies
+        uses: appleboy/ssh-action@v0.1.8
+        with:
+          host: ${{ vars.REMOTE_HOST }}
+          username: ${{ vars.REMOTE_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd ${{ vars.TARGET }}/${{ github.run_id }}-${{ github.run_number }}/server
+            npm install
+      - name: Set .env file
+        uses: appleboy/ssh-action@v0.1.8
+        with:
+          host: ${{ vars.REMOTE_HOST }}
+          username: ${{ vars.REMOTE_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd ${{ vars.TARGET }}/${{ github.run_id }}-${{ github.run_number }}/server
+            touch .env
+            echo PORT=${{ vars.SERVER_PORT }} >> .env
+            echo CLIENT_URL=${{ vars.CLIENT_URL }} >> .env
+  activate-release:
+    runs-on: ubuntu-latest
+    needs: ["setup-client-release", "setup-server-release"]
+    steps:
+      - name: Update current symlink
+        uses: appleboy/ssh-action@v0.1.8
+        with:
+          host: ${{ vars.REMOTE_HOST }}
+          username: ${{ vars.REMOTE_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd ${{ vars.TARGET }}
+            rm current
+            ln -sv ./${{ github.run_id }}-${{ github.run_number }} current
+      - name: Start server
+        uses: appleboy/ssh-action@v0.1.8
+        with:
+          host: ${{ vars.REMOTE_HOST }}
+          username: ${{ vars.REMOTE_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd ${{ vars.TARGET }}/current/server
+            pm2 list
+            pm2 delete blind-test-server
+            pm2 start index.js --name blind-test-server
+            pm2 list
+
+
