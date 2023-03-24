@@ -39,7 +39,7 @@ const io = new Server(httpServer, {
 const verboseOutput = process.env.VERBOSE;
 
 io.on("connection", socket => {
-  socket.on("createSession", ({ sessionUuid }, callback) => {
+  socket.on("createSession", ({ sessionUuid }) => {
     sessions.set(sessionUuid, {
       currentChallenger: null,
       challengers: new Map(),
@@ -212,6 +212,24 @@ io.on("connection", socket => {
       );
 
       callback();
+    }
+  });
+
+  socket.on("closeSession", ({ sessionUuid }) => {
+    if (sessions.has(sessionUuid)) {
+      if (verboseOutput) {
+        logger.info(
+          `session ${sessionUuid} will be closed the following players will be disconnected`
+        );
+
+        console.table(
+          Array.from(sessions.get(sessionUuid).challengers.values())
+        );
+      }
+
+      sessions.delete(sessionUuid);
+      io.to(sessionUuid).emit("sessionClosedByMaster");
+      socket.leave(sessionUuid);
     }
   });
 });

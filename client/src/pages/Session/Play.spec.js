@@ -5,6 +5,8 @@ import { Play } from "./Play";
 let mockListeners = {};
 let mockSocket = {};
 
+window.Notification = jest.fn();
+
 describe("<Play />", () => {
   beforeEach(() => {
     mockSocket = {
@@ -96,5 +98,23 @@ describe("<Play />", () => {
     fireEvent.click(getByTestId('leave-session-button'))
 
     expect(onLeaveCb).not.toHaveBeenCalled();
+  });
+
+  it("should call onLeave callback when session is closed by the master", () => {
+    const onLeaveCb = jest.fn();
+
+    render(
+      <Play
+        sessionUuid="session-12345"
+        onLeave={onLeaveCb}
+        socket={mockSocket}
+        player={{ uuid: "player-12345", name: "bob", color: "255,255,255" }}
+        challengers={[]}
+      />
+    );
+
+    mockSocket.emit('sessionClosedByMaster', jest.fn)
+
+    expect(onLeaveCb).toHaveBeenCalled();
   });
 });

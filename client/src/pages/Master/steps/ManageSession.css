@@ -13,8 +13,19 @@
     justify-content: center;
 }
 
-.controls-container .start-session-btn {
+.controls-container .session-actions {
+    width: 100%;
+    display: flex;
+    justify-content: space-evenly;
+}
+
+.session-actions .start-session-btn {
     background-color: var(--yellow-green);
+    color: var(--white);
+}
+
+.session-actions .close-session-btn {
+    background-color: var(--brick-red);
     color: var(--white);
 }
 
