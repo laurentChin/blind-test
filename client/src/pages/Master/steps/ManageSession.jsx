@@ -2,6 +2,7 @@ import React, { useContext, useEffect, useRef, useState } from "react";
 import PropTypes from "prop-types";
 import QRCodeGenerator from "qrcode";
 import io from "socket.io-client";
+import { useNavigate } from "react-router-dom";
 import { MdOpenInNew } from "react-icons/md";
 
 import { Player } from "../../../components/Player/Player";
@@ -14,10 +15,9 @@ const SPOTIFY_PLAYER_SRC = "https://sdk.scdn.co/spotify-player.js";
 const script = document.createElement("script");
 script.setAttribute("src", SPOTIFY_PLAYER_SRC);
 
-let socket = io(process.env.REACT_APP_SOCKET_URI);
-
-const ManageSession = ({ sessionUuid, ...props }) => {
+const ManageSession = ({ sessionUuid, socket, ...props }) => {
   const spotifyContext = useContext(SpotifyContext);
+  const navigate = useNavigate();
 
   const [isPlayerScriptLoaded, setPlayerScriptLoadedState] = useState(
     props.isPlayerScriptLoaded || false
@@ -99,18 +99,38 @@ const ManageSession = ({ sessionUuid, ...props }) => {
       .startPlayer(deviceId)
       .then(() => setSessionStartStatus(true));
 
+  const closeSession = () => {
+    if (
+      window.confirm("Are you sure want to close the session for all users?")
+    ) {
+      socket.emit("closeSession", { sessionUuid });
+      navigate("/");
+    }
+  };
+
   return (
     <div className="Step Session-Step">
       <div className="controls-container">
-        {!hasSessionStart && deviceId && (
-          <button
-            className="start-session-btn"
-            data-testid="start-session-btn"
-            onClick={() => startSession()}
-          >
-            Start the session
-          </button>
-        )}
+        <div className="session-actions">
+          {!hasSessionStart && deviceId && (
+            <button
+              className="start-session-btn"
+              data-testid="start-session-btn"
+              onClick={() => startSession()}
+            >
+              Start the session
+            </button>
+          )}
+          {deviceId && (
+            <button
+              className="close-session-btn"
+              data-testid="close-session-btn"
+              onClick={closeSession}
+            >
+              Close the session for all players
+            </button>
+          )}
+        </div>
         {hasSessionStart && isPlayerReady && (
           <Player nextTrackCallback={startNewChallenge} />
         )}
@@ -164,6 +184,10 @@ ManageSession.propTypes = {
   isPlayerReady: PropTypes.bool,
   deviceId: PropTypes.string,
   player: PropTypes.object,
+  socket: PropTypes.shape({
+    emit: PropTypes.func.isRequired,
+    on: PropTypes.func.isRequired,
+  }).isRequired,
 };
 
 export { ManageSession };

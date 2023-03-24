@@ -6,8 +6,36 @@ import { SpotifyContext } from "../../../contexts/Spotify";
 import { ManageSession } from "./ManageSession";
 
 jest.mock("qrcode");
+jest.mock('react-router-dom', () => ({
+  useNavigate: () => jest.fn()
+}))
+
+let mockListeners = {};
+let mockSocket = {};
 
 describe("<ManageSession />", () => {
+  beforeEach(() => {
+    mockSocket = {
+      emit: jest.fn((event, data, callback) => {
+        (mockListeners[event] || []).forEach((listener) => listener(data));
+        if (callback) {
+          callback();
+        }
+      }),
+      on: jest.fn((event, callback) => {
+        if (!mockListeners[event]) {
+          mockListeners[event] = [];
+        }
+        mockListeners[event].push(callback);
+      }),
+    }
+  });
+
+  afterEach(() => {
+    mockListeners = {};
+    jest.clearAllMocks();
+  });
+
   it("should start a session on 'Start the session' button click", async () => {
     const startPlayer = jest.fn().mockResolvedValue({});
     const getPlayer = jest.fn();
@@ -21,6 +49,7 @@ describe("<ManageSession />", () => {
           isPlayerReady={true}
           isPlayerScriptLoaded={true}
           deviceId="122536"
+          socket={mockSocket}
         />
       </SpotifyContext.Provider>
     );
@@ -31,6 +60,39 @@ describe("<ManageSession />", () => {
       await process.nextTick(() => {});
       expect(startPlayer).toHaveBeenCalled();
     });
+  });
+
+  it("should close the session on user confirmation", async () => {
+    const startPlayer = jest.fn().mockResolvedValue({});
+    const getPlayer = jest.fn();
+    const setPlayerStateChangeCb = jest.fn();
+    const { getByTestId } = render(
+      <SpotifyContext.Provider
+        value={{ startPlayer, getPlayer, setPlayerStateChangeCb }}
+      >
+        <ManageSession
+          sessionUuid="1112345678"
+          isPlayerReady={true}
+          isPlayerScriptLoaded={true}
+          deviceId="122536"
+          socket={mockSocket}
+        />
+      </SpotifyContext.Provider>
+    );
+
+    jest.resetAllMocks();
+
+    window.confirm = () => true;
+    fireEvent.click(getByTestId("close-session-btn"));
+
+    expect(mockSocket.emit).toHaveBeenCalled();
+
+    jest.resetAllMocks();
+
+    window.confirm = () => false;
+    fireEvent.click(getByTestId("close-session-btn"));
+
+    expect(mockSocket.emit).not.toHaveBeenCalled();
   });
 
   it("should display the challenger list", async () => {
@@ -46,12 +108,13 @@ describe("<ManageSession />", () => {
           isPlayerReady={true}
           isPlayerScriptLoaded={true}
           deviceId="122536"
+          socket={mockSocket}
         />
       </SpotifyContext.Provider>
     );
 
     await act(async () => {
-      io().emit("challengersUpdate", [
+      mockSocket.emit("challengersUpdate", [
         { uuid: "qwewrw-1232553", name: "name1", score: 1 },
         { uuid: "wuefgeew-82687234", name: "name2", score: 3 },
       ]);
@@ -75,8 +138,7 @@ describe("<ManageSession />", () => {
     };
 
     const setPlayerStateChangeCb = jest.fn();
-    const socket = io();
-    const emitSpy = jest.spyOn(socket, "emit");
+    const emitSpy = jest.spyOn(mockSocket, "emit");
     const { getAllByTestId, getByTestId } = render(
       <SpotifyContext.Provider
         value={{ startPlayer, getPlayer, setPlayerStateChangeCb }}
@@ -87,6 +149,7 @@ describe("<ManageSession />", () => {
           isPlayerScriptLoaded={true}
           deviceId="122536"
           player={player}
+          socket={mockSocket}
         />
       </SpotifyContext.Provider>
     );
@@ -94,12 +157,12 @@ describe("<ManageSession />", () => {
     fireEvent.click(getByTestId("start-session-btn"));
 
     await act(async () => {
-      socket.emit("challengersUpdate", [
+      mockSocket.emit("challengersUpdate", [
         { uuid: "qwewrw-1232553", name: "name1", score: 1 },
         { uuid: "wuefgeew-82687234", name: "name2", score: 3 },
       ]);
 
-      socket.emit("lockChallenge", "qwewrw-1232553");
+      mockSocket.emit("lockChallenge", "qwewrw-1232553");
     });
 
     expect(getAllByTestId("challenge-button").length).toEqual(3);
@@ -119,7 +182,7 @@ describe("<ManageSession />", () => {
     });
 
     await act(async () => {
-      socket.emit("lockChallenge", "qwewrw-1232553");
+      mockSocket.emit("lockChallenge", "qwewrw-1232553");
     });
 
     await act(async () => {
@@ -137,7 +200,7 @@ describe("<ManageSession />", () => {
     });
 
     await act(async () => {
-      socket.emit("lockChallenge", "qwewrw-1232553");
+      mockSocket.emit("lockChallenge", "qwewrw-1232553");
     });
 
     await act(async () => {

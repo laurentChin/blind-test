@@ -7,8 +7,11 @@ import { STEPS } from "./constants";
 import { ManageTracks } from "./steps/ManageTracks";
 import { ManageSession } from "./steps/ManageSession";
 import { StepsNavigation } from "./components/StepsNavigation";
+import io from "socket.io-client";
 
 const SESSION_UUID = v4();
+
+let socket = io(process.env.REACT_APP_SOCKET_URI);
 
 const Master = () => {
   const spotifyContext = useContext(SpotifyContext);
@@ -61,7 +64,7 @@ const Master = () => {
         <ManageTracks playlistId={playlistId} />
       )}
       {step.name === STEPS.MANAGE_SESSION.name && (
-        <ManageSession sessionUuid={SESSION_UUID} />
+        <ManageSession sessionUuid={SESSION_UUID} socket={socket}/>
       )}
       <StepsNavigation currentStep={step} setStep={setStep} />
     </div>

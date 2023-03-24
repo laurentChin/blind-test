@@ -4,6 +4,11 @@ import { MdExpandMore, MdExpandLess } from "react-icons/md";
 
 import "./Play.css";
 
+if (window.Notification && window.Notification.permission !== 'granted') {
+  window.Notification.requestPermission();
+}
+
+
 const Play = ({ sessionUuid, socket, player, onLeave, ...props }) => {
   const [challengers, setChallengers] = useState(props.challengers || []);
   const [isChallengeLocked, setChallengeLock] = useState(false);
@@ -29,13 +34,22 @@ const Play = ({ sessionUuid, socket, player, onLeave, ...props }) => {
     setChallengers(msg);
   });
 
+  const clearSession = () => {
+    sessionStorage.removeItem("player");
+    sessionStorage.removeItem("sessionUuid");
+    onLeave();
+  }
+
+  socket.on("sessionClosedByMaster", () => {
+    if (Notification && Notification.permission === 'granted') {
+      const notification = new Notification('Blind test', { body: "The session has been closed.", requireInteraction: true });
+    }
+    clearSession()
+  })
+
   const leave = () => {
     if (window.confirm("Are you sure want to leave the session?")) {
-      socket.emit("leave", { sessionUuid, playerUuid: player.uuid }, () => {
-        sessionStorage.removeItem("player");
-        sessionStorage.removeItem("sessionUuid");
-        onLeave();
-      });
+      socket.emit("leave", { sessionUuid, playerUuid: player.uuid }, clearSession);
     }
   };
 
