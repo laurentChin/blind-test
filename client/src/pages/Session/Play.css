@@ -5,7 +5,7 @@
 
 .Session-challenge-button {
     box-sizing: border-box;
-    height: calc(100vh/3*2);
+    height: calc(100dvh/3*2);
     max-height: 980px;
     padding: 0;
 }
@@ -19,7 +19,7 @@
 
 .Play .challenger-list-wrapper {
     position: fixed;
-    top : calc(100vh - 40px);
+    top : calc(100dvh - 40px);
     left: 0;
     max-width: 980px;
     will-change: top;
