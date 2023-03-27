@@ -41,8 +41,8 @@ const Play = ({ sessionUuid, socket, player, onLeave, ...props }) => {
   }
 
   socket.on("sessionClosedByMaster", () => {
-    if (Notification && Notification.permission === 'granted') {
-      const notification = new Notification('Blind test', { body: "The session has been closed.", requireInteraction: true });
+    if (window.Notification && window.Notification.permission === 'granted') {
+      const notification = new window.Notification('Blind test', { body: "The session has been closed.", requireInteraction: true });
     }
     clearSession()
   })
