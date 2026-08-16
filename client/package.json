@@ -13,23 +13,17 @@
     "react-dom": "^19.2.8",
     "react-icons": "^5.7.0",
     "react-router-dom": "^7.18.2",
-    "react-scripts": "^5.0.1",
     "socket.io-client": "^4.8.3",
     "styled-components": "^6.5.3",
     "uuid": "^14.0.1"
   },
   "scripts": {
     "prepare": "cd .. && husky client/.husky",
-    "start": "HTTPS=true DISABLE_ESLINT_PLUGIN=true react-scripts start",
-    "build": "DISABLE_ESLINT_PLUGIN=true react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject",
+    "start": "rsbuild dev",
+    "build": "rsbuild build",
+    "preview": "rsbuild preview",
+    "test": "jest",
     "lint": "eslint ."
-  },
-  "jest": {
-    "moduleNameMapper": {
-      "^react-router/dom$": "<rootDir>/node_modules/react-router/dist/development/dom-export.js"
-    }
   },
   "browserslist": {
     "production": [
@@ -44,12 +38,21 @@
     ]
   },
   "devDependencies": {
+    "@rsbuild/core": "^2.1.13",
+    "@rsbuild/plugin-basic-ssl": "^1.2.3",
+    "@rsbuild/plugin-react": "^2.1.0",
+    "@swc/core": "^1.16.0",
+    "@swc/jest": "^0.2.39",
     "@testing-library/dom": "^10.4.1",
     "eslint": "^10.8.1",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-react": "^7.37.5",
     "globals": "^17.11.0",
     "husky": "^9.1.7",
-    "prettier": "^3.9.6"
+    "identity-obj-proxy": "^3.0.0",
+    "jest": "^30.4.2",
+    "jest-environment-jsdom": "^30.4.1",
+    "prettier": "^3.9.6",
+    "whatwg-fetch": "^3.6.20"
   }
 }

@@ -8,7 +8,7 @@ export default [
   prettierConfig,
   {
     languageOptions: {
-      ecmaVersion: 2020,
+      ecmaVersion: "latest",
       sourceType: "module",
       globals: {
         ...globals.es6,
