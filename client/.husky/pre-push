@@ -1,0 +1,1 @@
+cd client && CI=true yarn test
