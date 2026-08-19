@@ -2,7 +2,12 @@
 client/.env
 client/node_modules
 client/build
+client/.certs
 
 # Server
 server/.env
 server/node_modules
+
+# Lambdas
+lambdas/**/node_modules
+lambdas/**/*.zip

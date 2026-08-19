@@ -1,27 +1,19 @@
-import React, { useContext, useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import PropTypes from "prop-types";
 import QRCodeGenerator from "qrcode";
-import io from "socket.io-client";
 import { useNavigate } from "react-router-dom";
 import { MdOpenInNew } from "react-icons/md";
 
 import { Player } from "../../../components/Player/Player";
-import { SpotifyContext } from "../../../contexts/Spotify";
+import { useMusicProvider } from "../../../contexts/MusicProvider";
 
 import "./ManageSession.css";
 import { ChallengerList } from "../../../components/ChallengerList/ChallengerList";
 
-const SPOTIFY_PLAYER_SRC = "https://sdk.scdn.co/spotify-player.js";
-const script = document.createElement("script");
-script.setAttribute("src", SPOTIFY_PLAYER_SRC);
-
 const ManageSession = ({ sessionUuid, socket, ...props }) => {
-  const spotifyContext = useContext(SpotifyContext);
+  const musicProvider = useMusicProvider();
   const navigate = useNavigate();
 
-  const [isPlayerScriptLoaded, setPlayerScriptLoadedState] = useState(
-    props.isPlayerScriptLoaded || false
-  );
   const [isPlayerReady, setPlayerReadyState] = useState(
     props.isPlayerReady || false
   );
@@ -33,13 +25,6 @@ const ManageSession = ({ sessionUuid, socket, ...props }) => {
 
   const qrCode = useRef();
 
-  if (!document.querySelector(`[src="${SPOTIFY_PLAYER_SRC}"]`)) {
-    document.head.appendChild(script);
-  }
-  script.onload = () => {
-    setPlayerScriptLoadedState(true);
-  };
-
   useEffect(() => {
     if (qrCode.current) {
       QRCodeGenerator.toCanvas(
@@ -50,17 +35,16 @@ const ManageSession = ({ sessionUuid, socket, ...props }) => {
   }, [qrCode, sessionUuid]);
 
   useEffect(() => {
-    window.onSpotifyWebPlaybackSDKReady = () => {
-      const spotifyPlayer = spotifyContext.setupPlayer((deviceId) => {
-        setPlayerReadyState(true);
-        setDeviceId(deviceId);
-      });
+    if (props.isPlayerReady) return;
 
-      setPlayer(spotifyPlayer);
-
+    musicProvider.setupPlayer((readyDeviceId) => {
+      setPlayerReadyState(true);
+      setDeviceId(readyDeviceId);
+      setPlayer(musicProvider.getPlayer());
       socket.emit("createSession", { sessionUuid });
-    };
-  }, [spotifyContext, isPlayerScriptLoaded, sessionUuid]);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   socket.on("challengersUpdate", setChallengers);
   socket.on("challengerRelease", setChallengers);
@@ -95,7 +79,7 @@ const ManageSession = ({ sessionUuid, socket, ...props }) => {
   const startNewChallenge = () => socket.emit("startNewChallenge", sessionUuid);
 
   const startSession = () =>
-    spotifyContext
+    musicProvider
       .startPlayer(deviceId)
       .then(() => setSessionStartStatus(true));
 
@@ -180,7 +164,6 @@ const ManageSession = ({ sessionUuid, socket, ...props }) => {
 
 ManageSession.propTypes = {
   sessionUuid: PropTypes.string.isRequired,
-  isPlayerScriptLoaded: PropTypes.bool,
   isPlayerReady: PropTypes.bool,
   deviceId: PropTypes.string,
   player: PropTypes.object,

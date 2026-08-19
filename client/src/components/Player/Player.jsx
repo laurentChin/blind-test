@@ -1,14 +1,14 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import { FaRegPlayCircle, FaRegPauseCircle } from "react-icons/fa";
 import { MdSkipNext } from "react-icons/md";
 
-import { SpotifyContext } from "../../contexts/Spotify";
+import { useMusicProvider } from "../../contexts/MusicProvider";
 
 import "./Player.css";
 
 const Player = ({ nextTrackCallback }) => {
-  const { getPlayer, setPlayerStateChangeCb } = useContext(SpotifyContext);
+  const { getPlayer, setPlayerStateChangeCb } = useMusicProvider();
 
   const [state, setState] = useState({});
   const [currentTrack, setCurrentTrack] = useState("");

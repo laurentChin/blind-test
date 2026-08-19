@@ -3,7 +3,9 @@ import React from "react";
 import { render, fireEvent } from "@testing-library/react";
 import { Player } from "./Player";
 
-import { SpotifyContext } from "../../contexts/Spotify";
+import { useMusicProvider } from "../../contexts/MusicProvider";
+
+jest.mock("../../contexts/MusicProvider");
 
 describe("<Player />", () => {
   afterEach(() => {
@@ -24,12 +26,9 @@ describe("<Player />", () => {
       togglePlay: jest.fn(),
       nextTrack: jest.fn(),
     }));
+    useMusicProvider.mockReturnValue({ setPlayerStateChangeCb, getPlayer });
 
-    const { getByText } = render(
-      <SpotifyContext.Provider value={{ setPlayerStateChangeCb, getPlayer }}>
-        <Player nextTrackCallback={() => {}} />
-      </SpotifyContext.Provider>
-    );
+    const { getByText } = render(<Player nextTrackCallback={() => {}} />);
 
     expect(getByText(/currentTrack/)).toBeTruthy();
   });
@@ -40,12 +39,9 @@ describe("<Player />", () => {
       togglePlay: jest.fn(),
       nextTrack: jest.fn(),
     }));
+    useMusicProvider.mockReturnValue({ setPlayerStateChangeCb, getPlayer });
 
-    const { getByText } = render(
-      <SpotifyContext.Provider value={{ setPlayerStateChangeCb, getPlayer }}>
-        <Player nextTrackCallback={() => {}} />
-      </SpotifyContext.Provider>
-    );
+    const { getByText } = render(<Player nextTrackCallback={() => {}} />);
 
     expect(getByText(/nextTrack/)).toBeTruthy();
   });
@@ -57,12 +53,9 @@ describe("<Player />", () => {
       togglePlay: mockTogglePlay,
       nextTrack: jest.fn(),
     }));
+    useMusicProvider.mockReturnValue({ setPlayerStateChangeCb, getPlayer });
 
-    const { getByTestId } = render(
-      <SpotifyContext.Provider value={{ setPlayerStateChangeCb, getPlayer }}>
-        <Player nextTrackCallback={() => {}} />
-      </SpotifyContext.Provider>
-    );
+    const { getByTestId } = render(<Player nextTrackCallback={() => {}} />);
 
     fireEvent.click(getByTestId("toggle-play-pause-btn"));
 
@@ -78,11 +71,10 @@ describe("<Player />", () => {
       togglePlay: mockTogglePlay,
       nextTrack: mockNextTrack,
     }));
+    useMusicProvider.mockReturnValue({ setPlayerStateChangeCb, getPlayer });
 
     const { getByTestId } = render(
-      <SpotifyContext.Provider value={{ setPlayerStateChangeCb, getPlayer }}>
-        <Player nextTrackCallback={mockNextTrackCallback} />
-      </SpotifyContext.Provider>
+      <Player nextTrackCallback={mockNextTrackCallback} />
     );
 
     fireEvent.click(getByTestId("play-next-btn"));

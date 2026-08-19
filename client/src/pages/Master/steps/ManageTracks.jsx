@@ -1,26 +1,26 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 
 import { FaTrash } from "react-icons/fa";
 
 import { Search } from "../../../components/Search/Search";
-import { SpotifyContext } from "../../../contexts/Spotify";
+import { useMusicProvider } from "../../../contexts/MusicProvider";
 
 import "./ManageTracks.css";
 
 const ManageTracks = ({ playlistId }) => {
-  const spotifyContext = useContext(SpotifyContext);
+  const musicProvider = useMusicProvider();
 
   const [tracks, setTracks] = useState([]);
   const [isSearchPopInVisible, setSearchPopInVisible] = useState(false);
 
   useEffect(() => {
-    spotifyContext.getTracks(playlistId).then((tracks) => setTracks(tracks));
-  }, [playlistId, spotifyContext]);
+    musicProvider.getTracks(playlistId).then((tracks) => setTracks(tracks));
+  }, [playlistId, musicProvider]);
 
   const removeTrack = (uri) => {
-    spotifyContext.removeTrack(uri).then(() => {
-      spotifyContext.getTracks(playlistId).then((tracks) => setTracks(tracks));
+    musicProvider.removeTrack(uri).then(() => {
+      musicProvider.getTracks(playlistId).then((tracks) => setTracks(tracks));
     });
   };
 
@@ -50,7 +50,7 @@ const ManageTracks = ({ playlistId }) => {
           <Search
             excludedTracks={tracks}
             addTrackCallback={() => {
-              spotifyContext
+              musicProvider
                 .getTracks(playlistId)
                 .then((tracks) => setTracks(tracks));
               setSearchPopInVisible(false);

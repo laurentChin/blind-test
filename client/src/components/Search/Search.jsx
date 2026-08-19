@@ -1,19 +1,19 @@
-import React, { useContext, useState } from "react";
+import React, { useState } from "react";
 import PropTypes from "prop-types";
 import { FiDelete } from "react-icons/fi";
 import { Result } from "../Result/Result";
-import { SpotifyContext } from "../../contexts/Spotify";
+import { useMusicProvider } from "../../contexts/MusicProvider";
 
 import "./Search.css";
 
 const Search = ({ excludedTracks, addTrackCallback }) => {
-  const spotifyContext = useContext(SpotifyContext);
+  const musicProvider = useMusicProvider();
   const [results, setResults] = useState([]);
   const [searchTerms, setSearchTerms] = useState("");
   const handleSearch = ({ currentTarget: { value } }) => {
     setSearchTerms(value);
     if (value.length < 3) return null;
-    spotifyContext.search(value).then((tracks) => {
+    musicProvider.search(value).then((tracks) => {
       setResults([
         ...tracks.items.filter(
           (item) => !excludedTracks.find((track) => track.id === item.id)
