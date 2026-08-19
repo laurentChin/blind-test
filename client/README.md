@@ -7,10 +7,23 @@ In the project directory, you can run:
 ### `yarn start`
 
 Runs the app in the development mode.<br />
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+Open [https://localhost:3000](https://localhost:3000) to view it in the browser.
 
 The page will reload if you make edits.<br />
 You will also see any lint errors in the console.
+
+By default the dev server uses a self-signed certificate, so browsers show a
+security warning. To avoid it, install [mkcert](https://github.com/FiloSottile/mkcert)
+and generate a locally-trusted certificate once:
+
+```bash
+brew install mkcert
+mkcert -install
+mkdir -p client/.certs
+mkcert -cert-file client/.certs/localhost.pem -key-file client/.certs/localhost-key.pem localhost 127.0.0.1 ::1
+```
+
+`client/.certs` is gitignored; `yarn start` picks the certificate up automatically when present.
 
 ### `yarn test`
 

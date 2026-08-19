@@ -1,9 +1,15 @@
 import React from "react";
 import { render, fireEvent, createEvent, act } from "@testing-library/react";
 import { Search } from "./Search";
-import { SpotifyContext } from "../../contexts/Spotify";
+import { useMusicProvider } from "../../contexts/MusicProvider";
+
+jest.mock("../../contexts/MusicProvider");
 
 describe("<Search />", () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   it("should display a list of results", async () => {
     const mockSearch = jest.fn();
     mockSearch.mockResolvedValue({
@@ -28,14 +34,13 @@ describe("<Search />", () => {
         },
       ],
     });
+    useMusicProvider.mockReturnValue({ search: mockSearch });
 
     const { getByText, queryByText, container } = render(
-      <SpotifyContext.Provider value={{ search: mockSearch }}>
-        <Search
-          addTrackCallback={jest.fn()}
-          excludedTracks={[{ id: "toexclude" }]}
-        />
-      </SpotifyContext.Provider>
+      <Search
+        addTrackCallback={jest.fn()}
+        excludedTracks={[{ id: "toexclude" }]}
+      />
     );
     const searchInput = container.querySelector("input");
     const changeEvent = createEvent.change(searchInput, {

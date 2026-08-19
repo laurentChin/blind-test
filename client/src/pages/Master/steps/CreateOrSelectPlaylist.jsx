@@ -1,6 +1,6 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import PropTypes from "prop-types";
-import { SpotifyContext } from "../../../contexts/Spotify";
+import { useMusicProvider } from "../../../contexts/MusicProvider";
 
 import "./CreateOrSelectPlaylist.css";
 
@@ -9,7 +9,7 @@ const CreateOrSelectPlaylist = ({
   onSelectPlaylist,
   setTitle,
 }) => {
-  const spotifyContext = useContext(SpotifyContext);
+  const musicProvider = useMusicProvider();
 
   const [sessionName, setSessionName] = useState("");
   const [playlists, setPlaylists] = useState([]);
@@ -19,7 +19,7 @@ const CreateOrSelectPlaylist = ({
 
   useEffect(() => {
     if (isAuthenticated) {
-      spotifyContext.getPlaylists().then((response) => {
+      musicProvider.getPlaylists().then((response) => {
         setPlaylists(response);
         setTitle(
           response.find((playlist) => playlist.id === playlistId)?.name ||
@@ -27,18 +27,18 @@ const CreateOrSelectPlaylist = ({
         );
       });
     }
-  }, [isAuthenticated, spotifyContext, playlistId, sessionName, setTitle]);
+  }, [isAuthenticated, musicProvider, playlistId, sessionName, setTitle]);
 
   useEffect(() => {
     if (playlistId) {
       sessionStorage.setItem("playlistId", playlistId);
-      spotifyContext.setCurrentPlaylist(playlistId);
+      musicProvider.setCurrentPlaylist(playlistId);
       onSelectPlaylist(playlistId);
     }
-  }, [playlistId, spotifyContext]);
+  }, [playlistId, musicProvider]);
 
   const createPlaylist = () => {
-    spotifyContext
+    musicProvider
       .createPlaylist(sessionName)
       .then(({ id }) => setPlaylistId(id));
   };

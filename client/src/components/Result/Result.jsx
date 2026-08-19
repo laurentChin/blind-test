@@ -1,16 +1,16 @@
-import React, { useContext, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import PropTypes from "prop-types";
 
 import "./Result.css";
-import { SpotifyContext } from "../../contexts/Spotify";
+import { useMusicProvider } from "../../contexts/MusicProvider";
 import { FaRegPlayCircle, FaRegPauseCircle } from "react-icons/fa";
 
 const Result = ({ uri, name, artists, preview, addTrackCallback }) => {
-  const spotifyContext = useContext(SpotifyContext);
+  const musicProvider = useMusicProvider();
   const player = useRef();
   const [isPlaying, setPlaying] = useState(false);
   const addToPlaylist = () => {
-    spotifyContext.addTrack(uri).then(() => {
+    musicProvider.addTrack(uri).then(() => {
       addTrackCallback();
     });
   };

@@ -7,7 +7,9 @@ import {
   screen,
 } from "@testing-library/react";
 import { CreateOrSelectPlaylist } from "./CreateOrSelectPlaylist";
-import { SpotifyContext } from "../../../contexts/Spotify";
+import { useMusicProvider } from "../../../contexts/MusicProvider";
+
+jest.mock("../../../contexts/MusicProvider");
 
 describe("<CreateOrSelectPlaylist />", () => {
   afterEach(() => {
@@ -19,16 +21,17 @@ describe("<CreateOrSelectPlaylist />", () => {
     const createPlaylist = jest.fn().mockResolvedValue({ id: "playlistId" });
     const getPlaylists = jest.fn().mockResolvedValue([]);
     const setTitle = jest.fn();
+    useMusicProvider.mockReturnValue({
+      createPlaylist,
+      setCurrentPlaylist,
+      getPlaylists,
+    });
     const { getByTestId, container } = render(
-      <SpotifyContext.Provider
-        value={{ createPlaylist, setCurrentPlaylist, getPlaylists }}
-      >
-        <CreateOrSelectPlaylist
-          onSelectPlaylist={setPlaylistId}
-          isAuthenticated={true}
-          setTitle={setTitle}
-        />
-      </SpotifyContext.Provider>
+      <CreateOrSelectPlaylist
+        onSelectPlaylist={setPlaylistId}
+        isAuthenticated={true}
+        setTitle={setTitle}
+      />
     );
 
     const sessionNameInput = container.querySelector("input");
@@ -54,16 +57,17 @@ describe("<CreateOrSelectPlaylist />", () => {
       { id: "234567890", name: "notSelectedPlaylist" },
     ]);
     const setTitle = jest.fn();
+    useMusicProvider.mockReturnValue({
+      createPlaylist,
+      setCurrentPlaylist,
+      getPlaylists,
+    });
     const { getByTestId, container } = render(
-      <SpotifyContext.Provider
-        value={{ createPlaylist, setCurrentPlaylist, getPlaylists }}
-      >
-        <CreateOrSelectPlaylist
-          onSelectPlaylist={setPlaylistId}
-          isAuthenticated={true}
-          setTitle={setTitle}
-        />
-      </SpotifyContext.Provider>
+      <CreateOrSelectPlaylist
+        onSelectPlaylist={setPlaylistId}
+        isAuthenticated={true}
+        setTitle={setTitle}
+      />
     );
 
     await act(async () => {
@@ -85,17 +89,18 @@ describe("<CreateOrSelectPlaylist />", () => {
       { id: "234567890", name: "Playlist2" },
     ]);
     const setTitle = jest.fn();
+    useMusicProvider.mockReturnValue({
+      createPlaylist,
+      setCurrentPlaylist,
+      getPlaylists,
+    });
 
     const { getByText } = render(
-      <SpotifyContext.Provider
-        value={{ createPlaylist, setCurrentPlaylist, getPlaylists }}
-      >
-        <CreateOrSelectPlaylist
-          onSelectPlaylist={setPlaylistId}
-          isAuthenticated={true}
-          setTitle={setTitle}
-        />
-      </SpotifyContext.Provider>
+      <CreateOrSelectPlaylist
+        onSelectPlaylist={setPlaylistId}
+        isAuthenticated={true}
+        setTitle={setTitle}
+      />
     );
 
     await act(async () => {
@@ -107,7 +112,6 @@ describe("<CreateOrSelectPlaylist />", () => {
   });
 
   it("should define the playlistId on user selection", async () => {
-    let playlistId = "";
     const setPlaylistId = jest.fn();
     const setCurrentPlaylist = jest.fn();
     const createPlaylist = jest.fn().mockResolvedValue({ id: "playlistId" });
@@ -116,18 +120,19 @@ describe("<CreateOrSelectPlaylist />", () => {
       { id: "234567890", name: "Playlist2" },
     ]);
     const setTitle = jest.fn();
+    useMusicProvider.mockReturnValue({
+      createPlaylist,
+      setCurrentPlaylist,
+      getPlaylists,
+    });
 
     await act(async () => {
       render(
-        <SpotifyContext.Provider
-          value={{ createPlaylist, setCurrentPlaylist, getPlaylists }}
-        >
-          <CreateOrSelectPlaylist
-            onSelectPlaylist={setPlaylistId}
-            isAuthenticated={true}
-            setTitle={setTitle}
-          />
-        </SpotifyContext.Provider>
+        <CreateOrSelectPlaylist
+          onSelectPlaylist={setPlaylistId}
+          isAuthenticated={true}
+          setTitle={setTitle}
+        />
       );
     });
 

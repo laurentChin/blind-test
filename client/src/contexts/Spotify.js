@@ -1,6 +1,7 @@
 import { createContext } from "react";
 
 const SPOTIFY_CODE_PARAM = /\?code=(.+)/;
+const SPOTIFY_PLAYER_SRC = "https://sdk.scdn.co/spotify-player.js";
 
 const redirectUri = `${window.location.origin}${window.location.pathname}`;
 
@@ -39,6 +40,10 @@ let currentPlaylist = "";
 let player = {};
 let playerStateChangeCb = () => {};
 
+function hasAuthExpired() {
+  return authExpiry < new Date().getTime();
+}
+
 async function getAccessToken(code) {
   const { access_token, refresh_token, expires_in } = await (
     await fetch(process.env.REACT_APP_SPOTIFY_TOKEN_ENDPOINT, {
@@ -69,6 +74,23 @@ async function getAccessToken(code) {
   authorizationHeader.Authorization = `Bearer ${access_token}`;
 
   return { access_token, refresh_token, expires_in };
+}
+
+function login() {
+  const [, code] = SPOTIFY_CODE_PARAM.exec(window.location) || [];
+
+  if (!isAuthenticated && !code) {
+    window.location = startTokenRequestUri;
+    return new Promise(() => {});
+  }
+
+  if (code || hasAuthExpired()) {
+    return getAccessToken(code).then(() => {
+      window.history.pushState({}, document.title, redirectUri);
+    });
+  }
+
+  return Promise.resolve();
 }
 
 async function getPlaylists() {
@@ -165,22 +187,33 @@ async function removeTrack(uri) {
 }
 
 function setupPlayer(playerReadyCb) {
-  player = new window.Spotify.Player({
-    name: "Blind Test Spotify Player",
-    getOAuthToken: (cb) => cb(authTokenList.accessToken),
-  });
+  window.onSpotifyWebPlaybackSDKReady = () => {
+    player = new window.Spotify.Player({
+      name: "Blind Test Spotify Player",
+      getOAuthToken: (cb) => cb(authTokenList.accessToken),
+    });
 
-  player.addListener("player_state_changed", (state) => {
-    playerStateChangeCb(state);
-  });
+    player.addListener("player_state_changed", (state) => {
+      playerStateChangeCb(state);
+    });
 
-  player.addListener("ready", ({ device_id }) => {
-    playerReadyCb(device_id);
-  });
+    player.addListener("ready", ({ device_id }) => {
+      playerReadyCb(device_id);
+    });
 
-  player.connect();
+    player.connect();
+  };
 
-  return player;
+  if (window.Spotify) {
+    window.onSpotifyWebPlaybackSDKReady();
+    return;
+  }
+
+  if (!document.querySelector(`[src="${SPOTIFY_PLAYER_SRC}"]`)) {
+    const script = document.createElement("script");
+    script.setAttribute("src", SPOTIFY_PLAYER_SRC);
+    document.head.appendChild(script);
+  }
 }
 
 function getPlayer() {
@@ -205,12 +238,8 @@ async function startPlayer(deviceID) {
 }
 
 const SpotifyContext = createContext({
-  SPOTIFY_CODE_PARAM,
-  redirectUri,
-  startTokenRequestUri,
   isAuthenticated,
-  hasAuthExpired: () => authExpiry < new Date().getTime(),
-  getAccessToken,
+  login,
   getPlaylists,
   createPlaylist,
   setCurrentPlaylist,

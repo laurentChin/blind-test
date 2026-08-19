@@ -1,11 +1,11 @@
 import React from "react";
 import { render, fireEvent, act } from "@testing-library/react";
-import io from "socket.io-client";
 
-import { SpotifyContext } from "../../../contexts/Spotify";
+import { useMusicProvider } from "../../../contexts/MusicProvider";
 import { ManageSession } from "./ManageSession";
 
 jest.mock("qrcode");
+jest.mock("../../../contexts/MusicProvider");
 jest.mock('react-router-dom', () => ({
   useNavigate: () => jest.fn()
 }))
@@ -40,18 +40,18 @@ describe("<ManageSession />", () => {
     const startPlayer = jest.fn().mockResolvedValue({});
     const getPlayer = jest.fn();
     const setPlayerStateChangeCb = jest.fn();
+    useMusicProvider.mockReturnValue({
+      startPlayer,
+      getPlayer,
+      setPlayerStateChangeCb,
+    });
     const { getByTestId } = render(
-      <SpotifyContext.Provider
-        value={{ startPlayer, getPlayer, setPlayerStateChangeCb }}
-      >
-        <ManageSession
-          sessionUuid="1112345678"
-          isPlayerReady={true}
-          isPlayerScriptLoaded={true}
-          deviceId="122536"
-          socket={mockSocket}
-        />
-      </SpotifyContext.Provider>
+      <ManageSession
+        sessionUuid="1112345678"
+        isPlayerReady={true}
+        deviceId="122536"
+        socket={mockSocket}
+      />
     );
 
     fireEvent.click(getByTestId("start-session-btn"));
@@ -66,18 +66,18 @@ describe("<ManageSession />", () => {
     const startPlayer = jest.fn().mockResolvedValue({});
     const getPlayer = jest.fn();
     const setPlayerStateChangeCb = jest.fn();
+    useMusicProvider.mockReturnValue({
+      startPlayer,
+      getPlayer,
+      setPlayerStateChangeCb,
+    });
     const { getByTestId } = render(
-      <SpotifyContext.Provider
-        value={{ startPlayer, getPlayer, setPlayerStateChangeCb }}
-      >
-        <ManageSession
-          sessionUuid="1112345678"
-          isPlayerReady={true}
-          isPlayerScriptLoaded={true}
-          deviceId="122536"
-          socket={mockSocket}
-        />
-      </SpotifyContext.Provider>
+      <ManageSession
+        sessionUuid="1112345678"
+        isPlayerReady={true}
+        deviceId="122536"
+        socket={mockSocket}
+      />
     );
 
     jest.resetAllMocks();
@@ -99,18 +99,18 @@ describe("<ManageSession />", () => {
     const startPlayer = jest.fn().mockResolvedValue({});
     const getPlayer = jest.fn();
     const setPlayerStateChangeCb = jest.fn();
+    useMusicProvider.mockReturnValue({
+      startPlayer,
+      getPlayer,
+      setPlayerStateChangeCb,
+    });
     const { container } = render(
-      <SpotifyContext.Provider
-        value={{ startPlayer, getPlayer, setPlayerStateChangeCb }}
-      >
-        <ManageSession
-          sessionUuid="1112345678"
-          isPlayerReady={true}
-          isPlayerScriptLoaded={true}
-          deviceId="122536"
-          socket={mockSocket}
-        />
-      </SpotifyContext.Provider>
+      <ManageSession
+        sessionUuid="1112345678"
+        isPlayerReady={true}
+        deviceId="122536"
+        socket={mockSocket}
+      />
     );
 
     await act(async () => {
@@ -138,20 +138,20 @@ describe("<ManageSession />", () => {
     };
 
     const setPlayerStateChangeCb = jest.fn();
+    useMusicProvider.mockReturnValue({
+      startPlayer,
+      getPlayer,
+      setPlayerStateChangeCb,
+    });
     const emitSpy = jest.spyOn(mockSocket, "emit");
     const { getAllByTestId, getByTestId } = render(
-      <SpotifyContext.Provider
-        value={{ startPlayer, getPlayer, setPlayerStateChangeCb }}
-      >
-        <ManageSession
-          sessionUuid="1112345678"
-          isPlayerReady={true}
-          isPlayerScriptLoaded={true}
-          deviceId="122536"
-          player={player}
-          socket={mockSocket}
-        />
-      </SpotifyContext.Provider>
+      <ManageSession
+        sessionUuid="1112345678"
+        isPlayerReady={true}
+        deviceId="122536"
+        player={player}
+        socket={mockSocket}
+      />
     );
 
     fireEvent.click(getByTestId("start-session-btn"));

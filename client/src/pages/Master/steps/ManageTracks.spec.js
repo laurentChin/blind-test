@@ -1,9 +1,15 @@
 import React from "react";
 import { render, act, fireEvent, screen } from "@testing-library/react";
-import { SpotifyContext } from "../../../contexts/Spotify";
+import { useMusicProvider } from "../../../contexts/MusicProvider";
 import { ManageTracks } from "./ManageTracks";
 
+jest.mock("../../../contexts/MusicProvider");
+
 describe("<ManageTracks />", () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   it("should display a list of tracks", async () => {
     const getTracks = jest.fn().mockResolvedValue([
       { name: "track1", id: "01" },
@@ -11,13 +17,10 @@ describe("<ManageTracks />", () => {
       { name: "track3", id: "03" },
     ]);
     const removeTracks = jest.fn().mockResolvedValue([]);
+    useMusicProvider.mockReturnValue({ getTracks, removeTracks });
 
     await act(async () => {
-      render(
-        <SpotifyContext.Provider value={{ getTracks, removeTracks }}>
-          <ManageTracks playlistId={"12345678"} />
-        </SpotifyContext.Provider>
-      );
+      render(<ManageTracks playlistId={"12345678"} />);
     });
 
     expect(getTracks).toHaveBeenCalled();
@@ -33,12 +36,10 @@ describe("<ManageTracks />", () => {
       { name: "track3", id: "03", uri: "03-track3" },
     ]);
     const removeTrack = jest.fn().mockResolvedValue({});
+    useMusicProvider.mockReturnValue({ getTracks, removeTrack });
+
     await act(async () => {
-      render(
-        <SpotifyContext.Provider value={{ getTracks, removeTrack }}>
-          <ManageTracks playlistId={"12345678"} />
-        </SpotifyContext.Provider>
-      );
+      render(<ManageTracks playlistId={"12345678"} />);
     });
 
     await act(async () => {

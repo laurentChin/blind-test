@@ -9,7 +9,9 @@ describe("<Home/>", () => {
 
     expect(container.querySelectorAll(".option-block").length).toEqual(1);
     expect(
-      getByText("Create a new session. A valid Spotify account is required.")
+      getByText(
+        "Create a new session. A valid Spotify or Apple Music account is required."
+      )
     ).toBeTruthy();
 
     expect(

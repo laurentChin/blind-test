@@ -1,7 +1,8 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { v4 } from "uuid";
 
-import { SpotifyContext } from "../../contexts/Spotify";
+import { getSelectedProvider, useMusicProvider } from "../../contexts/MusicProvider";
+import { ProviderSelect } from "./steps/ProviderSelect";
 import { CreateOrSelectPlaylist } from "./steps/CreateOrSelectPlaylist";
 import { STEPS } from "./constants";
 import { ManageTracks } from "./steps/ManageTracks";
@@ -14,11 +15,12 @@ const SESSION_UUID = v4();
 let socket = io(process.env.REACT_APP_SOCKET_URI);
 
 const Master = () => {
-  const spotifyContext = useContext(SpotifyContext);
+  const [provider, setProvider] = useState(getSelectedProvider());
+  const musicProvider = useMusicProvider();
 
   const [title, setTitle] = useState("New session");
   const [isAuthenticated, setIsAuthenticated] = useState(
-    spotifyContext.isAuthenticated
+    musicProvider.isAuthenticated
   );
 
   const [playlistId, setPlaylistId] = useState(
@@ -30,24 +32,14 @@ const Master = () => {
   );
 
   useEffect(() => {
-    const [, code] =
-      spotifyContext.SPOTIFY_CODE_PARAM.exec(window.location) || [];
+    if (!provider) return;
 
-    if (!isAuthenticated && !code) {
-      window.location = spotifyContext.startTokenRequestUri;
-    }
+    musicProvider.login().then(() => setIsAuthenticated(true));
+  }, [provider, musicProvider]);
 
-    if (code || spotifyContext.hasAuthExpired()) {
-      spotifyContext.getAccessToken(code).then(() => {
-        window.history.pushState(
-          {},
-          document.title,
-          spotifyContext.redirectUri
-        );
-        setIsAuthenticated(true);
-      });
-    }
-  }, [spotifyContext, isAuthenticated]);
+  if (!provider) {
+    return <ProviderSelect setProvider={setProvider} />;
+  }
 
   return (
     <div>
