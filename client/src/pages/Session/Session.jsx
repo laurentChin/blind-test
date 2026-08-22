@@ -8,13 +8,31 @@ import { Play } from "./Play";
 
 const socket = io(process.env.REACT_APP_SOCKET_URI);
 
+// The stored player only belongs to the session it was saved for — reusing
+// it for a different session's uuid would rejoin with a stale identity the
+// new session's server-side state knows nothing about.
+const getStoredPlayer = (uuid) => {
+  if (sessionStorage.getItem("sessionUuid") !== uuid) {
+    return {};
+  }
+
+  return JSON.parse(sessionStorage.getItem("player")) || {};
+};
+
 const Session = () => {
   const { uuid } = useParams();
-  const [player, setPlayer] = useState(
-    JSON.parse(sessionStorage.getItem("player")) || {}
-  );
+  const [player, setPlayer] = useState(() => getStoredPlayer(uuid));
   const [inSession, setInSession] = useState(false);
   const [challengers, setChallengers] = useState([]);
+
+  useEffect(() => {
+    if (sessionStorage.getItem("sessionUuid") !== uuid) {
+      sessionStorage.removeItem("player");
+      sessionStorage.removeItem("sessionUuid");
+      setPlayer({});
+      setInSession(false);
+    }
+  }, [uuid]);
 
   useEffect(() => {
     if (player.uuid && !inSession) {
@@ -23,20 +41,23 @@ const Session = () => {
       });
       setInSession(true);
     }
-  }, [player, inSession]);
+  }, [player, inSession, uuid]);
 
   return (
     <div className="Session">
       {!player.uuid && (
-        <JoinForm
-          sessionUuid={uuid}
-          onJoin={(response) => {
-            setPlayer(response.player);
-            setInSession(true);
-            setChallengers(response.challengers);
-          }}
-          socket={socket}
-        />
+        <>
+          <h1 className="visually-hidden">Join the session</h1>
+          <JoinForm
+            sessionUuid={uuid}
+            onJoin={(response) => {
+              setPlayer(response.player);
+              setInSession(true);
+              setChallengers(response.challengers);
+            }}
+            socket={socket}
+          />
+        </>
       )}
       {player.uuid && (
         <Play

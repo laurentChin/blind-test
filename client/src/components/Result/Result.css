@@ -1,18 +1,13 @@
 .Result {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 5px;
-}
-
-.Result > * {
-    display: block;
-}
-
-.Result button {
-    background-color: var(--yellow-green);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) 0;
+  border-bottom: 1px solid var(--color-surface-border);
 }
 
 .Result .preview-control {
-    margin: 0 5px 0 auto;
+  margin-left: auto;
+  font-size: 1.25rem;
 }

@@ -8,14 +8,12 @@ if (window.Notification && window.Notification.permission !== 'granted') {
   window.Notification.requestPermission();
 }
 
+const CHALLENGER_DRAWER_ID = "challenger-drawer";
 
 const Play = ({ sessionUuid, socket, player, onLeave, ...props }) => {
   const [challengers, setChallengers] = useState(props.challengers || []);
   const [isChallengeLocked, setChallengeLock] = useState(false);
   const [challengerUuid, setChallengerUuid] = useState();
-
-  const [isChallengerListVisible, setChallengerListVisibility] =
-    useState(false);
 
   useEffect(() => {
     setChallengers(props.challengers)
@@ -53,10 +51,13 @@ const Play = ({ sessionUuid, socket, player, onLeave, ...props }) => {
     }
   };
 
+  const ranked = [...challengers].sort((a, b) => b.score - a.score);
+
   return (
     <div className="Play">
+      <h1 className="visually-hidden">Play</h1>
       <button
-        style={{ backgroundColor: `rgb(${player.color})` }}
+        style={{ "--player-color": `rgb(${player.color})` }}
         disabled={isChallengeLocked}
         onClick={() =>
           socket.emit("challenge", { sessionUuid, playerUuid: player.uuid })
@@ -69,35 +70,50 @@ const Play = ({ sessionUuid, socket, player, onLeave, ...props }) => {
               ?.name
           : `Challenge`}
       </button>
-      <button className="Session-leave-button" data-testid="leave-session-button" onClick={leave}>
+      <button
+        className="btn btn-danger Session-leave-button"
+        data-testid="leave-session-button"
+        onClick={leave}
+      >
         Leave the game
       </button>
-      <div
-        className={`challenger-list-wrapper ${
-          isChallengerListVisible ? "open" : ""
-        }`}
+
+      <button
+        type="button"
+        className="challenger-list-trigger"
+        popoverTarget={CHALLENGER_DRAWER_ID}
+        popoverTargetAction="show"
       >
-        <div
+        Show challengers
+        <MdExpandLess aria-hidden="true" />
+      </button>
+
+      <div
+        id={CHALLENGER_DRAWER_ID}
+        popover="auto"
+        className="challenger-list-wrapper"
+      >
+        <button
+          type="button"
           className="challenger-list-opener"
-          onClick={() => setChallengerListVisibility(!isChallengerListVisible)}
+          popoverTarget={CHALLENGER_DRAWER_ID}
+          popoverTargetAction="hide"
         >
-          {isChallengerListVisible ? "Hide" : "Show"} challengers
-          {isChallengerListVisible ? <MdExpandMore /> : <MdExpandLess />}
-        </div>
-        <div className="challenger-list">
-          {challengers
-            .sort((a, b) => b.score - a.score)
-            .map((challenger) => (
-              <p
-                key={challenger.uuid}
-                className={
-                  challengerUuid === challenger.uuid ? "challenger" : null
-                }
-              >
-                <span>{challenger.name}</span> <span>{challenger.score}</span>
-              </p>
-            ))}
-        </div>
+          Hide challengers
+          <MdExpandMore aria-hidden="true" />
+        </button>
+        <ol className="challenger-list">
+          {ranked.map((challenger) => (
+            <li
+              key={challenger.uuid}
+              className={
+                challengerUuid === challenger.uuid ? "challenger" : null
+              }
+            >
+              <span>{challenger.name}</span> <span>{challenger.score}</span>
+            </li>
+          ))}
+        </ol>
       </div>
     </div>
   );

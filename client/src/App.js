@@ -12,9 +12,11 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <h1>Blind test App</h1>
+        <a className="App-brand" href="/">
+          Blind test
+        </a>
       </header>
-      <div className="main">
+      <main>
         <Router>
           <Routes>
             <Route path="/" exact element={<Home />} />
@@ -23,7 +25,7 @@ function App() {
             <Route path="/board/:uuid" exact element={<Board />} />
           </Routes>
         </Router>
-      </div>
+      </main>
     </div>
   );
 }

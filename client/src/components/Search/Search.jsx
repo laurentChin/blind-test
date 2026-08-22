@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useId, useState } from "react";
 import PropTypes from "prop-types";
 import { FiDelete } from "react-icons/fi";
 import { Result } from "../Result/Result";
@@ -10,6 +10,13 @@ const Search = ({ excludedTracks, addTrackCallback }) => {
   const musicProvider = useMusicProvider();
   const [results, setResults] = useState([]);
   const [searchTerms, setSearchTerms] = useState("");
+  const [activePreviewUri, setActivePreviewUri] = useState("");
+  const inputId = useId();
+
+  const togglePreview = (uri) => {
+    setActivePreviewUri((current) => (current === uri ? "" : uri));
+  };
+
   const handleSearch = ({ currentTarget: { value } }) => {
     setSearchTerms(value);
     if (value.length < 3) return null;
@@ -25,32 +32,52 @@ const Search = ({ excludedTracks, addTrackCallback }) => {
   const clearSearch = () => {
     setResults([]);
     setSearchTerms("");
+    setActivePreviewUri("");
   };
+
+  const handleTrackAdded = (track) => {
+    clearSearch();
+    addTrackCallback(track);
+  };
+
   return (
     <div className="Search-container">
       <div className="Search-Input-container">
+        <label className="visually-hidden" htmlFor={inputId}>
+          Search a title, or an artist
+        </label>
         <input
+          id={inputId}
+          className="field"
           type="search"
           onChange={handleSearch}
           value={searchTerms}
-          placeholder="Search of a title, or an artist"
+          placeholder="Search a title, or an artist"
         />
-        <button className="reset-search-button" onClick={clearSearch}>
+        <button
+          type="button"
+          className="btn btn-ghost reset-search-button"
+          aria-label="Clear search"
+          onClick={clearSearch}
+        >
           <FiDelete />
         </button>
       </div>
-      <div className="Search-ResultList">
-        {results.map(({ uri, name, preview_url, artists }) => (
+      <ul className="Search-ResultList">
+        {results.map(({ id, uri, name, preview_url, artists }) => (
           <Result
             key={uri}
+            id={id}
             uri={uri}
             name={name}
             artists={artists}
             preview={preview_url}
-            addTrackCallback={addTrackCallback}
+            addTrackCallback={handleTrackAdded}
+            isPlaying={activePreviewUri === uri}
+            onTogglePreview={() => togglePreview(uri)}
           />
         ))}
-      </div>
+      </ul>
     </div>
   );
 };

@@ -1,0 +1,387 @@
+/* Reset + base element styles + reusable button/form variants.
+   Layout and one-off visuals stay in each component's own .css file. */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--font-size-base);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--color-canvas);
+  color: var(--color-text);
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  line-height: 1.2;
+  margin: 0 0 var(--space-3) 0;
+}
+
+h1 {
+  font-size: var(--font-size-2xl);
+}
+h2 {
+  font-size: var(--font-size-xl);
+}
+h3 {
+  font-size: var(--font-size-lg);
+}
+
+p {
+  margin: 0 0 var(--space-3) 0;
+}
+
+a {
+  color: inherit;
+}
+
+ul,
+ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+fieldset {
+  border: none;
+  margin: 0;
+  padding: 0;
+}
+
+legend {
+  font-family: var(--font-display);
+  font-size: var(--font-size-lg);
+  padding: 0;
+  margin: 0 0 var(--space-3) 0;
+}
+
+label {
+  display: block;
+  margin-bottom: var(--space-2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Buttons */
+
+.btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  height: 2.5rem;
+  padding: 0 var(--space-4);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: var(--font-size-base);
+  text-decoration: none;
+  cursor: pointer;
+  background-color: var(--color-surface);
+  border-color: var(--color-surface-border);
+  color: var(--color-text);
+  transition: background-color var(--duration-base) var(--ease-standard);
+}
+
+@property --spin-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+/* A ring of glow that circles the border on hover, instead of moving the
+   button itself — masked so only the border-width band is visible, and
+   anchored (inset matches padding) so the band sits entirely outside the
+   button's own edge, nothing bleeding inward. */
+.btn::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  padding: 2px;
+  background: conic-gradient(
+    from var(--spin-angle),
+    transparent 0deg,
+    currentColor 40deg,
+    transparent 90deg
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--duration-base) var(--ease-standard);
+}
+
+.btn:hover:not(:disabled)::before {
+  opacity: 1;
+  animation: btn-glow-spin 4s linear infinite;
+}
+
+@keyframes btn-glow-spin {
+  to {
+    --spin-angle: 360deg;
+  }
+}
+
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* Loading state for buttons that trigger a network call: a wave-topped fill
+   rises from the bottom to 25% height in the button's own color while the
+   call is in flight, then — once .btn-loading-done takes over — finishes
+   climbing to the top to mark completion before the caller clears it. */
+.btn-loading,
+.btn-loading-done {
+  overflow: hidden;
+}
+
+.btn-loading::after,
+.btn-loading-done::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0 0;
+  border-radius: inherit;
+  background: var(--btn-role-color, currentColor);
+  opacity: 0.8;
+  pointer-events: none;
+  /* An irregular wave — several differently sized smooth crests rising from
+     a common baseline (not dipping below it), all pure cubic beziers so
+     there's no pointed cusp anywhere. The path's solid region extends far
+     past the baseline (to y=300) so that, combined with a mask-size tall
+     enough to push that baseline to a fixed ~8px on screen, everything below
+     the crests stays fully solid regardless of the box's own height — the
+     wave only ever adds height on top of it, never eats into it. */
+  /* Three copies of the same wave period back to back (0-120, 120-240,
+     240-360), sized to 300% width — i.e. relative to the BOX's own width,
+     not a fixed pixel value — so one period always spans exactly the
+     button's current width no matter how long its label is (a fixed pixel
+     tile was too narrow for very long playlist names and left a
+     transparent gap once the button grew past it). The animation sweeps
+     within the middle copy, using the identical copies on each side as
+     buffer so the visible window is always over defined content. */
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 360 300' preserveAspectRatio='none'%3E%3Cpath d='M0,24 C4,10 14,10 18,24 C21,19 25,19 28,24 C31,14 39,14 42,24 C45,17 51,17 54,24 C59,8 69,8 74,24 C77,18 83,18 86,24 C90,13 98,13 102,24 C106,15 114,15 120,24 L120,300 L0,300 Z M120,24 C124,10 134,10 138,24 C141,19 145,19 148,24 C151,14 159,14 162,24 C165,17 171,17 174,24 C179,8 189,8 194,24 C197,18 203,18 206,24 C210,13 218,13 222,24 C226,15 234,15 240,24 L240,300 L120,300 Z M240,24 C244,10 254,10 258,24 C261,19 265,19 268,24 C271,14 279,14 282,24 C285,17 291,17 294,24 C299,8 309,8 314,24 C317,18 323,18 326,24 C330,13 338,13 342,24 C346,15 354,15 360,24 L360,300 L240,300 Z' fill='white'/%3E%3C/svg%3E");
+  mask-size: 300% 100px;
+  mask-repeat: no-repeat;
+  mask-position: 100% top;
+}
+
+.btn-loading::after {
+  height: 0%;
+  animation: btn-fill-rise 0.5s var(--ease-standard) forwards,
+    btn-fill-wave 3.5s linear infinite;
+}
+
+.btn-loading-done::after {
+  height: calc(25% + 8px);
+  /* The wave mask is anchored to the box's own top edge, which keeps rising
+     as height grows toward 100% — so the wavy cutouts would keep showing at
+     the (ever-changing) top instead of disappearing, and the button would
+     never read as fully filled. Dropping the mask for this phase removes
+     the wave entirely rather than trying to chase its height in the
+     position math: completion is just a plain solid fill to the top. */
+  mask-image: none;
+  animation: btn-fill-complete 0.4s var(--ease-standard) forwards;
+}
+
+@keyframes btn-fill-rise {
+  from {
+    height: 0%;
+  }
+  to {
+    height: calc(25% + 8px);
+  }
+}
+
+@keyframes btn-fill-wave {
+  from {
+    mask-position: 100% top;
+  }
+  to {
+    /* mask-position percentages are resolved against (box width − image
+       width); since the image is 300% (3x) the box, this is negative, which
+       flips the intuitive direction — animating the percentage DOWN from
+       100% to 50% is what actually slides the image right under a fixed
+       window (wave advances left to right). Both ends sit mid-pattern, one
+       period's width apart, so the loop wraps seamlessly (all three copies
+       are identical) — and because it's percentage-based, this scales with
+       the box's own width instead of assuming a fixed maximum button size. */
+    mask-position: 50% top;
+  }
+}
+
+@keyframes btn-fill-complete {
+  from {
+    height: calc(25% + 8px);
+  }
+  to {
+    height: 100%;
+  }
+}
+
+/* Confirm-to-delete state: a left-to-right fill in the button's own color
+   (delete buttons are always red), painted behind its label (z-index: -1)
+   so the text stays legible on top. The text color runs its own animation
+   in lockstep with the fill (same duration/easing), fading from red to
+   white as the fill progresses, instead of snapping the moment it's armed. */
+.btn-confirm {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-confirm::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  z-index: -1;
+  width: 0%;
+  background: var(--btn-role-color, currentColor);
+  pointer-events: none;
+  animation: btn-confirm-fill 0.5s var(--ease-standard) forwards;
+}
+
+@keyframes btn-confirm-fill {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+.btn-confirm.is-armed {
+  animation: btn-confirm-text 0.5s var(--ease-standard) forwards;
+}
+
+@keyframes btn-confirm-text {
+  from {
+    color: var(--color-danger);
+  }
+  to {
+    color: var(--palette-white);
+  }
+}
+
+.btn-accent {
+  --btn-role-color: var(--color-accent);
+  background-color: transparent;
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.btn-positive {
+  --btn-role-color: var(--color-positive);
+  background-color: transparent;
+  border-color: var(--color-positive);
+  color: var(--color-positive);
+}
+
+.btn-danger {
+  --btn-role-color: var(--color-danger);
+  background-color: transparent;
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+}
+
+.btn-danger-strong {
+  --btn-role-color: var(--color-danger-strong);
+  background-color: transparent;
+  border-color: var(--color-danger-strong);
+  color: var(--color-danger-strong);
+}
+
+.btn-score-half {
+  --btn-role-color: var(--color-score-half);
+  background-color: transparent;
+  border-color: var(--color-score-half);
+  color: var(--color-score-half);
+}
+
+.btn-score-full {
+  --btn-role-color: var(--color-score-full);
+  background-color: transparent;
+  border-color: var(--color-score-full);
+  color: var(--color-score-full);
+}
+
+.btn-ghost {
+  background-color: transparent;
+  border-color: transparent;
+  color: var(--color-text);
+}
+
+/* Form controls */
+
+.field {
+  box-sizing: border-box;
+  width: 100%;
+  height: 2.5rem;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-surface-border);
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: var(--font-size-base);
+}
+
+.field:focus-visible {
+  border-color: var(--color-accent);
+}
+
+/* Panel: the "option-block" translucent card used across the app */
+
+.panel {
+  padding: var(--space-4);
+  border: 1px solid var(--color-surface-border);
+  background-color: var(--color-surface);
+  border-radius: var(--radius-md);
+}
+
+.panel-separator {
+  display: block;
+  text-align: center;
+  margin: var(--space-3) 0;
+  color: var(--color-text-muted);
+}

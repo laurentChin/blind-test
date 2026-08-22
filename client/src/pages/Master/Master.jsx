@@ -1,14 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { v4 } from "uuid";
+import io from "socket.io-client";
 
 import { getSelectedProvider, useMusicProvider } from "../../contexts/MusicProvider";
-import { ProviderSelect } from "./steps/ProviderSelect";
-import { CreateOrSelectPlaylist } from "./steps/CreateOrSelectPlaylist";
-import { STEPS } from "./constants";
-import { ManageTracks } from "./steps/ManageTracks";
+import { ConfigureSession } from "./ConfigureSession";
 import { ManageSession } from "./steps/ManageSession";
-import { StepsNavigation } from "./components/StepsNavigation";
-import io from "socket.io-client";
 
 const SESSION_UUID = v4();
 
@@ -22,43 +18,51 @@ const Master = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(
     musicProvider.isAuthenticated
   );
+  const [isConfigured, setIsConfigured] = useState(false);
+  const [tracks, setTracks] = useState([]);
+  const isFirstProviderRender = useRef(true);
 
-  const [playlistId, setPlaylistId] = useState(
-    sessionStorage.getItem("playlistId") || ""
-  );
+  const changeProvider = (newProvider) => {
+    if (newProvider !== provider) {
+      sessionStorage.removeItem("playlistId");
+    }
 
-  const [step, setStep] = useState(
-    sessionStorage.getItem("step") || STEPS.CREATE_OR_SELECT_PLAYLIST
-  );
+    setProvider(newProvider);
+  };
 
   useEffect(() => {
     if (!provider) return;
 
+    // Skip on the very first mount so a page reload with an already
+    // authenticated provider doesn't flash the steps back to locked — only a
+    // genuine switch to a different provider should invalidate them.
+    if (!isFirstProviderRender.current) {
+      setIsAuthenticated(false);
+    }
+    isFirstProviderRender.current = false;
+
     musicProvider.login().then(() => setIsAuthenticated(true));
   }, [provider, musicProvider]);
 
-  if (!provider) {
-    return <ProviderSelect setProvider={setProvider} />;
+  if (isConfigured) {
+    return (
+      <ManageSession sessionUuid={SESSION_UUID} socket={socket} tracks={tracks} />
+    );
   }
 
   return (
     <div>
-      <h2>{title}</h2>
-      {step.name === STEPS.CREATE_OR_SELECT_PLAYLIST.name && (
-        <CreateOrSelectPlaylist
-          onSelectPlaylist={setPlaylistId}
-          setStep={setStep}
-          isAuthenticated={isAuthenticated}
-          setTitle={setTitle}
-        />
-      )}
-      {step.name === STEPS.MANAGE_TRACKS.name && (
-        <ManageTracks playlistId={playlistId} />
-      )}
-      {step.name === STEPS.MANAGE_SESSION.name && (
-        <ManageSession sessionUuid={SESSION_UUID} socket={socket}/>
-      )}
-      <StepsNavigation currentStep={step} setStep={setStep} />
+      <h1>{title}</h1>
+      <ConfigureSession
+        provider={provider}
+        setProvider={changeProvider}
+        isAuthenticated={isAuthenticated}
+        setTitle={setTitle}
+        onLaunch={(launchedTracks) => {
+          setTracks(launchedTracks);
+          setIsConfigured(true);
+        }}
+      />
     </div>
   );
 };

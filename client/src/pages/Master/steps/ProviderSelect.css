@@ -1,27 +1,55 @@
-.Provider-Select .provider-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(100px, 120px));
-    gap: 12px;
-    margin-top: 10px;
+.provider-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 120px));
+  gap: var(--space-3);
 }
 
-.Provider-Select .provider-tile {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    height: auto;
-    aspect-ratio: 1;
-    background-color: var(--translucent-white);
-    border: 1px solid var(--translucent-white);
-    border-radius: var(--default-border-radius);
-    color: inherit;
-    font-weight: bold;
+.provider-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  height: auto;
+  aspect-ratio: 1;
+  position: relative;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-surface-border);
+  border-radius: var(--radius-md);
+  color: inherit;
+  font-weight: bold;
+  cursor: pointer;
+  transition: border-color var(--duration-base) var(--ease-standard);
 }
 
-.Provider-Select .provider-icon {
-    flex-shrink: 0;
-    width: 36px;
-    height: 36px;
+.provider-tile:hover,
+.provider-tile:focus-visible {
+  border-color: var(--provider-color);
+}
+
+.provider-tile[aria-pressed="true"] {
+  border-color: var(--provider-color);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--provider-color) 50%, transparent);
+}
+
+.provider-tile:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.provider-tile[aria-pressed="true"]:disabled {
+  opacity: 1;
+}
+
+.provider-icon {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  color: var(--provider-color);
+}
+
+.provider-status {
+  font-size: var(--font-size-sm);
+  font-weight: normal;
+  color: var(--color-positive);
 }

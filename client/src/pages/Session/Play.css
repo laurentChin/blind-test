@@ -1,71 +1,126 @@
-.Session-challenge-button, .Session .challenger-list-wrapper {
-    width: 100vw;
-    max-width: 980px;
+.Session-challenge-button,
+.Session .challenger-list-wrapper {
+  width: 100vw;
+  max-width: var(--content-max-width);
 }
 
 .Session-challenge-button {
-    box-sizing: border-box;
-    height: calc(100dvh/3*2);
-    max-height: 980px;
-    padding: 0;
+  box-sizing: border-box;
+  height: calc(100dvh / 3 * 2);
+  max-height: 980px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-lg);
+  background-color: var(--player-color);
+  color: var(--color-text-on-accent);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--font-size-2xl);
+  cursor: pointer;
+}
+
+.Session-challenge-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.85;
 }
 
 .Session-leave-button {
-    text-align: center;
-    margin: 20px auto 0 auto;
-    background-color: var(--brick-red);
-    color: var(--white);
+  display: block;
+  margin: var(--space-4) auto 0 auto;
 }
 
-.Play .challenger-list-wrapper {
-    position: fixed;
-    top : calc(100dvh - 40px);
-    left: 0;
-    max-width: 980px;
-    will-change: top;
-    transition: top .4s;
-    height: 100vh;
-    background-color: var(--indigo-dye);
+.challenger-list-trigger {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  translate: -50% 0;
+  width: 100vw;
+  max-width: var(--content-max-width);
+  background-color: var(--color-canvas-deep);
+  color: var(--color-text);
+  border: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 2.5rem;
+  padding: 0 var(--space-3);
+  box-sizing: border-box;
+  border-top-left-radius: var(--radius-sm);
+  border-top-right-radius: var(--radius-sm);
+  font-weight: bold;
+  cursor: pointer;
 }
 
-.Play .challenger-list-wrapper.open {
-    top: 0;
+.challenger-list-wrapper {
+  position: fixed;
+  inset: 0;
+  margin: 0;
+  width: 100vw;
+  max-width: var(--content-max-width);
+  height: 100dvh;
+  padding: 0;
+  border: none;
+  background-color: var(--color-canvas-deep);
+  color: var(--color-text);
 }
 
 .challenger-list-opener {
-    background-color: var(--indigo-dye);
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    height: 40px;
-    line-height: 40px;
-    box-sizing: border-box;
-    padding: 10px;
-    border-top-left-radius: var(--default-border-radius);
-    border-top-right-radius: var(--default-border-radius);
+  background-color: var(--color-canvas-deep);
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 2.5rem;
+  box-sizing: border-box;
+  padding: 0 var(--space-3);
+  border: none;
+  color: var(--color-text);
+  font-weight: bold;
+  cursor: pointer;
 }
 
-.Play .challenger-list {
-    padding: 0 10px 10px 10px;
-    max-height: calc(100vh - 40px);
-    overflow: scroll;
+.challenger-list {
+  padding: 0 var(--space-3) var(--space-3) var(--space-3);
+  max-height: calc(100dvh - 2.5rem);
+  overflow: auto;
+}
+
+.challenger-list li {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  padding: var(--space-1) 0;
+}
+
+.challenger-list li.challenger {
+  font-weight: bold;
+  color: var(--color-accent);
+}
+
+.challenger-list span:last-child {
+  margin: 0 0 0 auto;
 }
 
 @media all and (min-width: 980px) {
-    .challenger-list-opener{
-        display: none;
-    }
+  .challenger-list-trigger {
+    display: none;
+  }
 
-    .Play .challenger-list-wrapper {
-        position: initial;
-        top : initial;
-        max-width: 980px;
-        height: auto;
-        background-color: transparent;
-    }
+  .challenger-list-wrapper {
+    display: block;
+    position: static;
+    inset: auto;
+    width: 100%;
+    height: auto;
+    background-color: transparent;
+  }
 
-    .Session-challenge-button, .Session .challenger-list-wrapper {
-        margin-left: 0;
-    }
+  .challenger-list-opener {
+    display: none;
+  }
+
+  .challenger-list {
+    max-height: none;
+    padding: var(--space-3) 0 0 0;
+  }
 }

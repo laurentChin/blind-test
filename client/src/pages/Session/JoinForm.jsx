@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useId, useState, useRef } from "react";
 import { useParams } from "react-router-dom";
 import PropTypes from "prop-types";
 
@@ -12,6 +12,7 @@ const JoinForm = ({ socket, onJoin, sessionUuid }) => {
   const [playerColor, setPlayerColor] = useState("");
   const [teamUuid, setTeamUuid] = useState("-");
   const teamSelector = useRef();
+  const nameInputId = useId();
 
   socket.on("challengersUpdate", setChallengers);
   socket.on("availableColorsUpdate", setColors);
@@ -44,42 +45,43 @@ const JoinForm = ({ socket, onJoin, sessionUuid }) => {
 
   return (
     <div className="Join-Session-Form">
-      <div className="option-block">
+      <div className="panel">
         <h2>Choose a name and a color</h2>
+        <label htmlFor={nameInputId}>Name</label>
         <input
+          id={nameInputId}
+          className="field"
           data-testid="player-name-input"
           type="text"
           value={name}
           onChange={({ currentTarget }) => setName(currentTarget.value)}
         />
-        <div className="colors">
+        <fieldset className="colors">
+          <legend className="visually-hidden">Color</legend>
           {colors.length > 0 &&
             colors.map((color) => (
               <button
+                type="button"
                 onClick={() => setPlayerColor(color)}
                 key={color}
-                style={{
-                  backgroundColor: `rgba(${color}, ${
-                    color === playerColor ? "0.2" : "1"
-                  })`,
-                  ...(color === playerColor
-                    ? { border: `3px solid rgb(${color})` }
-                    : null),
-                }}
+                style={{ "--swatch-color": `rgba(${color}, 1)` }}
+                aria-pressed={color === playerColor}
+                aria-label={`Color ${color}`}
                 data-testid="color-button"
                 className="color-button"
-              >
-                &nbsp;
-              </button>
+              />
             ))}
-        </div>
+        </fieldset>
       </div>
       {challengers.length > 0 && (
         <>
-          <span className="option-block-separator">OR</span>
-          <div className="option-block">
+          <span className="panel-separator">OR</span>
+          <div className="panel">
             <h2>Join a team</h2>
+            <label htmlFor={`${nameInputId}-team`}>Team</label>
             <select
+              id={`${nameInputId}-team`}
+              className="field"
               ref={teamSelector}
               onChange={({ target: { value } }) => {
                 if (value !== "-") {
@@ -99,6 +101,8 @@ const JoinForm = ({ socket, onJoin, sessionUuid }) => {
         </>
       )}
       <button
+        type="button"
+        className="btn btn-positive join-button"
         data-testid="join-session-btn"
         disabled={
           (playerColor === "" && name === "" && teamUuid === "-") ||

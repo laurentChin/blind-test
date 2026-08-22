@@ -54,16 +54,43 @@ describe("<Session />", () => {
   });
 
   it("Should display the play screen when user is in a session", async () => {
-    Object.defineProperty(window, 'sessionStorage', {
+    Object.defineProperty(window, "sessionStorage", {
+      configurable: true,
       value: {
-        getItem: jest.fn().mockReturnValue(JSON.stringify({ uuid: "player-12345", color: "#f58231" }))
-      }
-    })
+        getItem: jest.fn((key) => ({
+          player: JSON.stringify({ uuid: "player-12345", color: "#f58231" }),
+          sessionUuid: "session-12345",
+        }[key])),
+        removeItem: jest.fn(),
+      },
+    });
     const emit = (event, data) => {
       listeners[event]?.forEach((listener) => listener(data));
     };
     const { getByTestId, getAllByTestId } = render(<Session />);
 
     expect(getByTestId("challenge-button")).toBeInTheDocument();
+  });
+
+  it("Should reset the stored player and show the join form when the url points to a different session", async () => {
+    Object.defineProperty(window, "sessionStorage", {
+      configurable: true,
+      value: {
+        getItem: jest.fn((key) => ({
+          player: JSON.stringify({ uuid: "player-12345", color: "#f58231" }),
+          sessionUuid: "a-previous-session",
+        }[key])),
+        removeItem: jest.fn(),
+      },
+    });
+
+    const { getByText, queryByTestId } = render(<Session />);
+
+    expect(queryByTestId("challenge-button")).toBeFalsy();
+    expect(getByText("Join")).toBeInTheDocument();
+    expect(window.sessionStorage.removeItem).toHaveBeenCalledWith("player");
+    expect(window.sessionStorage.removeItem).toHaveBeenCalledWith(
+      "sessionUuid"
+    );
   });
 });

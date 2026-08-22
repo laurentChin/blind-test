@@ -112,10 +112,16 @@ async function apiRequest(path, { method = "GET", body, params } = {}) {
   return responseBody;
 }
 
-function toTrack({ id, attributes }) {
+// rawIndex is the track's position in Apple's own tracks response, before
+// any local reordering/removal is applied — unlike id/uri, it stays unique
+// per playlist *entry* even when the same song appears more than once, so
+// it's what local removal/order tracking below key on (a Map keyed by id or
+// uri would collapse duplicate entries onto a single one).
+function toTrack({ id, attributes }, rawIndex) {
   return {
     id,
     uri: `apple-music:track:${id}`,
+    rawIndex,
     name: attributes.name,
     artists: [{ name: attributes.artistName }],
     preview_url: attributes.previews?.[0]?.url,
@@ -130,17 +136,49 @@ function removedTracksStorageKey() {
   return `appleMusicRemovedTracks:${currentPlaylist}`;
 }
 
-function getRemovedTrackUris() {
+function getRemovedTrackIndices() {
   return JSON.parse(sessionStorage.getItem(removedTracksStorageKey())) || [];
 }
 
-function setRemovedTrackUris(uris) {
-  sessionStorage.setItem(removedTracksStorageKey(), JSON.stringify(uris));
+function setRemovedTrackIndices(indices) {
+  sessionStorage.setItem(removedTracksStorageKey(), JSON.stringify(indices));
+}
+
+function trackOrderStorageKey() {
+  return `appleMusicTrackOrder:${currentPlaylist}`;
+}
+
+function getTrackOrderIndices() {
+  return JSON.parse(sessionStorage.getItem(trackOrderStorageKey())) || [];
+}
+
+function setTrackOrderIndices(indices) {
+  sessionStorage.setItem(trackOrderStorageKey(), JSON.stringify(indices));
+}
+
+function applyTrackOrder(tracks) {
+  const order = getTrackOrderIndices();
+
+  if (order.length === 0) {
+    return tracks;
+  }
+
+  const byRawIndex = new Map(tracks.map((track) => [track.rawIndex, track]));
+  const ordered = order.map((rawIndex) => byRawIndex.get(rawIndex)).filter(Boolean);
+  const remaining = tracks.filter((track) => !order.includes(track.rawIndex));
+
+  return [...ordered, ...remaining];
 }
 
 async function getPlaylists() {
   const { data } = await apiRequest("/v1/me/library/playlists");
-  return data.map(({ id, attributes }) => ({ id, name: attributes.name }));
+  // A playlist deleted from the native Apple Music app can linger in this
+  // listing for a while with its attributes stripped out (no name) before
+  // it's fully removed on Apple's side — filter those out rather than
+  // showing blank entries.
+  return data
+    .filter(({ attributes }) => attributes?.name)
+    .map(({ id, attributes }) => ({ id, name: attributes.name }));
 }
 
 async function createPlaylist(name) {
@@ -165,13 +203,21 @@ async function search(terms) {
 }
 
 async function getTracks() {
-  const { data } = await apiRequest(
+  // A playlist with no tracks yet has nothing to expose on its tracks
+  // relationship: the request can either reject outright, or resolve
+  // without a usable `data` array — treat either case as "no tracks yet"
+  // instead of throwing and leaving the caller's loading state stuck.
+  const response = await apiRequest(
     `/v1/me/library/playlists/${currentPlaylist}/tracks`
-  );
+  ).catch(() => ({}));
+  const data = response.data || [];
 
-  const removedUris = getRemovedTrackUris();
+  const removedIndices = getRemovedTrackIndices();
+  const tracks = data
+    .map((item, rawIndex) => toTrack(item, rawIndex))
+    .filter((track) => !removedIndices.includes(track.rawIndex));
 
-  return data.map(toTrack).filter((track) => !removedUris.includes(track.uri));
+  return applyTrackOrder(tracks);
 }
 
 async function addTrack(uri) {
@@ -179,20 +225,36 @@ async function addTrack(uri) {
     method: "POST",
     body: { data: [{ id: toCatalogId(uri), type: "songs" }] },
   });
-
-  setRemovedTrackUris(getRemovedTrackUris().filter((removed) => removed !== uri));
 }
 
 // The Apple Music API has no endpoint to delete a single track from a library
 // playlist, so removal is only tracked locally (per playlist, in
 // sessionStorage) and filtered out of getTracks() — the track itself stays in
-// the real Apple Music library playlist.
-async function removeTrack(uri) {
-  const removedUris = getRemovedTrackUris();
+// the real Apple Music library playlist. Tracked by rawIndex rather than
+// uri/id: the same song can appear more than once in a playlist, and every
+// occurrence shares the same catalog id, so a uri-keyed removal would hide
+// every occurrence instead of just the one that was removed.
+async function removeTrack(track) {
+  const removedIndices = getRemovedTrackIndices();
 
-  if (!removedUris.includes(uri)) {
-    setRemovedTrackUris([...removedUris, uri]);
+  if (!removedIndices.includes(track.rawIndex)) {
+    setRemovedTrackIndices([...removedIndices, track.rawIndex]);
   }
+}
+
+// The Apple Music API also has no endpoint to reorder a library playlist's
+// tracks, so — like removeTrack above — the order is only tracked locally
+// (per playlist, in sessionStorage) and applied on top of getTracks(). This
+// means the order shown in the app can drift from Apple Music's own queue
+// when actually playing the playlist during a session. Tracked by rawIndex
+// for the same duplicate-song reason as removal above.
+async function reorderTrack(fromIndex, toIndex) {
+  const tracks = await getTracks();
+  const reordered = [...tracks];
+  const [moved] = reordered.splice(fromIndex, 1);
+  reordered.splice(toIndex, 0, moved);
+
+  setTrackOrderIndices(reordered.map((track) => track.rawIndex));
 }
 
 function buildPlayerState(music) {
@@ -246,8 +308,11 @@ function setPlayerStateChangeCb(cb) {
 async function startPlayer() {
   const music = await ensureConfigured();
 
+  // Loads the queue without playing it — the initial "current/next track"
+  // display doesn't depend on this (the caller seeds it from its own
+  // already-fetched track list instead), so there's no need to briefly
+  // start and immediately pause playback just to populate it.
   await music.setQueue({ playlist: currentPlaylist });
-  await music.play();
 }
 
 const AppleMusicContext = createContext({
@@ -259,6 +324,7 @@ const AppleMusicContext = createContext({
   getTracks,
   addTrack,
   removeTrack,
+  reorderTrack,
   search,
   setupPlayer,
   getPlayer,
