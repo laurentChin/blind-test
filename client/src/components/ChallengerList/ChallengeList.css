@@ -1,33 +1,43 @@
 .challenger-list {
-    grid-area: challengers;
+  grid-area: challengers;
 }
 
-.challenger-list p {
-    grid-area: challengers;
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
+.challenger-ranking li {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  padding: var(--space-1) 0;
+}
+
+.active-challenger-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
 }
 
 p.active-challenger {
-    padding: 5px;
-    border-radius: 4px;
-    text-align: center;
-    font-weight: bold;
-    justify-content: center;
+  flex: 1;
+  margin: 0;
+  padding: var(--space-2);
+  border-radius: var(--radius-sm);
+  text-align: center;
+  font-weight: bold;
+  background-color: var(--player-color);
+  border: 1px solid var(--player-color);
 }
 
-.challenger-list p.first {
-    font-size: 16px;
-    font-weight: bold;
+.challenger-ranking li.first {
+  font-size: var(--font-size-lg);
+  font-weight: bold;
 }
 
-.challenger-list span:last-child {
-    margin: 0 0 0 auto;
+.challenger-ranking span:last-child {
+  margin: 0 0 0 auto;
 }
 
-.challenger-list svg {
-    font-size: 20px;
-    margin-right: 5px;
-    color: var(--sunglow)
+.challenger-ranking svg {
+  font-size: 1.25rem;
+  margin-right: var(--space-2);
+  color: var(--color-accent);
 }

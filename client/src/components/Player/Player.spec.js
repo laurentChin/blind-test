@@ -46,6 +46,25 @@ describe("<Player />", () => {
     expect(getByText(/nextTrack/)).toBeTruthy();
   });
 
+  it("should seed the current/next track from the tracks prop before any player event fires", () => {
+    const setPlayerStateChangeCb = jest.fn();
+    const getPlayer = jest.fn(() => ({
+      togglePlay: jest.fn(),
+      nextTrack: jest.fn(),
+    }));
+    useMusicProvider.mockReturnValue({ setPlayerStateChangeCb, getPlayer });
+
+    const tracks = [{ name: "track1" }, { name: "track2" }];
+    const { getByText, getByLabelText } = render(
+      <Player nextTrackCallback={() => {}} tracks={tracks} />
+    );
+
+    expect(getByText(/track1/)).toBeTruthy();
+    expect(getByText(/track2/)).toBeTruthy();
+    // Paused by default too, since the session opens without autoplaying.
+    expect(getByLabelText("Play")).toBeTruthy();
+  });
+
   it("should call togglePlay on play/pause button click", () => {
     const setPlayerStateChangeCb = (setState) => setState(state);
     const mockTogglePlay = jest.fn();

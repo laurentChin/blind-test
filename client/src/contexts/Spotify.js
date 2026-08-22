@@ -157,7 +157,11 @@ async function getTracks() {
     )
   ).json();
 
-  return tracks.items.map(({ track }) => track);
+  // rawIndex is the track's position in the playlist as Spotify sees it —
+  // needed by removeTrack below, since the same song can appear more than
+  // once in a playlist and Spotify's delete-by-uri removes every occurrence
+  // unless a specific position is also given.
+  return tracks.items.map(({ track }, rawIndex) => ({ ...track, rawIndex }));
 }
 
 async function addTrack(uri) {
@@ -173,17 +177,42 @@ async function addTrack(uri) {
   ).json();
 }
 
-async function removeTrack(uri) {
+// Targets the specific occurrence via `positions` rather than deleting by
+// uri alone — Spotify's delete-by-uri removes every occurrence of that
+// track from the playlist, which would take out every duplicate of a
+// repeated song instead of just the one that was removed.
+async function removeTrack({ uri, rawIndex }) {
   await (
     await fetch(
       `${process.env.REACT_APP_SPOTIFY_API_ENDPONT}/playlists/${currentPlaylist}/tracks`,
       {
         method: "DELETE",
-        headers: { ...authorizationHeader },
-        body: JSON.stringify({ tracks: [{ uri }] }),
+        headers: {
+          "Content-Type": "application/json",
+          ...authorizationHeader,
+        },
+        body: JSON.stringify({ tracks: [{ uri, positions: [rawIndex] }] }),
       }
     )
   ).json();
+}
+
+async function reorderTrack(fromIndex, toIndex) {
+  await fetch(
+    `${process.env.REACT_APP_SPOTIFY_API_ENDPONT}/playlists/${currentPlaylist}/tracks`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        ...authorizationHeader,
+      },
+      body: JSON.stringify({
+        range_start: fromIndex,
+        insert_before: toIndex > fromIndex ? toIndex + 1 : toIndex,
+        range_length: 1,
+      }),
+    }
+  );
 }
 
 function setupPlayer(playerReadyCb) {
@@ -246,6 +275,7 @@ const SpotifyContext = createContext({
   getTracks,
   addTrack,
   removeTrack,
+  reorderTrack,
   search,
   setupPlayer,
   getPlayer,

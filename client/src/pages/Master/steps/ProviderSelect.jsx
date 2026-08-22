@@ -24,38 +24,50 @@ const PROVIDERS = [
   },
 ];
 
-const ProviderSelect = ({ setProvider }) => {
+const ProviderSelect = ({ provider, setProvider, isAuthenticated }) => {
   useEffect(() => {
     preloadAppleMusic();
   }, []);
 
-  const selectProvider = (provider) => {
-    setSelectedProvider(provider);
-    setProvider(provider);
+  const toggleProvider = (id) => {
+    if (provider === id && !isAuthenticated) {
+      setSelectedProvider("");
+      setProvider("");
+      return;
+    }
+
+    setSelectedProvider(id);
+    setProvider(id);
   };
 
   return (
-    <div className="Step Provider-Select">
-      <p>Choose where to pull tracks from and play them.</p>
-      <div className="provider-grid">
-        {PROVIDERS.map(({ id, testId, label, icon: Icon, color }) => (
-          <button
-            key={id}
-            data-testid={testId}
-            className="provider-tile"
-            onClick={() => selectProvider(id)}
-          >
-            <Icon className="provider-icon" style={{ color }} />
-            <span>{label}</span>
-          </button>
-        ))}
-      </div>
+    <div className="provider-grid">
+      {PROVIDERS.map(({ id, testId, label, icon: Icon, color }) => (
+        <button
+          key={id}
+          type="button"
+          data-testid={testId}
+          className="provider-tile"
+          style={{ "--provider-color": color }}
+          aria-pressed={provider === id}
+          disabled={isAuthenticated && provider === id}
+          onClick={() => toggleProvider(id)}
+        >
+          <Icon className="provider-icon" aria-hidden="true" />
+          <span>{label}</span>
+          {isAuthenticated && provider === id && (
+            <span className="provider-status">Connected</span>
+          )}
+        </button>
+      ))}
     </div>
   );
 };
 
 ProviderSelect.propTypes = {
+  provider: PropTypes.string,
   setProvider: PropTypes.func.isRequired,
+  isAuthenticated: PropTypes.bool,
 };
 
 export { ProviderSelect };

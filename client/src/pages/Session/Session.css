@@ -1,6 +1,4 @@
 .Session {
-    width: 100%;
-    max-width: 980px;
-    overflow: hidden;
-    height: calc(100vh - 50px);
+  width: 100%;
+  max-width: var(--content-max-width);
 }

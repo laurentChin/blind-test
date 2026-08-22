@@ -4,7 +4,6 @@ import { render, fireEvent, act } from "@testing-library/react";
 import { useMusicProvider } from "../../../contexts/MusicProvider";
 import { ManageSession } from "./ManageSession";
 
-jest.mock("qrcode");
 jest.mock("../../../contexts/MusicProvider");
 jest.mock('react-router-dom', () => ({
   useNavigate: () => jest.fn()
@@ -62,7 +61,60 @@ describe("<ManageSession />", () => {
     });
   });
 
-  it("should close the session on user confirmation", async () => {
+  it("should pause the player right after starting the session, so it opens on track 1 without autoplaying", async () => {
+    const startPlayer = jest.fn().mockResolvedValue({});
+    const getPlayer = jest.fn();
+    const setPlayerStateChangeCb = jest.fn();
+    const player = { pause: jest.fn() };
+    useMusicProvider.mockReturnValue({
+      startPlayer,
+      getPlayer,
+      setPlayerStateChangeCb,
+    });
+    const { getByTestId } = render(
+      <ManageSession
+        sessionUuid="1112345678"
+        isPlayerReady={true}
+        deviceId="122536"
+        player={player}
+        socket={mockSocket}
+      />
+    );
+
+    await act(async () => {
+      fireEvent.click(getByTestId("start-session-btn"));
+    });
+
+    expect(player.pause).toHaveBeenCalled();
+  });
+
+  it("should arm the close-session button on first click without closing it", async () => {
+    const startPlayer = jest.fn().mockResolvedValue({});
+    const getPlayer = jest.fn();
+    const setPlayerStateChangeCb = jest.fn();
+    useMusicProvider.mockReturnValue({
+      startPlayer,
+      getPlayer,
+      setPlayerStateChangeCb,
+    });
+    const { getByTestId, getByText } = render(
+      <ManageSession
+        sessionUuid="1112345678"
+        isPlayerReady={true}
+        deviceId="122536"
+        socket={mockSocket}
+      />
+    );
+
+    jest.resetAllMocks();
+
+    fireEvent.click(getByTestId("close-session-btn"));
+
+    expect(mockSocket.emit).not.toHaveBeenCalled();
+    expect(getByText("Click again to confirm")).toBeTruthy();
+  });
+
+  it("should close the session on the confirming second click", async () => {
     const startPlayer = jest.fn().mockResolvedValue({});
     const getPlayer = jest.fn();
     const setPlayerStateChangeCb = jest.fn();
@@ -82,17 +134,12 @@ describe("<ManageSession />", () => {
 
     jest.resetAllMocks();
 
-    window.confirm = () => true;
+    fireEvent.click(getByTestId("close-session-btn"));
     fireEvent.click(getByTestId("close-session-btn"));
 
-    expect(mockSocket.emit).toHaveBeenCalled();
-
-    jest.resetAllMocks();
-
-    window.confirm = () => false;
-    fireEvent.click(getByTestId("close-session-btn"));
-
-    expect(mockSocket.emit).not.toHaveBeenCalled();
+    expect(mockSocket.emit).toHaveBeenCalledWith("closeSession", {
+      sessionUuid: "1112345678",
+    });
   });
 
   it("should display the challenger list", async () => {
@@ -120,7 +167,48 @@ describe("<ManageSession />", () => {
       ]);
     });
 
-    expect(container.querySelectorAll(".challenger-list p").length).toEqual(2);
+    expect(container.querySelectorAll(".challenger-ranking li").length).toEqual(2);
+  });
+
+  it("should clear a stuck lock via the Clear button without touching any score", async () => {
+    const startPlayer = jest.fn().mockResolvedValue({});
+    const getPlayer = jest.fn();
+    const player = { pause: jest.fn(), resume: jest.fn() };
+    const setPlayerStateChangeCb = jest.fn();
+    useMusicProvider.mockReturnValue({
+      startPlayer,
+      getPlayer,
+      setPlayerStateChangeCb,
+    });
+    const emitSpy = jest.spyOn(mockSocket, "emit");
+    const { container, getByText } = render(
+      <ManageSession
+        sessionUuid="1112345678"
+        isPlayerReady={true}
+        deviceId="122536"
+        player={player}
+        socket={mockSocket}
+      />
+    );
+
+    await act(async () => {
+      mockSocket.emit("challengersUpdate", [
+        { uuid: "qwewrw-1232553", name: "name1", score: 1, color: "1,2,3" },
+      ]);
+      mockSocket.emit("lockChallenge", "qwewrw-1232553");
+    });
+
+    expect(container.querySelector(".active-challenger-row")).toBeTruthy();
+
+    await act(async () => {
+      fireEvent.click(getByText("Clear"));
+    });
+
+    expect(emitSpy).toHaveBeenCalledWith("clearChallenge", {
+      sessionUuid: "1112345678",
+    });
+    expect(player.resume).toHaveBeenCalled();
+    expect(container.querySelector(".active-challenger-row")).toBeFalsy();
   });
 
   it("should display the challenge actions buttons when a user try to answer", async () => {

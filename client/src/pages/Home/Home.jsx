@@ -3,17 +3,18 @@ import React from "react";
 import "./Home.css";
 
 const Home = () => (
-  <div className="Home">
-    <div className="option-list">
-      <div className="option-block">
-        <p>
-          Create a new session. A valid Spotify or Apple Music account is
-          required.
-        </p>
-        <a href="/create-session">Create &gt;&gt;</a>
-      </div>
+  <section className="Home">
+    <h1>Blind test</h1>
+    <div className="panel">
+      <p>
+        Create a new session. A valid Spotify or Apple Music account is
+        required.
+      </p>
+      <a className="btn btn-accent" href="/create-session">
+        Create a session
+      </a>
     </div>
-  </div>
+  </section>
 );
 
 export { Home };

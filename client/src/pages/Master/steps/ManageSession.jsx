@@ -1,11 +1,12 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import PropTypes from "prop-types";
-import QRCodeGenerator from "qrcode";
 import { useNavigate } from "react-router-dom";
 import { MdOpenInNew } from "react-icons/md";
 
 import { Player } from "../../../components/Player/Player";
 import { useMusicProvider } from "../../../contexts/MusicProvider";
+import { useAsyncAction } from "../../../hooks/useAsyncAction";
+import { useConfirmAction } from "../../../hooks/useConfirmAction";
 
 import "./ManageSession.css";
 import { ChallengerList } from "../../../components/ChallengerList/ChallengerList";
@@ -22,17 +23,9 @@ const ManageSession = ({ sessionUuid, socket, ...props }) => {
   const [challengerUuid, setChallengerUuid] = useState("");
   const [deviceId, setDeviceId] = useState(props.deviceId || "");
   const [hasSessionStart, setSessionStartStatus] = useState(false);
-
-  const qrCode = useRef();
-
-  useEffect(() => {
-    if (qrCode.current) {
-      QRCodeGenerator.toCanvas(
-        qrCode.current,
-        `${process.env.REACT_APP_URL}/session/${sessionUuid}`
-      );
-    }
-  }, [qrCode, sessionUuid]);
+  const tracks = props.tracks || [];
+  const { run, className: loadingClassName } = useAsyncAction();
+  const { run: runCloseSession, isArmed: isCloseArmed } = useConfirmAction();
 
   useEffect(() => {
     if (props.isPlayerReady) return;
@@ -78,27 +71,42 @@ const ManageSession = ({ sessionUuid, socket, ...props }) => {
 
   const startNewChallenge = () => socket.emit("startNewChallenge", sessionUuid);
 
-  const startSession = () =>
-    musicProvider
-      .startPlayer(deviceId)
-      .then(() => setSessionStartStatus(true));
-
-  const closeSession = () => {
-    if (
-      window.confirm("Are you sure want to close the session for all users?")
-    ) {
-      socket.emit("closeSession", { sessionUuid });
-      navigate("/");
-    }
+  // Manual override for when a player buzzes in at a moment the session
+  // can't sensibly be scored (e.g. mid-setup, wrong track) — releases the
+  // lock without touching anyone's score, unlike releaseChallenger above.
+  const clearChallenge = () => {
+    socket.emit("clearChallenge", { sessionUuid });
+    setChallengerUuid("");
+    player.resume?.();
   };
 
+  const startSession = () =>
+    run(() =>
+      musicProvider.startPlayer(deviceId).then(() => {
+        // Spotify's API has no way to load a context without immediately
+        // playing it, so pausing right after is the only way to open the
+        // session on track 1 without autoplaying (a no-op for Apple Music,
+        // whose startPlayer never starts playback in the first place).
+        player.pause?.();
+        setSessionStartStatus(true);
+      })
+    );
+
+  const closeSession = () =>
+    runCloseSession(() => {
+      socket.emit("closeSession", { sessionUuid });
+      navigate("/");
+    });
+
   return (
-    <div className="Step Session-Step">
+    <section className="Step Session-Step">
+      <h2 className="visually-hidden">Manage the session</h2>
       <div className="controls-container">
         <div className="session-actions">
           {!hasSessionStart && deviceId && (
             <button
-              className="start-session-btn"
+              type="button"
+              className={`btn btn-positive start-session-btn ${loadingClassName}`.trim()}
               data-testid="start-session-btn"
               onClick={() => startSession()}
             >
@@ -107,36 +115,52 @@ const ManageSession = ({ sessionUuid, socket, ...props }) => {
           )}
           {deviceId && (
             <button
-              className="close-session-btn"
+              type="button"
+              className={`btn btn-danger close-session-btn ${
+                isCloseArmed ? "btn-confirm is-armed" : ""
+              }`.trim()}
               data-testid="close-session-btn"
               onClick={closeSession}
             >
-              Close the session for all players
+              {isCloseArmed
+                ? "Click again to confirm"
+                : "Close the session for all players"}
             </button>
           )}
+          <a
+            className="btn btn-accent"
+            href={`${window.origin}/board/${sessionUuid}`}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Open the board <MdOpenInNew aria-hidden="true" />
+          </a>
         </div>
         {hasSessionStart && isPlayerReady && (
-          <Player nextTrackCallback={startNewChallenge} />
+          <Player nextTrackCallback={startNewChallenge} tracks={tracks} />
         )}
         {hasSessionStart && challengerUuid && (
           <div className="challenge-buttons-container">
             <button
+              type="button"
               data-testid="challenge-button"
-              className="challenge-button challenge-button-wrong"
+              className="btn btn-danger-strong"
               onClick={() => releaseChallenger(0)}
             >
               Wrong
             </button>
             <button
+              type="button"
               data-testid="challenge-button"
-              className="challenge-button challenge-button-half"
+              className="btn btn-score-half"
               onClick={() => releaseChallenger(0.5)}
             >
               Success .5pt
             </button>
             <button
+              type="button"
               data-testid="challenge-button"
-              className="challenge-button challenge-button-full"
+              className="btn btn-score-full"
               onClick={() => releaseChallenger(1)}
             >
               Success 1pt
@@ -147,18 +171,9 @@ const ManageSession = ({ sessionUuid, socket, ...props }) => {
       <ChallengerList
         challengers={challengers}
         challengerUuid={challengerUuid}
+        onClearChallenge={clearChallenge}
       />
-      <div className="QRCode">
-        <canvas ref={qrCode} />
-        <a
-          href={`${window.origin}/board/${sessionUuid}`}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Open the board <MdOpenInNew />
-        </a>
-      </div>
-    </div>
+    </section>
   );
 };
 
@@ -167,6 +182,7 @@ ManageSession.propTypes = {
   isPlayerReady: PropTypes.bool,
   deviceId: PropTypes.string,
   player: PropTypes.object,
+  tracks: PropTypes.array,
   socket: PropTypes.shape({
     emit: PropTypes.func.isRequired,
     on: PropTypes.func.isRequired,

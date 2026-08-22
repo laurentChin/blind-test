@@ -179,6 +179,26 @@ io.on("connection", socket => {
     }
   });
 
+  socket.on("clearChallenge", ({ sessionUuid }) => {
+    if (verboseOutput) {
+      logger.info(`clearChallenge event received for session ${sessionUuid}`);
+    }
+
+    const session = sessions.get(sessionUuid);
+    session.currentChallenger = null;
+
+    io.to(sessionUuid).emit(
+      "challengerRelease",
+      Array.from(session.challengers.values())
+    );
+
+    if (verboseOutput) {
+      logger.notice(
+        `challengerRelease event has been emitted to session ${sessionUuid} (manual clear)`
+      );
+    }
+  });
+
   socket.on("startNewChallenge", sessionUuid => {
     if (verboseOutput) {
       logger.info(`startNewChallenge received for session ${sessionUuid}`);

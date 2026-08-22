@@ -1,51 +1,65 @@
-.Manage-Tracks {
-    border: 1px solid var(--white);
-    background-color: var(--translucent-white);
-    border-radius: var(--default-border-radius);
-    padding: 10px;
-    text-align: center;
+.track-list {
+  border: 1px solid var(--color-surface-border);
+  background-color: var(--color-surface);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-3);
+  overflow: hidden;
 }
 
-.Manage-Tracks .track {
-    display: flex;
-    align-items: center;
-    text-align: left;
-    width: 100%;
-    justify-content: space-between;
-    border-bottom: 1px solid var(--white);
+.track {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  text-align: left;
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--color-surface-border);
 }
 
-.Manage-Tracks > button {
-    background-color: var(--african-violet);
-    color: var(--white);
-    border: none;
-    margin-top: 10px;
+.track:last-child {
+  border-bottom: none;
 }
 
-.Manage-Tracks .trash-button {
-    background-color: transparent;
-    border: none;
-    color: var(--brick-red)
+.track-placeholder {
+  display: block;
+  height: 2.75rem;
+  margin: var(--space-1) var(--space-2);
+  border: 2px dashed var(--color-accent);
+  border-radius: var(--radius-sm);
 }
 
-.search-pop-in {
-    position: absolute;
-    top: 0; left: 0;
-    width: 100vw; height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.drag-handle {
+  flex-shrink: 0;
+  font-size: 1.25rem;
+  color: var(--color-text-muted);
+  cursor: grab;
 }
 
-.Search-container {
-    position: relative;
-    z-index: 1;
-    max-width: 980px;
+.track-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.search-overlay {
-    position: absolute;
-    width: 100vw; height: 100vh;
-    background-color: var(--translucent-davys-grey);
-    z-index: 0;
+.track-actions {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.trash-button {
+  color: var(--color-danger);
+}
+
+.search-dialog {
+  padding: 0;
+  border: none;
+  background: transparent;
+  max-width: none;
+  width: min(100vw, calc(var(--content-max-width) + var(--space-6)));
+}
+
+.search-dialog::backdrop {
+  background-color: var(--color-overlay);
 }

@@ -1,5 +1,5 @@
 import React from "react";
-import { act, render } from "@testing-library/react";
+import { act, render, fireEvent } from "@testing-library/react";
 import { ChallengerList } from "./ChallengerList";
 
 describe("<ChallengerList />", () => {
@@ -15,7 +15,7 @@ describe("<ChallengerList />", () => {
 
     expect(getByText("name1")).toBeTruthy();
     expect(getByText("name2")).toBeTruthy();
-    const challengers = container.querySelectorAll(".challenger-list p");
+    const challengers = container.querySelectorAll(".challenger-ranking li");
     expect(challengers[0].textContent).toEqual("name2 3");
     expect(challengers[1].textContent).toEqual("name1 1");
   });
@@ -34,5 +34,49 @@ describe("<ChallengerList />", () => {
     expect(container.querySelector(".active-challenger").textContent).toEqual(
       "currentChallenger"
     );
+  });
+
+  it("should not show the active challenger banner when showActiveChallenger is false", () => {
+    const { container } = render(
+      <ChallengerList
+        challengers={[
+          { uuid: "qwewrw-1232553", name: "currentChallenger", score: 1 },
+        ]}
+        challengerUuid={"qwewrw-1232553"}
+        showActiveChallenger={false}
+      />
+    );
+
+    expect(container.querySelector(".active-challenger")).toBeFalsy();
+  });
+
+  it("should not show a Clear button when onClearChallenge isn't provided", () => {
+    const { queryByText } = render(
+      <ChallengerList
+        challengers={[
+          { uuid: "qwewrw-1232553", name: "currentChallenger", score: 1 },
+        ]}
+        challengerUuid={"qwewrw-1232553"}
+      />
+    );
+
+    expect(queryByText("Clear")).toBeFalsy();
+  });
+
+  it("should call onClearChallenge when the Clear button is clicked", () => {
+    const onClearChallenge = jest.fn();
+    const { getByText } = render(
+      <ChallengerList
+        challengers={[
+          { uuid: "qwewrw-1232553", name: "currentChallenger", score: 1 },
+        ]}
+        challengerUuid={"qwewrw-1232553"}
+        onClearChallenge={onClearChallenge}
+      />
+    );
+
+    fireEvent.click(getByText("Clear"));
+
+    expect(onClearChallenge).toHaveBeenCalled();
   });
 });
