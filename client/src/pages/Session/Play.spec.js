@@ -35,7 +35,11 @@ describe("<Play />", () => {
     const { getByTestId } = render(
       <Play
         sessionUuid="session-12345"
-        player={{ uuid: "player-12345", name: "bob", color: "#e6194B" }}
+        player={{
+          uuid: "player-12345",
+          name: "bob",
+          color: { background: "230, 25, 75", text: "255, 255, 255" },
+        }}
         socket={mockSocket}
         onLeave={jest.fn}
         challengers={[]}
@@ -47,7 +51,11 @@ describe("<Play />", () => {
 
     await act(async () => {
       mockSocket.emit("challengersUpdate", [
-        { uuid: "player-12345", name: "bob", color: "#e6194B" },
+        {
+          uuid: "player-12345",
+          name: "bob",
+          color: { background: "230, 25, 75", text: "255, 255, 255" },
+        },
       ]);
       mockSocket.emit("lockChallenge", "player-12345");
     });
@@ -66,7 +74,11 @@ describe("<Play />", () => {
         sessionUuid="session-12345"
         onLeave={onLeaveCb}
         socket={mockSocket}
-        player={{ uuid: "player-12345", name: "bob", color: "255,255,255" }}
+        player={{
+          uuid: "player-12345",
+          name: "bob",
+          color: { background: "255, 255, 255", text: "0, 0, 0" },
+        }}
         challengers={[]}
       />
     );
@@ -88,7 +100,11 @@ describe("<Play />", () => {
         sessionUuid="session-12345"
         onLeave={onLeaveCb}
         socket={mockSocket}
-        player={{ uuid: "player-12345", name: "bob", color: "255,255,255" }}
+        player={{
+          uuid: "player-12345",
+          name: "bob",
+          color: { background: "255, 255, 255", text: "0, 0, 0" },
+        }}
         challengers={[]}
       />
     );
@@ -108,7 +124,11 @@ describe("<Play />", () => {
         sessionUuid="session-12345"
         onLeave={onLeaveCb}
         socket={mockSocket}
-        player={{ uuid: "player-12345", name: "bob", color: "255,255,255" }}
+        player={{
+          uuid: "player-12345",
+          name: "bob",
+          color: { background: "255, 255, 255", text: "0, 0, 0" },
+        }}
         challengers={[]}
       />
     );
@@ -119,7 +139,11 @@ describe("<Play />", () => {
   });
 
   describe("mode='everybodyPlays'", () => {
-    const player = { uuid: "player-12345", name: "bob", color: "#e6194B" };
+    const player = {
+      uuid: "player-12345",
+      name: "bob",
+      color: { background: "230, 25, 75", text: "255, 255, 255" },
+    };
 
     it("should show a reveal button instead of the buzzer once this player is locked in, then the score buttons once revealed", async () => {
       const { getByTestId, queryByTestId } = render(
@@ -165,7 +189,11 @@ describe("<Play />", () => {
 
       await act(async () => {
         mockSocket.emit("challengersUpdate", [
-          { uuid: "other-player", name: "alice", color: "1,2,3" },
+          {
+            uuid: "other-player",
+            name: "alice",
+            color: { background: "1, 2, 3", text: "255, 255, 255" },
+          },
         ]);
         mockSocket.emit("lockChallenge", "other-player");
       });

@@ -13,12 +13,18 @@ jest.mock("socket.io-client", () => {
         case "joinWaitingRoom":
           callback({
             challengers: [],
-            colors: ["#e6194B", "#f58231"],
+            colors: [
+              { background: "230, 25, 75", text: "255, 255, 255" },
+              { background: "245, 130, 49", text: "0, 0, 0" },
+            ],
           });
           break;
         case "join":
           callback({
-            player: { uuid: "player-12345", color: "#f58231" },
+            player: {
+              uuid: "player-12345",
+              color: { background: "245, 130, 49", text: "0, 0, 0" },
+            },
             sessionUuid: "session-12345",
           });
           break;
@@ -58,7 +64,10 @@ describe("<Session />", () => {
       configurable: true,
       value: {
         getItem: jest.fn((key) => ({
-          player: JSON.stringify({ uuid: "player-12345", color: "#f58231" }),
+          player: JSON.stringify({
+            uuid: "player-12345",
+            color: { background: "245, 130, 49", text: "0, 0, 0" },
+          }),
           sessionUuid: "session-12345",
         }[key])),
         removeItem: jest.fn(),
@@ -77,7 +86,10 @@ describe("<Session />", () => {
       configurable: true,
       value: {
         getItem: jest.fn((key) => ({
-          player: JSON.stringify({ uuid: "player-12345", color: "#f58231" }),
+          player: JSON.stringify({
+            uuid: "player-12345",
+            color: { background: "245, 130, 49", text: "0, 0, 0" },
+          }),
           sessionUuid: "a-previous-session",
         }[key])),
         removeItem: jest.fn(),

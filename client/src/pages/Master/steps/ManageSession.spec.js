@@ -193,7 +193,12 @@ describe("<ManageSession />", () => {
 
     await act(async () => {
       mockSocket.emit("challengersUpdate", [
-        { uuid: "qwewrw-1232553", name: "name1", score: 1, color: "1,2,3" },
+        {
+          uuid: "qwewrw-1232553",
+          name: "name1",
+          score: 1,
+          color: { background: "1, 2, 3", text: "255, 255, 255" },
+        },
       ]);
       mockSocket.emit("lockChallenge", "qwewrw-1232553");
     });
@@ -246,7 +251,12 @@ describe("<ManageSession />", () => {
 
     await act(async () => {
       mockSocket.emit("challengersUpdate", [
-        { uuid: "qwewrw-1232553", name: "name1", score: 1 },
+        {
+          uuid: "qwewrw-1232553",
+          name: "name1",
+          score: 1,
+          color: { background: "1, 2, 3", text: "255, 255, 255" },
+        },
         { uuid: "wuefgeew-82687234", name: "name2", score: 3 },
       ]);
 

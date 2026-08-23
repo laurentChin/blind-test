@@ -21,7 +21,10 @@ const ChallengerList = ({
         <div className="active-challenger-row">
           <p
             className="active-challenger"
-            style={{ "--player-color": `rgba(${currentChallenger.color})` }}
+            style={{
+              "--player-color": `rgb(${currentChallenger.color.background})`,
+              "--player-color-text": `rgb(${currentChallenger.color.text})`,
+            }}
           >
             {currentChallenger.name}
           </p>

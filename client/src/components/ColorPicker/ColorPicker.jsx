@@ -10,10 +10,10 @@ const ColorPicker = ({ colors, value, onChange, legend = "Color" }) => (
       <button
         type="button"
         onClick={() => onChange(color)}
-        key={color}
-        style={{ "--swatch-color": `rgba(${color}, 1)` }}
+        key={color.background}
+        style={{ "--swatch-color": `rgb(${color.background})` }}
         aria-pressed={color === value}
-        aria-label={`Color ${color}`}
+        aria-label={`Color ${color.background}`}
         data-testid="color-button"
         className="color-button"
       />
@@ -21,11 +21,16 @@ const ColorPicker = ({ colors, value, onChange, legend = "Color" }) => (
   </fieldset>
 );
 
+const colorPropType = PropTypes.shape({
+  background: PropTypes.string.isRequired,
+  text: PropTypes.string.isRequired,
+});
+
 ColorPicker.propTypes = {
-  colors: PropTypes.arrayOf(PropTypes.string).isRequired,
-  value: PropTypes.string,
+  colors: PropTypes.arrayOf(colorPropType).isRequired,
+  value: colorPropType,
   onChange: PropTypes.func.isRequired,
   legend: PropTypes.string,
 };
 
-export { ColorPicker };
+export { ColorPicker, colorPropType };

@@ -63,7 +63,7 @@ const ConfigureEverybodyPlaysSession = ({ sessionUuid, socket, onLaunch }) => {
   const customTrackCountInputId = useId();
 
   const [creatorName, setCreatorName] = useState("");
-  const [creatorColor, setCreatorColor] = useState("");
+  const [creatorColor, setCreatorColor] = useState(null);
   const [colors, setColors] = useState([]);
 
   const [playlistName, setPlaylistName] = useState("");
@@ -96,7 +96,7 @@ const ConfigureEverybodyPlaysSession = ({ sessionUuid, socket, onLaunch }) => {
     ? THEMES.find((theme) => theme.id === themeId)?.query
     : customTheme.trim();
 
-  const isIdentityValid = creatorName.trim() !== "" && creatorColor !== "";
+  const isIdentityValid = creatorName.trim() !== "" && !!creatorColor;
   const isPlaylistNameValid = playlistName.trim() !== "";
   const isThemeValid = !!effectiveQuery;
   const isTrackCountValid = trackCount >= MIN_TRACKS && trackCount <= MAX_TRACKS;

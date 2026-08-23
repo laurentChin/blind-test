@@ -21,7 +21,7 @@ jest.mock("./ConfigureEverybodyPlaysSession", () => ({
   ConfigureEverybodyPlaysSession: ({ onLaunch }) => (
     <button
       data-testid="mock-launch-btn"
-      onClick={() => onLaunch({ name: "Alice", color: "1,2,3" })}
+      onClick={() => onLaunch({ name: "Alice", color: { background: "1, 2, 3", text: "255, 255, 255" } })}
     >
       launch
     </button>
@@ -48,7 +48,7 @@ describe("<EverybodyPlaysHost />", () => {
     socketEmit = jest.fn((event, data, callback) => {
       if (event === "join" && callback) {
         callback({
-          player: { uuid: "player-1", color: "1,2,3" },
+          player: { uuid: "player-1", color: { background: "1, 2, 3", text: "255, 255, 255" } },
           challengers: [],
         });
       }
@@ -102,7 +102,7 @@ describe("<EverybodyPlaysHost />", () => {
       "join",
       {
         sessionUuid: expect.any(String),
-        player: { name: "Alice", color: "1,2,3", teamUuid: "" },
+        player: { name: "Alice", color: { background: "1, 2, 3", text: "255, 255, 255" }, teamUuid: "" },
       },
       expect.any(Function)
     );

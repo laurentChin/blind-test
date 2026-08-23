@@ -25,6 +25,7 @@ p.active-challenger {
   font-weight: bold;
   background-color: var(--player-color);
   border: 1px solid var(--player-color);
+  color: var(--player-color-text);
 }
 
 .challenger-ranking li.first {

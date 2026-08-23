@@ -63,7 +63,12 @@ describe("<Board />", () => {
 
     await act(async () => {
       io().emit("challengersUpdate", [
-        { uuid: "player-1", name: "Alice", score: 0, color: "255,0,0" },
+        {
+          uuid: "player-1",
+          name: "Alice",
+          score: 0,
+          color: { background: "255, 0, 0", text: "255, 255, 255" },
+        },
       ]);
       io().emit("lockChallenge", "player-1");
     });
