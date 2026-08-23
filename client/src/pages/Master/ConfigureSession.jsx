@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import PropTypes from "prop-types";
 
-import { ProviderSelect } from "./steps/ProviderSelect";
 import { CreateOrSelectPlaylist } from "./steps/CreateOrSelectPlaylist";
 import { ManageTracks } from "./steps/ManageTracks";
 
@@ -9,13 +8,7 @@ import "./ConfigureSession.css";
 
 const MIN_TRACKS = 5;
 
-const ConfigureSession = ({
-  provider,
-  setProvider,
-  isAuthenticated,
-  setTitle,
-  onLaunch,
-}) => {
+const ConfigureSession = ({ provider, isAuthenticated, setTitle, onLaunch }) => {
   const [playlistId, setPlaylistId] = useState("");
   const [tracks, setTracks] = useState([]);
   const [isLoadingTracks, setIsLoadingTracks] = useState(false);
@@ -53,17 +46,8 @@ const ConfigureSession = ({
 
   return (
     <div className="ConfigureSession">
-      <section className="config-step">
-        <h2>1. Choose where to pull tracks from and play them</h2>
-        <ProviderSelect
-          provider={provider}
-          setProvider={setProvider}
-          isAuthenticated={isAuthenticated}
-        />
-      </section>
-
       <section className="config-step" inert={!isProviderValidated}>
-        <h2>2. Choose a playlist</h2>
+        <h2>1. Choose a playlist</h2>
         <CreateOrSelectPlaylist
           key={provider}
           isAuthenticated={isAuthenticated}
@@ -73,7 +57,7 @@ const ConfigureSession = ({
       </section>
 
       <section className="config-step" inert={!isTracksStepReady}>
-        <h2>3. Manage the tracks</h2>
+        <h2>2. Manage the tracks</h2>
         <p className="config-step-hint">
           At least {MIN_TRACKS} tracks are required to launch the session.
         </p>
@@ -100,10 +84,9 @@ const ConfigureSession = ({
 
 ConfigureSession.propTypes = {
   provider: PropTypes.string,
-  setProvider: PropTypes.func.isRequired,
   isAuthenticated: PropTypes.bool,
   setTitle: PropTypes.func.isRequired,
   onLaunch: PropTypes.func.isRequired,
 };
 
-export { ConfigureSession };
+export { ConfigureSession, MIN_TRACKS };

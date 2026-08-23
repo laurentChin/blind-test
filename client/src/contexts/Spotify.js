@@ -132,12 +132,17 @@ function setCurrentPlaylist(id) {
   currentPlaylist = id;
 }
 
-async function search(terms) {
+async function search(terms, { limit, offset } = {}) {
   const { tracks } = await (
     await fetch(
       `${
         process.env.REACT_APP_SPOTIFY_API_ENDPONT
-      }/search?q=${encodeURIComponent(terms)}&type=track`,
+      }/search?q=${encodeURIComponent(terms)}&type=track${
+        // Spotify's search caps limit at 50 — clamped here so callers (e.g.
+        // the everybody-plays playlist generator) can ask for a bigger page
+        // without worrying about each provider's own ceiling.
+        limit ? `&limit=${Math.min(limit, 50)}` : ""
+      }${offset ? `&offset=${offset}` : ""}`,
       {
         headers: { ...authorizationHeader },
       }

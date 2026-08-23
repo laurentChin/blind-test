@@ -385,3 +385,34 @@ label {
   margin: var(--space-3) 0;
   color: var(--color-text-muted);
 }
+
+/* Numbered, gate-able step section — used by every session creation flow
+   (classic and everybody-plays) to lock a step until the previous one is
+   validated. */
+
+.config-step {
+  width: 100%;
+  padding: var(--space-4);
+  border: 1px solid var(--color-surface-border);
+  background-color: var(--color-surface);
+  border-radius: var(--radius-md);
+  transition: opacity var(--duration-slow) var(--ease-standard);
+}
+
+.config-step[inert] {
+  opacity: 0.45;
+  filter: grayscale(0.5);
+}
+
+.config-step h2 {
+  margin-bottom: var(--space-3);
+}
+
+.config-step-hint {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.launch-button {
+  min-width: 220px;
+}

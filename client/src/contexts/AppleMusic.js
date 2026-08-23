@@ -194,9 +194,18 @@ function setCurrentPlaylist(id) {
   currentPlaylist = id;
 }
 
-async function search(terms) {
+async function search(terms, { limit, offset } = {}) {
   const { results } = await apiRequest(`/v1/catalog/${storefrontId}/search`, {
-    params: { term: terms, types: "songs" },
+    params: {
+      term: terms,
+      types: "songs",
+      // Apple's catalog search rejects a limit above 25 with a 400 — clamped
+      // here so callers (e.g. the everybody-plays playlist generator) can
+      // ask for a bigger page without worrying about each provider's own
+      // ceiling.
+      ...(limit ? { limit: Math.min(limit, 25) } : {}),
+      ...(offset ? { offset } : {}),
+    },
   });
 
   return { items: (results.songs?.data || []).map(toTrack) };

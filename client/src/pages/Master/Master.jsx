@@ -1,8 +1,10 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useState } from "react";
 import { v4 } from "uuid";
 import io from "socket.io-client";
+import { Navigate } from "react-router-dom";
 
 import { getSelectedProvider, useMusicProvider } from "../../contexts/MusicProvider";
+import { useProviderAuth } from "../../hooks/useProviderAuth";
 import { ConfigureSession } from "./ConfigureSession";
 import { ManageSession } from "./steps/ManageSession";
 
@@ -11,38 +13,20 @@ const SESSION_UUID = v4();
 let socket = io(process.env.REACT_APP_SOCKET_URI);
 
 const Master = () => {
-  const [provider, setProvider] = useState(getSelectedProvider());
+  const provider = getSelectedProvider();
   const musicProvider = useMusicProvider();
+  const isAuthenticated = useProviderAuth(provider, musicProvider);
 
   const [title, setTitle] = useState("New session");
-  const [isAuthenticated, setIsAuthenticated] = useState(
-    musicProvider.isAuthenticated
-  );
   const [isConfigured, setIsConfigured] = useState(false);
   const [tracks, setTracks] = useState([]);
-  const isFirstProviderRender = useRef(true);
 
-  const changeProvider = (newProvider) => {
-    if (newProvider !== provider) {
-      sessionStorage.removeItem("playlistId");
-    }
-
-    setProvider(newProvider);
-  };
-
-  useEffect(() => {
-    if (!provider) return;
-
-    // Skip on the very first mount so a page reload with an already
-    // authenticated provider doesn't flash the steps back to locked — only a
-    // genuine switch to a different provider should invalidate them.
-    if (!isFirstProviderRender.current) {
-      setIsAuthenticated(false);
-    }
-    isFirstProviderRender.current = false;
-
-    musicProvider.login().then(() => setIsAuthenticated(true));
-  }, [provider, musicProvider]);
+  // Provider choice now happens on the shared /create-session gate — a
+  // session creator who lands here directly (bookmarked link, back/forward)
+  // hasn't made that choice yet.
+  if (!provider) {
+    return <Navigate to="/create-session" replace />;
+  }
 
   if (isConfigured) {
     return (
@@ -55,7 +39,6 @@ const Master = () => {
       <h1>{title}</h1>
       <ConfigureSession
         provider={provider}
-        setProvider={changeProvider}
         isAuthenticated={isAuthenticated}
         setTitle={setTitle}
         onLaunch={(launchedTracks) => {

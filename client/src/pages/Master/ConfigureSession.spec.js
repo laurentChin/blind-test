@@ -3,10 +3,6 @@ import { render, fireEvent } from "@testing-library/react";
 
 import { ConfigureSession } from "./ConfigureSession";
 
-jest.mock("./steps/ProviderSelect", () => ({
-  ProviderSelect: () => <div data-testid="provider-step" />,
-}));
-
 jest.mock("./steps/CreateOrSelectPlaylist", () => ({
   // eslint-disable-next-line react/prop-types
   CreateOrSelectPlaylist: ({ onSelectPlaylist }) => (
@@ -43,14 +39,12 @@ jest.mock("./steps/ManageTracks", () => ({
 }));
 
 const setup = (props = {}) => {
-  const setProvider = jest.fn();
   const setTitle = jest.fn();
   const onLaunch = jest.fn();
 
   const utils = render(
     <ConfigureSession
       provider=""
-      setProvider={setProvider}
       isAuthenticated={false}
       setTitle={setTitle}
       onLaunch={onLaunch}
@@ -58,14 +52,14 @@ const setup = (props = {}) => {
     />
   );
 
-  return { ...utils, setProvider, setTitle, onLaunch };
+  return { ...utils, setTitle, onLaunch };
 };
 
 describe("<ConfigureSession />", () => {
   it("should keep the playlist and tracks steps inert until the previous step is validated", () => {
     const { container } = setup({ isAuthenticated: false });
 
-    const [, playlistStep, tracksStep] = container.querySelectorAll(
+    const [playlistStep, tracksStep] = container.querySelectorAll(
       ".config-step"
     );
 
@@ -76,7 +70,7 @@ describe("<ConfigureSession />", () => {
   it("should unlock the playlist step once authenticated", () => {
     const { container } = setup({ isAuthenticated: true });
 
-    const [, playlistStep] = container.querySelectorAll(".config-step");
+    const [playlistStep] = container.querySelectorAll(".config-step");
 
     expect(playlistStep).not.toHaveAttribute("inert");
   });
@@ -86,7 +80,7 @@ describe("<ConfigureSession />", () => {
 
     fireEvent.click(getByText("select playlist"));
 
-    const [, , tracksStep] = container.querySelectorAll(".config-step");
+    const [, tracksStep] = container.querySelectorAll(".config-step");
     expect(tracksStep).not.toHaveAttribute("inert");
   });
 
@@ -113,7 +107,6 @@ describe("<ConfigureSession />", () => {
     const { getByText, queryByText, container, rerender } = render(
       <ConfigureSession
         provider="spotify"
-        setProvider={jest.fn()}
         isAuthenticated={true}
         setTitle={setTitle}
         onLaunch={onLaunch}
@@ -128,7 +121,6 @@ describe("<ConfigureSession />", () => {
     rerender(
       <ConfigureSession
         provider="appleMusic"
-        setProvider={jest.fn()}
         isAuthenticated={false}
         setTitle={setTitle}
         onLaunch={onLaunch}
@@ -137,7 +129,7 @@ describe("<ConfigureSession />", () => {
 
     expect(queryByText("Launch the session")).toBeFalsy();
 
-    const [, playlistStep, tracksStep] = container.querySelectorAll(
+    const [playlistStep, tracksStep] = container.querySelectorAll(
       ".config-step"
     );
     expect(playlistStep).toHaveAttribute("inert");
@@ -160,7 +152,7 @@ describe("<ConfigureSession />", () => {
     // playlist's tracks haven't loaded yet.
     expect(queryByText("Launch the session")).toBeFalsy();
 
-    const [, , tracksStep] = container.querySelectorAll(".config-step");
+    const [, tracksStep] = container.querySelectorAll(".config-step");
 
     fireEvent.click(getByText("start loading tracks"));
     expect(tracksStep).toHaveAttribute("inert");
@@ -176,7 +168,7 @@ describe("<ConfigureSession />", () => {
     fireEvent.click(getByText("select playlist"));
     fireEvent.click(getByText("start loading tracks"));
 
-    const [, , tracksStep] = container.querySelectorAll(".config-step");
+    const [, tracksStep] = container.querySelectorAll(".config-step");
     expect(tracksStep).toHaveAttribute("inert");
 
     fireEvent.click(getByText("load tracks"));

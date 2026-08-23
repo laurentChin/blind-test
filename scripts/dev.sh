@@ -11,7 +11,7 @@ fi
 
 tmux kill-session -t "$SESSION" 2>/dev/null || true
 
-tmux new-session -d -s "$SESSION" -n dev -c "$ROOT_DIR/server" "yarn start"
+tmux new-session -d -s "$SESSION" -n dev -c "$ROOT_DIR/server" "yarn start:watch"
 tmux split-window -h -t "$SESSION:dev" -c "$ROOT_DIR/client" "PORT=3001 yarn start"
 tmux select-pane -t "$SESSION:dev.0"
 
