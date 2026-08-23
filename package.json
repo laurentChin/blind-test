@@ -4,9 +4,13 @@
   "scripts": {
     "dev": "bash scripts/dev.sh",
     "dev:interleaved": "concurrently -n server,client -c blue,green \"yarn --cwd server start:watch\" \"PORT=3001 yarn --cwd client start\"",
-    "attach": "tmux attach -t blind-test-dev"
+    "attach": "tmux attach -t blind-test-dev",
+    "prepare": "husky"
   },
   "devDependencies": {
-    "concurrently": "^9.2.1"
+    "@commitlint/cli": "^21.2.2",
+    "@commitlint/config-conventional": "^21.2.2",
+    "concurrently": "^9.2.1",
+    "husky": "^9.1.7"
   }
 }

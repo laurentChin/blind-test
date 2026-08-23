@@ -13,3 +13,6 @@ server/node_modules
 # Lambdas
 lambdas/**/node_modules
 lambdas/**/*.zip
+
+# Husky
+.husky/_
