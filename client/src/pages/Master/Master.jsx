@@ -21,11 +21,11 @@ const Master = () => {
   const [isConfigured, setIsConfigured] = useState(false);
   const [tracks, setTracks] = useState([]);
 
-  // Provider choice now happens on the shared /create-session gate — a
-  // session creator who lands here directly (bookmarked link, back/forward)
-  // hasn't made that choice yet.
+  // Provider choice now happens on the shared home gate — a session creator
+  // who lands here directly (bookmarked link, back/forward) hasn't made that
+  // choice yet.
   if (!provider) {
-    return <Navigate to="/create-session" replace />;
+    return <Navigate to="/" replace />;
   }
 
   if (isConfigured) {

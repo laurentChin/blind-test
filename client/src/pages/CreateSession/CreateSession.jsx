@@ -30,6 +30,9 @@ const CreateSession = () => {
 
       <section className="config-step">
         <h2>1. Choose where to pull tracks from and play them</h2>
+        <p className="config-step-hint">
+          A valid Spotify or Apple Music account is required.
+        </p>
         <ProviderSelect
           provider={provider}
           setProvider={changeProvider}
