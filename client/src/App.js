@@ -1,7 +1,6 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
-import { Home } from "./pages/Home/Home";
 import { CreateSession } from "./pages/CreateSession/CreateSession";
 import { Master } from "./pages/Master/Master";
 import { EverybodyPlaysHost } from "./pages/EverybodyPlays/EverybodyPlaysHost";
@@ -21,8 +20,7 @@ function App() {
       <main>
         <Router>
           <Routes>
-            <Route path="/" exact element={<Home />} />
-            <Route path="/create-session" exact element={<CreateSession />} />
+            <Route path="/" exact element={<CreateSession />} />
             <Route path="/create-session/classic" exact element={<Master />} />
             <Route
               path="/create-session/everybody-plays"

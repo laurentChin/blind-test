@@ -91,7 +91,7 @@ const EverybodyPlaysHost = () => {
   }, [identity]);
 
   if (!provider) {
-    return <Navigate to="/create-session" replace />;
+    return <Navigate to="/" replace />;
   }
 
   const startSession = () =>
