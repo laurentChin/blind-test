@@ -5,28 +5,15 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import { v4 } from "uuid";
 import * as logger from "./src/logger.js";
+import { generateSessionColors } from "./src/colors.js";
 
 const sessions = new Map();
 
-const colors = [
-  "255, 183, 195", // #ffb7c3
-  "230, 25, 75", // #e6194B
-  "245, 130, 49", // #f58231
-  "252, 245, 199", // #fcf5c7
-  "255, 225, 25", // #ffe119
-  "191, 239, 69", // #bfef45
-  "22, 219, 101", // #16db65
-  "60, 180, 75", // #3cb44b
-  "66, 212, 244", // #42d4f4
-  "48, 99, 142", // #30638e
-  "67, 99, 216", // #4363d8
-  "145, 30, 180", // #911eb4
-  "230, 190, 255", // #e6beff
-  "240, 50, 230", // #f032e6
-  "226, 199, 170", // #e2c7aa
-  "197, 195, 198", // #c5c3c6
-  "147, 94, 56", // #935e38
-];
+// Generated once and reused as the template for every session's color pool
+// (each session gets its own copy, see createSession below) — each entry
+// pairs a background with the text color (black or white) that reads best
+// on it, computed from actual WCAG contrast rather than assumed.
+const colors = generateSessionColors();
 
 const httpServer = createServer();
 const io = new Server(httpServer, {
@@ -66,7 +53,9 @@ io.on("connection", socket => {
         uuid: playerUuid,
       });
       session.colors.splice(
-        session.colors.findIndex(color => color === player.color),
+        session.colors.findIndex(
+          color => color.background === player.color.background
+        ),
         1
       );
       io.to(sessionUuid).emit("availableColorsUpdate", session.colors);

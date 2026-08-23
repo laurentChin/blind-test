@@ -11,7 +11,7 @@ const JoinForm = ({ socket, onJoin, sessionUuid }) => {
   const [name, setName] = useState("");
   const [challengers, setChallengers] = useState([]);
   const [colors, setColors] = useState([]);
-  const [playerColor, setPlayerColor] = useState("");
+  const [playerColor, setPlayerColor] = useState(null);
   const [teamUuid, setTeamUuid] = useState("-");
   const teamSelector = useRef();
   const nameInputId = useId();
@@ -99,9 +99,9 @@ const JoinForm = ({ socket, onJoin, sessionUuid }) => {
         className="btn btn-positive join-button"
         data-testid="join-session-btn"
         disabled={
-          (playerColor === "" && name === "" && teamUuid === "-") ||
-          (playerColor === "" && name !== "") ||
-          (playerColor !== "" && name === "")
+          (!playerColor && name === "" && teamUuid === "-") ||
+          (!playerColor && name !== "") ||
+          (!!playerColor && name === "")
         }
         onClick={joinSession}
       >

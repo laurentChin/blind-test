@@ -2,6 +2,8 @@ import React, { useEffect, useRef, useState } from "react";
 import PropTypes from "prop-types";
 import { MdExpandMore, MdExpandLess } from "react-icons/md";
 
+import { colorPropType } from "../../components/ColorPicker/ColorPicker";
+
 import "./Play.css";
 
 if (window.Notification && window.Notification.permission !== 'granted') {
@@ -158,7 +160,10 @@ const Play = ({ sessionUuid, socket, player, onLeave, mode = "classic", ...props
         </div>
       ) : (
         <button
-          style={{ "--player-color": `rgb(${player.color})` }}
+          style={{
+            "--player-color": `rgb(${player.color.background})`,
+            "--player-color-text": `rgb(${player.color.text})`,
+          }}
           disabled={isChallengeLocked || isExcluded}
           onClick={buzzIn}
           data-testid="challenge-button"
@@ -186,7 +191,10 @@ const Play = ({ sessionUuid, socket, player, onLeave, mode = "classic", ...props
           {lockedChallenger && (
             <p
               className="dialog-challenger-name"
-              style={{ "--player-color": `rgba(${lockedChallenger.color})` }}
+              style={{
+                "--player-color": `rgb(${lockedChallenger.color.background})`,
+                "--player-color-text": `rgb(${lockedChallenger.color.text})`,
+              }}
             >
               {lockedChallenger.name}
             </p>
@@ -247,7 +255,7 @@ Play.propTypes = {
   mode: PropTypes.oneOf(["classic", "everybodyPlays"]),
   player: PropTypes.shape({
     uuid: PropTypes.string.isRequired,
-    color: PropTypes.string.isRequired,
+    color: colorPropType.isRequired,
   }),
   socket: PropTypes.shape({
     emit: PropTypes.func.isRequired,
@@ -257,7 +265,7 @@ Play.propTypes = {
   challengers: PropTypes.arrayOf(
     PropTypes.shape({
       name: PropTypes.string.isRequired,
-      color: PropTypes.string.isRequired,
+      color: colorPropType.isRequired,
     })
   ),
 };

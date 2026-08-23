@@ -54,7 +54,7 @@ const ManageSession = ({ sessionUuid, socket, ...props }) => {
       const { name, artists } = playerState.track_window.current_track;
       const track = {
         name,
-        artists: artists
+        artists: (artists || [])
           .map((artist) => artist.name)
           .join(", ")
           .trim(),

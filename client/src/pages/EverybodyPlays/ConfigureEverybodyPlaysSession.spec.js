@@ -26,7 +26,12 @@ const setup = ({ candidateCount = 15 } = {}) => {
   const socket = {
     emit: jest.fn((event, data, callback) => {
       if (event === "joinWaitingRoom") {
-        callback({ colors: ["1,2,3", "4,5,6"] });
+        callback({
+          colors: [
+            { background: "1, 2, 3", text: "255, 255, 255" },
+            { background: "4, 5, 6", text: "0, 0, 0" },
+          ],
+        });
       }
     }),
   };
@@ -99,7 +104,10 @@ describe("<ConfigureEverybodyPlaysSession />", () => {
     expect(new Set(addedUris).size).toBe(10);
     addedUris.forEach((uri) => expect(uri).toMatch(/^uri:track-/));
 
-    expect(onLaunch).toHaveBeenCalledWith({ name: "Alice", color: "1,2,3" });
+    expect(onLaunch).toHaveBeenCalledWith({
+      name: "Alice",
+      color: { background: "1, 2, 3", text: "255, 255, 255" },
+    });
   });
 
   it("should use the custom theme text instead of a preset when typed", async () => {

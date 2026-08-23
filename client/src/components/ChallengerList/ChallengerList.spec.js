@@ -24,7 +24,12 @@ describe("<ChallengerList />", () => {
     const { container } = render(
       <ChallengerList
         challengers={[
-          { uuid: "qwewrw-1232553", name: "currentChallenger", score: 1 },
+          {
+            uuid: "qwewrw-1232553",
+            name: "currentChallenger",
+            score: 1,
+            color: { background: "1, 2, 3", text: "255, 255, 255" },
+          },
           { uuid: "wuefgeew-82687234", name: "name2", score: 3 },
         ]}
         challengerUuid={"qwewrw-1232553"}
@@ -54,7 +59,12 @@ describe("<ChallengerList />", () => {
     const { queryByText } = render(
       <ChallengerList
         challengers={[
-          { uuid: "qwewrw-1232553", name: "currentChallenger", score: 1 },
+          {
+            uuid: "qwewrw-1232553",
+            name: "currentChallenger",
+            score: 1,
+            color: { background: "1, 2, 3", text: "255, 255, 255" },
+          },
         ]}
         challengerUuid={"qwewrw-1232553"}
       />
@@ -68,7 +78,12 @@ describe("<ChallengerList />", () => {
     const { getByText } = render(
       <ChallengerList
         challengers={[
-          { uuid: "qwewrw-1232553", name: "currentChallenger", score: 1 },
+          {
+            uuid: "qwewrw-1232553",
+            name: "currentChallenger",
+            score: 1,
+            color: { background: "1, 2, 3", text: "255, 255, 255" },
+          },
         ]}
         challengerUuid={"qwewrw-1232553"}
         onClearChallenge={onClearChallenge}

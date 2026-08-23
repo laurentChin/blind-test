@@ -28,7 +28,6 @@
   /* Text */
   --color-text: color-mix(in srgb, var(--palette-white) 90%, var(--palette-indigo-dye) 10%);
   --color-text-muted: color-mix(in srgb, var(--palette-white) 75%, transparent);
-  --color-text-on-accent: var(--palette-davys-grey);
 
   /* Action roles */
   --color-accent: var(--palette-sunglow);

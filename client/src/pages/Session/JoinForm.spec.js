@@ -18,14 +18,24 @@ describe("<JoinForm />", () => {
           case "joinWaitingRoom":
             callback({
               challengers: [
-                { uuid: "qqqwqq-qeqeq-qeqw", name: "bob", color: "color" },
+                {
+                  uuid: "qqqwqq-qeqeq-qeqw",
+                  name: "bob",
+                  color: { background: "230, 25, 75", text: "255, 255, 255" },
+                },
               ],
-              colors: ["#e6194B", "#f58231"],
+              colors: [
+                { background: "230, 25, 75", text: "255, 255, 255" },
+                { background: "245, 130, 49", text: "0, 0, 0" },
+              ],
             });
             break;
           case "join":
             callback({
-              player: { uuid: "player-12345", color: "#f58231" },
+              player: {
+                uuid: "player-12345",
+                color: { background: "245, 130, 49", text: "0, 0, 0" },
+              },
               sessionUuid: "session-12345",
             });
             break;
@@ -117,7 +127,7 @@ describe("<JoinForm />", () => {
     fireEvent.click(getByText("Join"));
     expect(onJoin).toHaveBeenCalledWith({
       player: {
-        color: "#f58231",
+        color: { background: "245, 130, 49", text: "0, 0, 0" },
         uuid: "player-12345",
       },
       sessionUuid: 'session-12345'
