@@ -315,4 +315,60 @@ describe("<ManageSession />", () => {
       },
     });
   });
+
+  it("should not crash when releasing a challenger while the current track has no artists (e.g. Apple Music between tracks)", async () => {
+    const startPlayer = jest.fn().mockResolvedValue({});
+    const getPlayer = jest.fn();
+    const player = {
+      pause: jest.fn(),
+      resume: jest.fn(),
+      getCurrentState: jest.fn().mockResolvedValue({
+        track_window: {
+          current_track: { name: "Hallelujah" },
+        },
+      }),
+    };
+
+    const setPlayerStateChangeCb = jest.fn();
+    useMusicProvider.mockReturnValue({
+      startPlayer,
+      getPlayer,
+      setPlayerStateChangeCb,
+    });
+    const emitSpy = jest.spyOn(mockSocket, "emit");
+    const { getAllByTestId, getByTestId } = render(
+      <ManageSession
+        sessionUuid="1112345678"
+        isPlayerReady={true}
+        deviceId="122536"
+        player={player}
+        socket={mockSocket}
+      />
+    );
+
+    fireEvent.click(getByTestId("start-session-btn"));
+
+    await act(async () => {
+      mockSocket.emit("challengersUpdate", [
+        {
+          uuid: "qwewrw-1232553",
+          name: "name1",
+          score: 1,
+          color: { background: "1, 2, 3", text: "255, 255, 255" },
+        },
+      ]);
+
+      mockSocket.emit("lockChallenge", "qwewrw-1232553");
+    });
+
+    await act(async () => {
+      fireEvent.click(getAllByTestId("challenge-button")[0]);
+    });
+
+    expect(emitSpy).toHaveBeenCalledWith("setScore", {
+      sessionUuid: "1112345678",
+      score: 0,
+      track: { name: "Hallelujah", artists: "" },
+    });
+  });
 });
