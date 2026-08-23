@@ -105,6 +105,57 @@ describe("<Board />", () => {
     expect(resultDialog.open).toBeFalsy();
   });
 
+  it("should swap back to announcing the challenger when a new buzz-in arrives before the master starts the next track", async () => {
+    // challengerRelease (fired right after setScore) re-enables everyone's
+    // buzzer immediately — well before startNewChallenge — so a second buzz
+    // on the same still-displayed track is a normal race, not an edge case.
+    const { container } = render(
+      <Router>
+        <Board />
+      </Router>
+    );
+
+    const resultDialog = container.querySelector(".result-dialog");
+
+    await act(async () => {
+      io().emit("challengersUpdate", [
+        {
+          uuid: "player-1",
+          name: "Alice",
+          score: 0,
+          color: { background: "255, 0, 0", text: "255, 255, 255" },
+        },
+      ]);
+      io().emit("lockChallenge", "player-1");
+      io().emit("challengeResult", {
+        track: { name: "Hallelujah", artists: "Jeff Buckley" },
+        score: 1,
+      });
+      io().emit("challengerRelease", [
+        {
+          uuid: "player-1",
+          name: "Alice",
+          score: 1,
+          color: { background: "255, 0, 0", text: "255, 255, 255" },
+        },
+      ]);
+    });
+
+    expect(container.querySelector(".gif-big").src).toBe(
+      "https://example.com/gif.gif"
+    );
+
+    await act(async () => {
+      io().emit("lockChallenge", "player-1");
+    });
+
+    expect(resultDialog.open).toBeTruthy();
+    expect(container.querySelector(".gif-big")).toBeFalsy();
+    expect(container.querySelector(".active-challenger-big").textContent).toBe(
+      "Alice"
+    );
+  });
+
   it("should display the track info inside the result dialog in case of success", async () => {
     const { container, getByText, queryByText, rerender } = render(
       <Router>

@@ -79,7 +79,17 @@ const Board = () => {
 
   challengersUpdateHandler = setChallengers;
 
-  lockChallengeHandler = setChallengerUuid;
+  // A new buzz-in can arrive before the master advances to the next track
+  // (challengerRelease re-enables the buzzer for everyone right after
+  // setScore, well ahead of startNewChallenge) — so a fresh lock also has to
+  // clear out the previous round's result, or the dialog stays stuck
+  // showing the old gif instead of announcing who just took it.
+  lockChallengeHandler = (uuid) => {
+    setChallengerUuid(uuid);
+    setTrack(undefined);
+    setGif(undefined);
+    setScore(undefined);
+  };
 
   challengerReleaseHandler = (msg) => {
     setChallengerUuid("");
