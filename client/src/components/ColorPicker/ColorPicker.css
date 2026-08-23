@@ -1,0 +1,24 @@
+.ColorPicker {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+.color-button {
+  flex-basis: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--radius-full);
+  border: 3px solid transparent;
+  background-color: var(--swatch-color);
+  cursor: pointer;
+  transition: transform var(--duration-fast) var(--ease-standard);
+}
+
+.color-button[aria-pressed="true"] {
+  border-color: var(--color-text);
+  transform: scale(1.1);
+}

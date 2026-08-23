@@ -1,0 +1,48 @@
+.ConfigureEverybodyPlaysSession {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-5);
+  width: 100%;
+}
+
+.ConfigureEverybodyPlaysSession .config-step {
+  display: flex;
+  flex-direction: column;
+}
+
+.theme-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.theme-tile {
+  width: auto;
+  height: auto;
+  min-height: 2.5rem;
+  padding: var(--space-2) var(--space-4);
+  white-space: nowrap;
+}
+
+.track-count-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: var(--space-2);
+}
+
+.theme-tile[aria-pressed="true"],
+.track-count-tile[aria-pressed="true"] {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.custom-track-count {
+  margin-top: var(--space-3);
+  max-width: 220px;
+}
+
+.generation-error {
+  color: var(--color-danger-strong);
+  text-align: center;
+}

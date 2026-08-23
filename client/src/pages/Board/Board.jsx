@@ -2,9 +2,9 @@ import React, { useEffect, useRef, useState } from "react";
 
 import io from "socket.io-client";
 import { useParams } from "react-router-dom";
-import QRCodeGenerator from "qrcode";
 import { getGif } from "../../helpers/Giphy";
 import { ChallengerList } from "../../components/ChallengerList/ChallengerList";
+import { JoinCode } from "../../components/JoinCode/JoinCode";
 
 import "./Board.css";
 
@@ -34,9 +34,6 @@ const Board = () => {
   const [score, setScore] = useState();
   const [gif, setGif] = useState();
 
-  const qrCode = useRef();
-  const bigQrCode = useRef();
-  const qrDialog = useRef();
   const resultDialog = useRef();
   const joinUrl = `${process.env.REACT_APP_URL}/session/${uuid}`;
 
@@ -50,15 +47,7 @@ const Board = () => {
         setChallengers(response.challengers);
       }
     );
-
-    if (qrCode.current) {
-      QRCodeGenerator.toCanvas(qrCode.current, joinUrl);
-    }
-
-    if (bigQrCode.current) {
-      QRCodeGenerator.toCanvas(bigQrCode.current, joinUrl);
-    }
-  }, [uuid, joinUrl]);
+  }, [uuid]);
 
   useEffect(() => {
     if (score !== undefined) {
@@ -123,30 +112,9 @@ const Board = () => {
           showActiveChallenger={false}
         />
         <div className="join-info">
-          <button
-            type="button"
-            className="qrcode-button"
-            aria-label="Enlarge the QR code and see the full join URL"
-            onClick={() => qrDialog.current.showModal()}
-          >
-            <canvas className="qrcode" ref={qrCode} />
-          </button>
+          <JoinCode joinUrl={joinUrl} />
         </div>
       </div>
-      <dialog
-        ref={qrDialog}
-        className="qrcode-dialog"
-        onClick={(event) => {
-          if (event.target === qrDialog.current) {
-            qrDialog.current.close();
-          }
-        }}
-      >
-        <div className="panel">
-          <canvas className="qrcode-big" ref={bigQrCode} />
-          <span className="join-url-full">{joinUrl}</span>
-        </div>
-      </dialog>
       <dialog
         ref={resultDialog}
         className="result-dialog"

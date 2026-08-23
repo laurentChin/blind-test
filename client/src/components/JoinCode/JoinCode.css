@@ -1,0 +1,37 @@
+.qrcode-button {
+  display: block;
+  align-self: center;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+}
+
+.qrcode-button:focus-visible {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.qrcode-dialog {
+  border: none;
+  background: transparent;
+  max-width: none;
+}
+
+.qrcode-dialog::backdrop {
+  background-color: var(--color-overlay);
+}
+
+.qrcode-dialog .panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.join-url-full {
+  color: var(--color-text);
+  word-break: break-all;
+  text-align: center;
+}

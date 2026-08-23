@@ -39,11 +39,13 @@ const io = new Server(httpServer, {
 const verboseOutput = process.env.VERBOSE;
 
 io.on("connection", socket => {
-  socket.on("createSession", ({ sessionUuid }) => {
+  socket.on("createSession", ({ sessionUuid, mode }) => {
     sessions.set(sessionUuid, {
       currentChallenger: null,
       challengers: new Map(),
       colors: [...colors],
+      mode: mode || "classic",
+      excludedPlayers: new Set(),
     });
 
     socket.join(sessionUuid);
@@ -86,6 +88,7 @@ io.on("connection", socket => {
       },
       challengers,
       sessionUuid,
+      mode: session.mode,
     });
 
     io.to(sessionUuid).emit("challengersUpdate", challengers);
@@ -108,7 +111,10 @@ io.on("connection", socket => {
     if (session) {
       socket.join(sessionUuid);
       if (callback) {
-        callback({ challengers: Array.from(session.challengers.values()) });
+        callback({
+          challengers: Array.from(session.challengers.values()),
+          mode: session.mode,
+        });
       }
     }
   });
@@ -125,10 +131,11 @@ io.on("connection", socket => {
       colors: [
         ...(session && session.colors.length > 0 ? session.colors : colors),
       ],
+      mode: session ? session.mode : "classic",
     });
   });
 
-  socket.on("challenge", ({ sessionUuid, playerUuid }) => {
+  socket.on("challenge", ({ sessionUuid, playerUuid }, callback) => {
     if (verboseOutput) {
       logger.info(
         `challenge event received for session ${sessionUuid} and player ${playerUuid}`
@@ -136,8 +143,20 @@ io.on("connection", socket => {
     }
 
     const session = sessions.get(sessionUuid);
+
+    if (session.mode === "everybodyPlays" && session.excludedPlayers.has(playerUuid)) {
+      if (callback) {
+        callback({ rejected: true });
+      }
+      return;
+    }
+
     session.currentChallenger = playerUuid;
     io.to(sessionUuid).emit("lockChallenge", playerUuid);
+
+    if (callback) {
+      callback({ rejected: false });
+    }
   });
 
   socket.on("setScore", ({ sessionUuid, score, track }) => {
@@ -177,6 +196,51 @@ io.on("connection", socket => {
         `challengeResult event has been emitted to session ${sessionUuid} with score ${score}`
       );
     }
+
+    // No game master to manually cue the next round in this mode — a
+    // successful self-reported score is the signal to move on. Clears
+    // excludedPlayers directly (rather than relying on the startNewChallenge
+    // handler below) since this emit is server-originated, not relayed from
+    // a client's own startNewChallenge event.
+    if (session.mode === "everybodyPlays") {
+      session.excludedPlayers.clear();
+      io.to(sessionUuid).emit("startNewChallenge");
+    }
+  });
+
+  // A player self-reports a wrong answer: unlike setScore above, this never
+  // advances the track — everyone else still gets a shot at the same song.
+  // Only relevant to "everybodyPlays" sessions, where there's no game master
+  // to judge the answer instead.
+  socket.on("markWrongAnswer", ({ sessionUuid, playerUuid }) => {
+    if (verboseOutput) {
+      logger.info(
+        `markWrongAnswer event received for session ${sessionUuid} and player ${playerUuid}`
+      );
+    }
+
+    const session = sessions.get(sessionUuid);
+    session.excludedPlayers.add(playerUuid);
+    session.currentChallenger = null;
+
+    io.to(sessionUuid).emit(
+      "challengerRelease",
+      Array.from(session.challengers.values())
+    );
+
+    if (verboseOutput) {
+      logger.notice(
+        `challengerRelease event has been emitted to session ${sessionUuid} (wrong answer)`
+      );
+    }
+  });
+
+  // Relayed as-is: only the session's playback-hosting client knows the
+  // newly-current track (it's the one driving the Spotify/Apple Music
+  // player), so it broadcasts it here for every player's screen to privately
+  // cache ahead of that player's own "reveal" action.
+  socket.on("trackReady", ({ sessionUuid, track }) => {
+    io.to(sessionUuid).emit("trackReady", track);
   });
 
   socket.on("clearChallenge", ({ sessionUuid }) => {
@@ -202,6 +266,11 @@ io.on("connection", socket => {
   socket.on("startNewChallenge", sessionUuid => {
     if (verboseOutput) {
       logger.info(`startNewChallenge received for session ${sessionUuid}`);
+    }
+
+    const session = sessions.get(sessionUuid);
+    if (session) {
+      session.excludedPlayers.clear();
     }
 
     io.to(sessionUuid).emit("startNewChallenge");

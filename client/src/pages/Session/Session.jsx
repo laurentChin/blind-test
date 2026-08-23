@@ -19,9 +19,18 @@ const getStoredPlayer = (uuid) => {
   return JSON.parse(sessionStorage.getItem("player")) || {};
 };
 
+const getStoredMode = (uuid) => {
+  if (sessionStorage.getItem("sessionUuid") !== uuid) {
+    return "classic";
+  }
+
+  return sessionStorage.getItem("mode") || "classic";
+};
+
 const Session = () => {
   const { uuid } = useParams();
   const [player, setPlayer] = useState(() => getStoredPlayer(uuid));
+  const [mode, setMode] = useState(() => getStoredMode(uuid));
   const [inSession, setInSession] = useState(false);
   const [challengers, setChallengers] = useState([]);
 
@@ -29,6 +38,7 @@ const Session = () => {
     if (sessionStorage.getItem("sessionUuid") !== uuid) {
       sessionStorage.removeItem("player");
       sessionStorage.removeItem("sessionUuid");
+      sessionStorage.removeItem("mode");
       setPlayer({});
       setInSession(false);
     }
@@ -38,6 +48,10 @@ const Session = () => {
     if (player.uuid && !inSession) {
       socket.emit("joinAfterRefresh", { sessionUuid: uuid }, (response) => {
         setChallengers(response.challengers);
+        if (response.mode) {
+          setMode(response.mode);
+          sessionStorage.setItem("mode", response.mode);
+        }
       });
       setInSession(true);
     }
@@ -52,6 +66,7 @@ const Session = () => {
             sessionUuid={uuid}
             onJoin={(response) => {
               setPlayer(response.player);
+              setMode(response.mode || "classic");
               setInSession(true);
               setChallengers(response.challengers);
             }}
@@ -61,6 +76,7 @@ const Session = () => {
       )}
       {player.uuid && (
         <Play
+          mode={mode}
           sessionUuid={uuid}
           player={player}
           socket={socket}

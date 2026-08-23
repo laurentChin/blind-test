@@ -1,0 +1,119 @@
+.EverybodyPlaysHost {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+}
+
+/* Mobile-first: the controls sit in a popover drawer, closed by default,
+   opened via .settings-trigger, fixed to the top of the screen — same
+   principle as Play.css's challenger-list drawer (fixed trigger + full-width
+   panel taking over the popover's top-layer), just anchored top-to-bottom
+   instead of bottom-to-top. Overridden below at desktop width to a plain
+   always-visible row.
+
+   The "visible" declarations (display, flex layout) live under
+   :popover-open rather than on the bare .host-controls selector: an
+   unconditional `display` on an author rule overrides the UA stylesheet's
+   `[popover]:not(:popover-open) { display: none }`, since UA rules always
+   lose to author rules regardless of specificity — that was the earlier bug
+   where "Hide settings" closed the popover but the panel stayed rendered
+   (just demoted out of the top layer, so it fell behind other content
+   instead of disappearing). */
+
+.settings-trigger {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  translate: -50% 0;
+  width: 100vw;
+  max-width: var(--content-max-width);
+  background-color: var(--color-canvas-deep);
+  color: var(--color-text);
+  border: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-2);
+  height: 2.5rem;
+  padding: 0 var(--space-3);
+  box-sizing: border-box;
+  border-bottom-left-radius: var(--radius-sm);
+  border-bottom-right-radius: var(--radius-sm);
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.host-controls {
+  box-sizing: border-box;
+  position: fixed;
+  inset: 0 0 auto 0;
+  margin: 0;
+  width: 100vw;
+  max-width: var(--content-max-width);
+  max-height: 80dvh;
+  overflow: auto;
+  padding: var(--space-4);
+  border: none;
+  border-bottom-left-radius: var(--radius-lg);
+  border-bottom-right-radius: var(--radius-lg);
+  background-color: var(--color-canvas-deep);
+  color: var(--color-text);
+}
+
+.host-controls:popover-open {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-3);
+}
+
+.host-controls-opener {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 0 0 var(--space-2) 0;
+  border: none;
+  background: none;
+  color: var(--color-text);
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.host-controls-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+}
+
+@media all and (min-width: 980px) {
+  .settings-trigger {
+    display: none;
+  }
+
+  .host-controls {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    position: static;
+    inset: auto;
+    width: 100%;
+    max-width: none;
+    max-height: none;
+    overflow: visible;
+    padding: 0;
+    border-radius: 0;
+    background-color: transparent;
+  }
+
+  .host-controls-opener {
+    display: none;
+  }
+}

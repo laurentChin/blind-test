@@ -2,6 +2,8 @@ import React, { useEffect, useId, useState, useRef } from "react";
 import { useParams } from "react-router-dom";
 import PropTypes from "prop-types";
 
+import { ColorPicker } from "../../components/ColorPicker/ColorPicker";
+
 import "./JoinForm.css";
 
 const JoinForm = ({ socket, onJoin, sessionUuid }) => {
@@ -39,6 +41,7 @@ const JoinForm = ({ socket, onJoin, sessionUuid }) => {
         const { player } = response;
         sessionStorage.setItem("player", JSON.stringify(player));
         sessionStorage.setItem("sessionUuid", response.sessionUuid);
+        sessionStorage.setItem("mode", response.mode || "classic");
         onJoin(response);
       }
     );
@@ -56,22 +59,13 @@ const JoinForm = ({ socket, onJoin, sessionUuid }) => {
           value={name}
           onChange={({ currentTarget }) => setName(currentTarget.value)}
         />
-        <fieldset className="colors">
-          <legend className="visually-hidden">Color</legend>
-          {colors.length > 0 &&
-            colors.map((color) => (
-              <button
-                type="button"
-                onClick={() => setPlayerColor(color)}
-                key={color}
-                style={{ "--swatch-color": `rgba(${color}, 1)` }}
-                aria-pressed={color === playerColor}
-                aria-label={`Color ${color}`}
-                data-testid="color-button"
-                className="color-button"
-              />
-            ))}
-        </fieldset>
+        {colors.length > 0 && (
+          <ColorPicker
+            colors={colors}
+            value={playerColor}
+            onChange={setPlayerColor}
+          />
+        )}
       </div>
       {challengers.length > 0 && (
         <>
