@@ -24,3 +24,10 @@ if (window.HTMLDialogElement) {
     };
   }
 }
+
+// jsdom doesn't implement <audio>/<video> playback (play()/pause() log a
+// "Not implemented" error), so stub them out as no-ops for tests.
+window.HTMLMediaElement.prototype.play = function play() {
+  return Promise.resolve();
+};
+window.HTMLMediaElement.prototype.pause = function pause() {};

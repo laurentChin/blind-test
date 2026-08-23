@@ -1,5 +1,5 @@
 import React from "react";
-import { render, fireEvent } from "@testing-library/react";
+import { render, fireEvent, waitFor } from "@testing-library/react";
 import { Result } from "./Result";
 
 import { useMusicProvider } from "../../contexts/MusicProvider";
@@ -53,7 +53,9 @@ describe("<Result />", () => {
 
     expect(addTrack).toHaveBeenCalledWith(uri);
 
-    await process.nextTick(() => {});
+    // Wait for the loading state to settle so the addTrack().then() chain
+    // (and the state update it triggers) has fully resolved before asserting.
+    await waitFor(() => expect(getByText("Add")).toHaveClass("btn-loading-done"));
 
     // Passed back explicitly rather than relying on a refetch: some
     // providers don't reflect a just-added track on their own read
@@ -146,6 +148,11 @@ describe("<Result />", () => {
 
     expect(onTogglePreview).toHaveBeenCalled();
     expect(addTrack).toHaveBeenCalledWith(uri);
+
+    // Wait for the addTrack().then() chain to fully resolve before the test
+    // (and its automatic unmount) ends, so the resulting state update isn't
+    // left dangling outside of act().
+    await waitFor(() => expect(getByText("Add")).toHaveClass("btn-loading-done"));
   });
 
   it("should display an audio tag if preview is given in props", async () => {
