@@ -107,6 +107,7 @@ const EverybodyPlaysHost = () => {
 
   const closeSession = () =>
     runCloseSession(() => {
+      musicProvider.getPlayer().pause?.();
       socket.emit("closeSession", { sessionUuid: SESSION_UUID });
       navigate("/");
     });
