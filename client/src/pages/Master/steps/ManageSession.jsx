@@ -103,6 +103,7 @@ const ManageSession = ({ sessionUuid, socket, ...props }) => {
 
   const closeSession = () =>
     runCloseSession(() => {
+      player.pause?.();
       socket.emit("closeSession", { sessionUuid });
       navigate("/");
     });

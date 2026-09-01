@@ -165,4 +165,32 @@ describe("<EverybodyPlaysHost />", () => {
 
     expect(resume).toHaveBeenCalled();
   });
+
+  it("should pause the player when closing the session", async () => {
+    getSelectedProvider.mockReturnValue("spotify");
+    const pause = jest.fn();
+    useMusicProvider.mockReturnValue({
+      isAuthenticated: true,
+      login: jest.fn().mockResolvedValue(),
+      setupPlayer: jest.fn((cb) => cb("device-1")),
+      getPlayer: jest.fn().mockReturnValue({ pause }),
+      setPlayerStateChangeCb: jest.fn(),
+      startPlayer: jest.fn().mockResolvedValue(),
+    });
+
+    const { getByTestId } = render(
+      <MemoryRouter initialEntries={["/create-session/everybody-plays"]}>
+        <EverybodyPlaysHost />
+      </MemoryRouter>
+    );
+
+    fireEvent.click(getByTestId("mock-launch-btn"));
+
+    await waitFor(() => expect(getByTestId("mock-play")).toBeInTheDocument());
+
+    fireEvent.click(getByTestId("close-session-btn"));
+    fireEvent.click(getByTestId("close-session-btn"));
+
+    expect(pause).toHaveBeenCalled();
+  });
 });

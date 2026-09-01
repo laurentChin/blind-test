@@ -142,6 +142,32 @@ describe("<ManageSession />", () => {
     });
   });
 
+  it("should pause the player when closing the session", async () => {
+    const startPlayer = jest.fn().mockResolvedValue({});
+    const getPlayer = jest.fn();
+    const setPlayerStateChangeCb = jest.fn();
+    const player = { pause: jest.fn() };
+    useMusicProvider.mockReturnValue({
+      startPlayer,
+      getPlayer,
+      setPlayerStateChangeCb,
+    });
+    const { getByTestId } = render(
+      <ManageSession
+        sessionUuid="1112345678"
+        isPlayerReady={true}
+        deviceId="122536"
+        player={player}
+        socket={mockSocket}
+      />
+    );
+
+    fireEvent.click(getByTestId("close-session-btn"));
+    fireEvent.click(getByTestId("close-session-btn"));
+
+    expect(player.pause).toHaveBeenCalled();
+  });
+
   it("should display the challenger list", async () => {
     const startPlayer = jest.fn().mockResolvedValue({});
     const getPlayer = jest.fn();
