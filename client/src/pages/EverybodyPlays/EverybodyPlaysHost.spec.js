@@ -35,6 +35,7 @@ jest.mock("../Session/Play", () => ({
 
 let socketEmit;
 let socketOn;
+let socketListeners;
 
 jest.mock("socket.io-client", () =>
   jest.fn(() => ({
@@ -45,6 +46,7 @@ jest.mock("socket.io-client", () =>
 
 describe("<EverybodyPlaysHost />", () => {
   beforeEach(() => {
+    socketListeners = {};
     socketEmit = jest.fn((event, data, callback) => {
       if (event === "join" && callback) {
         callback({
@@ -53,7 +55,9 @@ describe("<EverybodyPlaysHost />", () => {
         });
       }
     });
-    socketOn = jest.fn();
+    socketOn = jest.fn((event, callback) => {
+      (socketListeners[event] = socketListeners[event] || []).push(callback);
+    });
   });
 
   afterEach(() => {
@@ -106,5 +110,32 @@ describe("<EverybodyPlaysHost />", () => {
       },
       expect.any(Function)
     );
+  });
+
+  it("should pause the player as soon as a challenger buzzes in", async () => {
+    getSelectedProvider.mockReturnValue("spotify");
+    const pause = jest.fn();
+    useMusicProvider.mockReturnValue({
+      isAuthenticated: true,
+      login: jest.fn().mockResolvedValue(),
+      setupPlayer: jest.fn((cb) => cb("device-1")),
+      getPlayer: jest.fn().mockReturnValue({ pause }),
+      setPlayerStateChangeCb: jest.fn(),
+      startPlayer: jest.fn().mockResolvedValue(),
+    });
+
+    const { getByTestId } = render(
+      <MemoryRouter initialEntries={["/create-session/everybody-plays"]}>
+        <EverybodyPlaysHost />
+      </MemoryRouter>
+    );
+
+    fireEvent.click(getByTestId("mock-launch-btn"));
+
+    await waitFor(() => expect(getByTestId("mock-play")).toBeInTheDocument());
+
+    (socketListeners["lockChallenge"] || []).forEach((listener) => listener("player-1"));
+
+    expect(pause).toHaveBeenCalled();
   });
 });
