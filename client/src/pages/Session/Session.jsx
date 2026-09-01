@@ -27,10 +27,28 @@ const getStoredMode = (uuid) => {
   return sessionStorage.getItem("mode") || "classic";
 };
 
+const getStoredTimerSeconds = (uuid) => {
+  if (sessionStorage.getItem("sessionUuid") !== uuid) {
+    return 5;
+  }
+
+  return parseInt(sessionStorage.getItem("timerSeconds"), 10) || 5;
+};
+
+const getStoredCooldownSeconds = (uuid) => {
+  if (sessionStorage.getItem("sessionUuid") !== uuid) {
+    return 2;
+  }
+
+  return parseInt(sessionStorage.getItem("cooldownSeconds"), 10) || 2;
+};
+
 const Session = () => {
   const { uuid } = useParams();
   const [player, setPlayer] = useState(() => getStoredPlayer(uuid));
   const [mode, setMode] = useState(() => getStoredMode(uuid));
+  const [timerSeconds, setTimerSeconds] = useState(() => getStoredTimerSeconds(uuid));
+  const [cooldownSeconds, setCooldownSeconds] = useState(() => getStoredCooldownSeconds(uuid));
   const [inSession, setInSession] = useState(false);
   const [challengers, setChallengers] = useState([]);
 
@@ -39,6 +57,8 @@ const Session = () => {
       sessionStorage.removeItem("player");
       sessionStorage.removeItem("sessionUuid");
       sessionStorage.removeItem("mode");
+      sessionStorage.removeItem("timerSeconds");
+      sessionStorage.removeItem("cooldownSeconds");
       setPlayer({});
       setInSession(false);
     }
@@ -51,6 +71,14 @@ const Session = () => {
         if (response.mode) {
           setMode(response.mode);
           sessionStorage.setItem("mode", response.mode);
+        }
+        if (response.challengeTimerSeconds) {
+          setTimerSeconds(response.challengeTimerSeconds);
+          sessionStorage.setItem("timerSeconds", response.challengeTimerSeconds);
+        }
+        if (response.challengeCooldownSeconds !== undefined) {
+          setCooldownSeconds(response.challengeCooldownSeconds);
+          sessionStorage.setItem("cooldownSeconds", response.challengeCooldownSeconds);
         }
       });
       setInSession(true);
@@ -67,6 +95,8 @@ const Session = () => {
             onJoin={(response) => {
               setPlayer(response.player);
               setMode(response.mode || "classic");
+              setTimerSeconds(response.challengeTimerSeconds || 5);
+              setCooldownSeconds(response.challengeCooldownSeconds ?? 2);
               setInSession(true);
               setChallengers(response.challengers);
             }}
@@ -81,6 +111,8 @@ const Session = () => {
           player={player}
           socket={socket}
           challengers={challengers}
+          timerSeconds={timerSeconds}
+          cooldownSeconds={cooldownSeconds}
           onLeave={() => {
             setPlayer({});
             setInSession(false);

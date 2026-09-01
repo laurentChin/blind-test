@@ -12,10 +12,21 @@ if (window.Notification && window.Notification.permission !== 'granted') {
 
 const CHALLENGER_DRAWER_ID = "challenger-drawer";
 
-const Play = ({ sessionUuid, socket, player, onLeave, mode = "classic", ...props }) => {
+const Play = ({
+  sessionUuid,
+  socket,
+  player,
+  onLeave,
+  mode = "classic",
+  timerSeconds = 5,
+  cooldownSeconds = 2,
+  ...props
+}) => {
   const [challengers, setChallengers] = useState(props.challengers || []);
   const [isChallengeLocked, setChallengeLock] = useState(false);
   const [challengerUuid, setChallengerUuid] = useState();
+  const [isOnCooldown, setIsOnCooldown] = useState(false);
+  const cooldownTimeoutRef = useRef();
   // "everybodyPlays" only: the current/upcoming track, privately cached from
   // the host's trackReady broadcast ahead of time and only ever shown once
   // this player reveals it themselves (see Play mode docs in the plan).
@@ -44,6 +55,22 @@ const Play = ({ sessionUuid, socket, player, onLeave, mode = "classic", ...props
     setChallengerUuid(undefined);
     setChallengers(msg);
   });
+
+  socket.on("challengeTimedOut", (timedOutPlayerUuid) => {
+    setChallengeLock(false);
+    setChallengerUuid(undefined);
+
+    if (timedOutPlayerUuid === player.uuid) {
+      clearTimeout(cooldownTimeoutRef.current);
+      setIsOnCooldown(true);
+      cooldownTimeoutRef.current = setTimeout(
+        () => setIsOnCooldown(false),
+        cooldownSeconds * 1000
+      );
+    }
+  });
+
+  useEffect(() => () => clearTimeout(cooldownTimeoutRef.current), []);
 
   socket.on("trackReady", (track) => {
     setCurrentTrack(track);
@@ -116,7 +143,10 @@ const Play = ({ sessionUuid, socket, player, onLeave, mode = "classic", ...props
             <button
               type="button"
               data-testid="reveal-answer-btn"
-              className="btn btn-accent reveal-answer-btn"
+              className={`btn btn-accent reveal-answer-btn ${
+                isChallengeLocked ? "is-timing" : ""
+              }`.trim()}
+              style={{ "--timer-duration": `${timerSeconds}s` }}
               onClick={() => setIsRevealed(true)}
             >
               Reveal the answer
@@ -163,13 +193,19 @@ const Play = ({ sessionUuid, socket, player, onLeave, mode = "classic", ...props
           style={{
             "--player-color": `rgb(${player.color.background})`,
             "--player-color-text": `rgb(${player.color.text})`,
+            "--timer-duration": `${timerSeconds}s`,
+            "--cooldown-duration": `${cooldownSeconds}s`,
           }}
-          disabled={isChallengeLocked || isExcluded}
+          disabled={isChallengeLocked || isExcluded || isOnCooldown}
           onClick={buzzIn}
           data-testid="challenge-button"
-          className="Session-challenge-button"
+          className={`Session-challenge-button ${
+            isChallengeLocked ? "is-timing" : ""
+          } ${isOnCooldown ? "is-cooldown" : ""}`.trim()}
         >
-          {isChallengeLocked
+          {isOnCooldown
+            ? "Cooldown…"
+            : isChallengeLocked
             ? mode === "everybodyPlays"
               ? "Answering…"
               : lockedChallenger?.name
@@ -253,6 +289,8 @@ const Play = ({ sessionUuid, socket, player, onLeave, mode = "classic", ...props
 Play.propTypes = {
   sessionUuid: PropTypes.string.isRequired,
   mode: PropTypes.oneOf(["classic", "everybodyPlays"]),
+  timerSeconds: PropTypes.number,
+  cooldownSeconds: PropTypes.number,
   player: PropTypes.shape({
     uuid: PropTypes.string.isRequired,
     color: colorPropType.isRequired,

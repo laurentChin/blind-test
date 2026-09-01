@@ -26,13 +26,17 @@ const io = new Server(httpServer, {
 const verboseOutput = process.env.VERBOSE;
 
 io.on("connection", socket => {
-  socket.on("createSession", ({ sessionUuid, mode }) => {
+  socket.on("createSession", ({ sessionUuid, mode, timerSeconds, cooldownSeconds }) => {
     sessions.set(sessionUuid, {
       currentChallenger: null,
       challengers: new Map(),
       colors: [...colors],
       mode: mode || "classic",
       excludedPlayers: new Set(),
+      challengeTimerSeconds: timerSeconds ?? 5,
+      challengeCooldownSeconds: cooldownSeconds ?? 2,
+      cooldowns: new Map(),
+      challengeTimeoutHandle: null,
     });
 
     socket.join(sessionUuid);
@@ -78,6 +82,8 @@ io.on("connection", socket => {
       challengers,
       sessionUuid,
       mode: session.mode,
+      challengeTimerSeconds: session.challengeTimerSeconds,
+      challengeCooldownSeconds: session.challengeCooldownSeconds,
     });
 
     io.to(sessionUuid).emit("challengersUpdate", challengers);
@@ -103,6 +109,8 @@ io.on("connection", socket => {
         callback({
           challengers: Array.from(session.challengers.values()),
           mode: session.mode,
+          challengeTimerSeconds: session.challengeTimerSeconds,
+          challengeCooldownSeconds: session.challengeCooldownSeconds,
         });
       }
     }
@@ -121,6 +129,8 @@ io.on("connection", socket => {
         ...(session && session.colors.length > 0 ? session.colors : colors),
       ],
       mode: session ? session.mode : "classic",
+      challengeTimerSeconds: session ? session.challengeTimerSeconds : 5,
+      challengeCooldownSeconds: session ? session.challengeCooldownSeconds : 2,
     });
   });
 
@@ -133,6 +143,14 @@ io.on("connection", socket => {
 
     const session = sessions.get(sessionUuid);
 
+    const cooldownUntil = session.cooldowns.get(playerUuid);
+    if (cooldownUntil && cooldownUntil > Date.now()) {
+      if (callback) {
+        callback({ rejected: true });
+      }
+      return;
+    }
+
     if (session.mode === "everybodyPlays" && session.excludedPlayers.has(playerUuid)) {
       if (callback) {
         callback({ rejected: true });
@@ -142,6 +160,22 @@ io.on("connection", socket => {
 
     session.currentChallenger = playerUuid;
     io.to(sessionUuid).emit("lockChallenge", playerUuid);
+
+    clearTimeout(session.challengeTimeoutHandle);
+    session.challengeTimeoutHandle = setTimeout(() => {
+      session.currentChallenger = null;
+      session.cooldowns.set(
+        playerUuid,
+        Date.now() + session.challengeCooldownSeconds * 1000
+      );
+      io.to(sessionUuid).emit("challengeTimedOut", playerUuid);
+
+      if (verboseOutput) {
+        logger.notice(
+          `challengeTimedOut event has been emitted to session ${sessionUuid} for player ${playerUuid}`
+        );
+      }
+    }, session.challengeTimerSeconds * 1000);
 
     if (callback) {
       callback({ rejected: false });
@@ -158,6 +192,7 @@ io.on("connection", socket => {
     const session = sessions.get(sessionUuid);
     const challenger = session.challengers.get(session.currentChallenger);
 
+    clearTimeout(session.challengeTimeoutHandle);
     session.currentChallenger = null;
     challenger.score = parseFloat(challenger.score) + parseFloat(score);
 
@@ -209,6 +244,7 @@ io.on("connection", socket => {
     }
 
     const session = sessions.get(sessionUuid);
+    clearTimeout(session.challengeTimeoutHandle);
     session.excludedPlayers.add(playerUuid);
     session.currentChallenger = null;
 
@@ -238,6 +274,7 @@ io.on("connection", socket => {
     }
 
     const session = sessions.get(sessionUuid);
+    clearTimeout(session.challengeTimeoutHandle);
     session.currentChallenger = null;
 
     io.to(sessionUuid).emit(
@@ -305,6 +342,7 @@ io.on("connection", socket => {
         );
       }
 
+      clearTimeout(sessions.get(sessionUuid).challengeTimeoutHandle);
       sessions.delete(sessionUuid);
       io.to(sessionUuid).emit("sessionClosedByMaster");
       socket.leave(sessionUuid);

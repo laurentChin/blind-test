@@ -42,6 +42,14 @@ const JoinForm = ({ socket, onJoin, sessionUuid }) => {
         sessionStorage.setItem("player", JSON.stringify(player));
         sessionStorage.setItem("sessionUuid", response.sessionUuid);
         sessionStorage.setItem("mode", response.mode || "classic");
+        sessionStorage.setItem(
+          "timerSeconds",
+          response.challengeTimerSeconds || 5
+        );
+        sessionStorage.setItem(
+          "cooldownSeconds",
+          response.challengeCooldownSeconds ?? 2
+        );
         onJoin(response);
       }
     );

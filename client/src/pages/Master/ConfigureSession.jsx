@@ -3,6 +3,11 @@ import PropTypes from "prop-types";
 
 import { CreateOrSelectPlaylist } from "./steps/CreateOrSelectPlaylist";
 import { ManageTracks } from "./steps/ManageTracks";
+import {
+  ChallengeTimerConfig,
+  DEFAULT_TIMER_SECONDS,
+  DEFAULT_COOLDOWN_SECONDS,
+} from "../../components/ChallengeTimerConfig/ChallengeTimerConfig";
 
 import "./ConfigureSession.css";
 
@@ -12,6 +17,8 @@ const ConfigureSession = ({ provider, isAuthenticated, setTitle, onLaunch }) => 
   const [playlistId, setPlaylistId] = useState("");
   const [tracks, setTracks] = useState([]);
   const [isLoadingTracks, setIsLoadingTracks] = useState(false);
+  const [timerSeconds, setTimerSeconds] = useState(DEFAULT_TIMER_SECONDS);
+  const [cooldownSeconds, setCooldownSeconds] = useState(DEFAULT_COOLDOWN_SECONDS);
   const isFirstProviderRender = useRef(true);
   const isFirstPlaylistRender = useRef(true);
 
@@ -69,11 +76,23 @@ const ConfigureSession = ({ provider, isAuthenticated, setTitle, onLaunch }) => 
         />
       </section>
 
+      <section className="config-step" inert={!isTracksValidated}>
+        <h2>3. Timer settings</h2>
+        <ChallengeTimerConfig
+          timerSeconds={timerSeconds}
+          cooldownSeconds={cooldownSeconds}
+          onChange={({ timerSeconds, cooldownSeconds }) => {
+            setTimerSeconds(timerSeconds);
+            setCooldownSeconds(cooldownSeconds);
+          }}
+        />
+      </section>
+
       {isTracksValidated && (
         <button
           type="button"
           className="btn btn-positive launch-button"
-          onClick={() => onLaunch(tracks)}
+          onClick={() => onLaunch({ tracks, timerSeconds, cooldownSeconds })}
         >
           Launch the session
         </button>

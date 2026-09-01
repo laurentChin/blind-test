@@ -29,18 +29,13 @@ const EverybodyPlaysHost = () => {
   const [identity, setIdentity] = useState(null);
   const [selfPlayer, setSelfPlayer] = useState(null);
   const [challengers, setChallengers] = useState([]);
+  const [challengeTimerSeconds, setChallengeTimerSeconds] = useState();
+  const [challengeCooldownSeconds, setChallengeCooldownSeconds] = useState();
   const [deviceId, setDeviceId] = useState("");
   const [hasSessionStart, setHasSessionStart] = useState(false);
   const [isPaused, setIsPaused] = useState(true);
   const { run, className: startLoadingClassName } = useAsyncAction();
   const { run: runCloseSession, isArmed: isCloseArmed } = useConfirmAction();
-
-  useEffect(() => {
-    socket.emit("createSession", {
-      sessionUuid: SESSION_UUID,
-      mode: "everybodyPlays",
-    });
-  }, []);
 
   useEffect(() => {
     if (!identity) return;
@@ -56,6 +51,8 @@ const EverybodyPlaysHost = () => {
       (response) => {
         setSelfPlayer(response.player);
         setChallengers(response.challengers);
+        setChallengeTimerSeconds(response.challengeTimerSeconds);
+        setChallengeCooldownSeconds(response.challengeCooldownSeconds);
       }
     );
 
@@ -90,6 +87,7 @@ const EverybodyPlaysHost = () => {
     // Same player instance is the one that must stop the music as soon as
     // anyone buzzes in (mirrors ManageSession.jsx's classic-mode handler).
     socket.on("lockChallenge", () => musicProvider.getPlayer().pause?.());
+    socket.on("challengeTimedOut", () => musicProvider.getPlayer().resume?.());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [identity]);
 
@@ -214,6 +212,8 @@ const EverybodyPlaysHost = () => {
           player={selfPlayer}
           socket={socket}
           challengers={challengers}
+          timerSeconds={challengeTimerSeconds}
+          cooldownSeconds={challengeCooldownSeconds}
           onLeave={closeSession}
         />
       )}

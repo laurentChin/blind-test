@@ -20,6 +20,8 @@ const Master = () => {
   const [title, setTitle] = useState("New session");
   const [isConfigured, setIsConfigured] = useState(false);
   const [tracks, setTracks] = useState([]);
+  const [timerSeconds, setTimerSeconds] = useState();
+  const [cooldownSeconds, setCooldownSeconds] = useState();
 
   // Provider choice now happens on the shared home gate — a session creator
   // who lands here directly (bookmarked link, back/forward) hasn't made that
@@ -30,7 +32,13 @@ const Master = () => {
 
   if (isConfigured) {
     return (
-      <ManageSession sessionUuid={SESSION_UUID} socket={socket} tracks={tracks} />
+      <ManageSession
+        sessionUuid={SESSION_UUID}
+        socket={socket}
+        tracks={tracks}
+        timerSeconds={timerSeconds}
+        cooldownSeconds={cooldownSeconds}
+      />
     );
   }
 
@@ -41,8 +49,10 @@ const Master = () => {
         provider={provider}
         isAuthenticated={isAuthenticated}
         setTitle={setTitle}
-        onLaunch={(launchedTracks) => {
+        onLaunch={({ tracks: launchedTracks, timerSeconds, cooldownSeconds }) => {
           setTracks(launchedTracks);
+          setTimerSeconds(timerSeconds);
+          setCooldownSeconds(cooldownSeconds);
           setIsConfigured(true);
         }}
       />

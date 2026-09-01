@@ -110,6 +110,35 @@ describe("<ConfigureEverybodyPlaysSession />", () => {
     });
   });
 
+  it("should create the session with the default timer/cooldown, or the edited values", async () => {
+    const utils = setup({ candidateCount: 15 });
+    const { getByTestId, socket, onLaunch } = utils;
+
+    fillIdentity(utils);
+    fireEvent.change(getByTestId("playlist-name-input"), {
+      target: { value: "Friday night" },
+    });
+    fireEvent.click(getByTestId("select-theme-80s-btn"));
+    fireEvent.click(getByTestId("select-count-10-btn"));
+    fireEvent.change(getByTestId("timer-seconds-input"), {
+      target: { value: "8" },
+    });
+    fireEvent.change(getByTestId("cooldown-seconds-input"), {
+      target: { value: "3" },
+    });
+
+    fireEvent.click(getByTestId("generate-and-launch-btn"));
+
+    await waitFor(() => expect(onLaunch).toHaveBeenCalled());
+
+    expect(socket.emit).toHaveBeenCalledWith("createSession", {
+      sessionUuid: "session-12345",
+      mode: "everybodyPlays",
+      timerSeconds: 8,
+      cooldownSeconds: 3,
+    });
+  });
+
   it("should use the custom theme text instead of a preset when typed", async () => {
     const utils = setup({ candidateCount: 15 });
     const { getByTestId, musicProvider, onLaunch } = utils;

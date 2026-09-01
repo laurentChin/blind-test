@@ -138,4 +138,31 @@ describe("<EverybodyPlaysHost />", () => {
 
     expect(pause).toHaveBeenCalled();
   });
+
+  it("should resume playback when the challenge timer expires", async () => {
+    getSelectedProvider.mockReturnValue("spotify");
+    const resume = jest.fn();
+    useMusicProvider.mockReturnValue({
+      isAuthenticated: true,
+      login: jest.fn().mockResolvedValue(),
+      setupPlayer: jest.fn((cb) => cb("device-1")),
+      getPlayer: jest.fn().mockReturnValue({ resume }),
+      setPlayerStateChangeCb: jest.fn(),
+      startPlayer: jest.fn().mockResolvedValue(),
+    });
+
+    const { getByTestId } = render(
+      <MemoryRouter initialEntries={["/create-session/everybody-plays"]}>
+        <EverybodyPlaysHost />
+      </MemoryRouter>
+    );
+
+    fireEvent.click(getByTestId("mock-launch-btn"));
+
+    await waitFor(() => expect(getByTestId("mock-play")).toBeInTheDocument());
+
+    (socketListeners["challengeTimedOut"] || []).forEach((listener) => listener());
+
+    expect(resume).toHaveBeenCalled();
+  });
 });

@@ -101,6 +101,38 @@ describe("<ConfigureSession />", () => {
     expect(onLaunch).toHaveBeenCalled();
   });
 
+  it("should call onLaunch with the default timer/cooldown, or the edited values", () => {
+    const { getByText, getByTestId, onLaunch } = setup({
+      isAuthenticated: true,
+    });
+
+    fireEvent.click(getByText("select playlist"));
+    fireEvent.click(getByText("load tracks"));
+    fireEvent.click(getByText("Launch the session"));
+
+    expect(onLaunch).toHaveBeenCalledWith({
+      tracks: expect.any(Array),
+      timerSeconds: 5,
+      cooldownSeconds: 2,
+    });
+
+    onLaunch.mockClear();
+
+    fireEvent.change(getByTestId("timer-seconds-input"), {
+      target: { value: "10" },
+    });
+    fireEvent.change(getByTestId("cooldown-seconds-input"), {
+      target: { value: "4" },
+    });
+    fireEvent.click(getByText("Launch the session"));
+
+    expect(onLaunch).toHaveBeenCalledWith({
+      tracks: expect.any(Array),
+      timerSeconds: 10,
+      cooldownSeconds: 4,
+    });
+  });
+
   it("should invalidate the playlist and tracks steps when the provider changes", () => {
     const setTitle = jest.fn();
     const onLaunch = jest.fn();
