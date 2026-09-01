@@ -64,6 +64,103 @@ describe("<Play />", () => {
     expect(getByTestId("challenge-button")).toBeDisabled();
   });
 
+  it("should show the timer fill while a challenge is locked", async () => {
+    const { getByTestId } = render(
+      <Play
+        sessionUuid="session-12345"
+        player={{
+          uuid: "player-12345",
+          name: "bob",
+          color: { background: "230, 25, 75", text: "255, 255, 255" },
+        }}
+        socket={mockSocket}
+        onLeave={jest.fn}
+        challengers={[]}
+        timerSeconds={7}
+      />
+    );
+
+    await act(async () => {
+      mockSocket.emit("lockChallenge", "player-12345");
+    });
+
+    expect(getByTestId("challenge-button")).toHaveClass("is-timing");
+    expect(getByTestId("challenge-button")).toHaveStyle(
+      "--timer-duration: 7s"
+    );
+  });
+
+  it("should unfreeze everyone and put the timed-out challenger on cooldown when the timer expires", async () => {
+    jest.useFakeTimers();
+
+    const { getByTestId } = render(
+      <Play
+        sessionUuid="session-12345"
+        player={{
+          uuid: "player-12345",
+          name: "bob",
+          color: { background: "230, 25, 75", text: "255, 255, 255" },
+        }}
+        socket={mockSocket}
+        onLeave={jest.fn}
+        challengers={[]}
+        cooldownSeconds={2}
+      />
+    );
+
+    await act(async () => {
+      mockSocket.emit("lockChallenge", "player-12345");
+    });
+
+    expect(getByTestId("challenge-button")).toBeDisabled();
+
+    await act(async () => {
+      mockSocket.emit("challengeTimedOut", "player-12345");
+    });
+
+    expect(getByTestId("challenge-button")).toBeDisabled();
+    expect(getByTestId("challenge-button")).toHaveClass("is-cooldown");
+    expect(getByTestId("challenge-button")).toHaveTextContent("Cooldown…");
+
+    await act(async () => {
+      jest.advanceTimersByTime(2000);
+    });
+
+    expect(getByTestId("challenge-button")).not.toBeDisabled();
+    expect(getByTestId("challenge-button")).toHaveTextContent("Challenge");
+
+    jest.useRealTimers();
+  });
+
+  it("should just unfreeze other players, without a cooldown, when someone else's timer expires", async () => {
+    const { getByTestId } = render(
+      <Play
+        sessionUuid="session-12345"
+        player={{
+          uuid: "player-12345",
+          name: "bob",
+          color: { background: "230, 25, 75", text: "255, 255, 255" },
+        }}
+        socket={mockSocket}
+        onLeave={jest.fn}
+        challengers={[]}
+      />
+    );
+
+    await act(async () => {
+      mockSocket.emit("lockChallenge", "other-player");
+    });
+
+    expect(getByTestId("challenge-button")).toBeDisabled();
+
+    await act(async () => {
+      mockSocket.emit("challengeTimedOut", "other-player");
+    });
+
+    expect(getByTestId("challenge-button")).not.toBeDisabled();
+    expect(getByTestId("challenge-button")).not.toHaveClass("is-cooldown");
+  });
+
   it("should call onLeave callback on confirm when user click on leave button", () => {
     const onLeaveCb = jest.fn();
 

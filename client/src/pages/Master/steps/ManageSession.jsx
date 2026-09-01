@@ -34,7 +34,11 @@ const ManageSession = ({ sessionUuid, socket, ...props }) => {
       setPlayerReadyState(true);
       setDeviceId(readyDeviceId);
       setPlayer(musicProvider.getPlayer());
-      socket.emit("createSession", { sessionUuid });
+      socket.emit("createSession", {
+        sessionUuid,
+        timerSeconds: props.timerSeconds,
+        cooldownSeconds: props.cooldownSeconds,
+      });
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -48,6 +52,11 @@ const ManageSession = ({ sessionUuid, socket, ...props }) => {
       setChallengerUuid(msg);
     });
   }
+
+  socket.on("challengeTimedOut", () => {
+    setChallengerUuid("");
+    player.resume?.();
+  });
 
   const releaseChallenger = (score) => {
     player.getCurrentState().then((playerState) => {
@@ -183,6 +192,8 @@ ManageSession.propTypes = {
   deviceId: PropTypes.string,
   player: PropTypes.object,
   tracks: PropTypes.array,
+  timerSeconds: PropTypes.number,
+  cooldownSeconds: PropTypes.number,
   socket: PropTypes.shape({
     emit: PropTypes.func.isRequired,
     on: PropTypes.func.isRequired,

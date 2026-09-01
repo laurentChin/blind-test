@@ -5,6 +5,11 @@ import { ColorPicker } from "../../components/ColorPicker/ColorPicker";
 import { useMusicProvider } from "../../contexts/MusicProvider";
 import { useAsyncAction } from "../../hooks/useAsyncAction";
 import { MIN_TRACKS } from "../Master/ConfigureSession";
+import {
+  ChallengeTimerConfig,
+  DEFAULT_TIMER_SECONDS,
+  DEFAULT_COOLDOWN_SECONDS,
+} from "../../components/ChallengeTimerConfig/ChallengeTimerConfig";
 import { THEMES } from "./themes";
 
 import "./ConfigureEverybodyPlaysSession.css";
@@ -71,6 +76,8 @@ const ConfigureEverybodyPlaysSession = ({ sessionUuid, socket, onLaunch }) => {
   const [customTheme, setCustomTheme] = useState("");
   const [trackCount, setTrackCount] = useState(TRACK_COUNT_PRESETS[0]);
   const [isCustomCount, setIsCustomCount] = useState(false);
+  const [timerSeconds, setTimerSeconds] = useState(DEFAULT_TIMER_SECONDS);
+  const [cooldownSeconds, setCooldownSeconds] = useState(DEFAULT_COOLDOWN_SECONDS);
 
   const [addedCount, setAddedCount] = useState(0);
   const [error, setError] = useState("");
@@ -107,6 +114,13 @@ const ConfigureEverybodyPlaysSession = ({ sessionUuid, socket, onLaunch }) => {
     run(async () => {
       setError("");
       setAddedCount(0);
+
+      socket.emit("createSession", {
+        sessionUuid,
+        mode: "everybodyPlays",
+        timerSeconds,
+        cooldownSeconds,
+      });
 
       const { id: playlistId } = await musicProvider.createPlaylist(
         playlistName
@@ -259,6 +273,21 @@ const ConfigureEverybodyPlaysSession = ({ sessionUuid, socket, onLaunch }) => {
             />
           </div>
         )}
+      </section>
+
+      <section
+        className="config-step"
+        inert={!isIdentityValid || !isPlaylistNameValid || !isThemeValid}
+      >
+        <h2>5. Timer settings</h2>
+        <ChallengeTimerConfig
+          timerSeconds={timerSeconds}
+          cooldownSeconds={cooldownSeconds}
+          onChange={({ timerSeconds, cooldownSeconds }) => {
+            setTimerSeconds(timerSeconds);
+            setCooldownSeconds(cooldownSeconds);
+          }}
+        />
       </section>
 
       {error && <p className="generation-error">{error}</p>}

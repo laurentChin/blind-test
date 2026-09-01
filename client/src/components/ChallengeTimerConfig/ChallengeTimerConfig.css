@@ -1,0 +1,12 @@
+.ChallengeTimerConfig {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.timer-config-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  max-width: 220px;
+}

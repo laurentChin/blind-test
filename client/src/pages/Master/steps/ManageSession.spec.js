@@ -216,6 +216,48 @@ describe("<ManageSession />", () => {
     expect(container.querySelector(".active-challenger-row")).toBeFalsy();
   });
 
+  it("should resume playback and clear the lock when the challenge timer expires", async () => {
+    const startPlayer = jest.fn().mockResolvedValue({});
+    const getPlayer = jest.fn();
+    const player = { pause: jest.fn(), resume: jest.fn() };
+    const setPlayerStateChangeCb = jest.fn();
+    useMusicProvider.mockReturnValue({
+      startPlayer,
+      getPlayer,
+      setPlayerStateChangeCb,
+    });
+    const { container } = render(
+      <ManageSession
+        sessionUuid="1112345678"
+        isPlayerReady={true}
+        deviceId="122536"
+        player={player}
+        socket={mockSocket}
+      />
+    );
+
+    await act(async () => {
+      mockSocket.emit("challengersUpdate", [
+        {
+          uuid: "qwewrw-1232553",
+          name: "name1",
+          score: 1,
+          color: { background: "1, 2, 3", text: "255, 255, 255" },
+        },
+      ]);
+      mockSocket.emit("lockChallenge", "qwewrw-1232553");
+    });
+
+    expect(container.querySelector(".active-challenger-row")).toBeTruthy();
+
+    await act(async () => {
+      mockSocket.emit("challengeTimedOut", "qwewrw-1232553");
+    });
+
+    expect(player.resume).toHaveBeenCalled();
+    expect(container.querySelector(".active-challenger-row")).toBeFalsy();
+  });
+
   it("should display the challenge actions buttons when a user try to answer", async () => {
     const startPlayer = jest.fn().mockResolvedValue({});
     const getPlayer = jest.fn();

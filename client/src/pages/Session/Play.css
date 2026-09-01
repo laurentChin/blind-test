@@ -29,6 +29,58 @@
   opacity: 0.85;
 }
 
+/* Timer/cooldown overlays: a semi-transparent layer that drains (timer, time
+   running out) or fills (cooldown, time to wait) over the configured
+   duration, exposed as CSS custom properties so JS never has to hardcode or
+   re-derive the animation length — see ChallengeTimerConfig. */
+.Session-challenge-button.is-timing,
+.reveal-answer-btn.is-timing,
+.Session-challenge-button.is-cooldown {
+  position: relative;
+  overflow: hidden;
+}
+
+.Session-challenge-button.is-timing::after,
+.reveal-answer-btn.is-timing::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: rgb(0 0 0 / 0.25);
+  transform-origin: right;
+  animation: challenge-timer-drain var(--timer-duration) linear forwards;
+  pointer-events: none;
+}
+
+.Session-challenge-button.is-cooldown::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: rgb(0 0 0 / 0.35);
+  transform-origin: left;
+  animation: challenge-cooldown-fill var(--cooldown-duration) linear forwards;
+  pointer-events: none;
+}
+
+@keyframes challenge-timer-drain {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
+@keyframes challenge-cooldown-fill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
 .reveal-container {
   box-sizing: border-box;
   /* Same fix as .Session-challenge-button above: a normal flow child of the
