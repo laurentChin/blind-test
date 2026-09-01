@@ -87,6 +87,9 @@ const EverybodyPlaysHost = () => {
     // scores (or the host's own "Skip") triggers this broadcast, and this is
     // the one tab holding the actual Spotify/Apple Music player instance.
     socket.on("startNewChallenge", () => musicProvider.getPlayer().nextTrack?.());
+    // Same player instance is the one that must stop the music as soon as
+    // anyone buzzes in (mirrors ManageSession.jsx's classic-mode handler).
+    socket.on("lockChallenge", () => musicProvider.getPlayer().pause?.());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [identity]);
 
