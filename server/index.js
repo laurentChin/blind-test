@@ -6,6 +6,7 @@ import { Server } from "socket.io";
 import { v4 } from "uuid";
 import * as logger from "./src/logger.js";
 import { generateSessionColors } from "./src/colors.js";
+import { createHttpRequestListener } from "./src/httpRouter.js";
 
 const sessions = new Map();
 
@@ -15,7 +16,11 @@ const sessions = new Map();
 // on it, computed from actual WCAG contrast rather than assumed.
 const colors = generateSessionColors();
 
-const httpServer = createServer();
+// Registered before socket.io attaches so Engine.IO preserves it as a
+// fallback for any request that isn't one of its own (see its `attach`
+// behavior) — that's how these plain HTTP routes and the socket.io
+// handshake share the same port.
+const httpServer = createServer(createHttpRequestListener());
 const io = new Server(httpServer, {
   cors: {
     origin: process.env.CLIENT_URL,

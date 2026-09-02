@@ -10,9 +10,8 @@ client/.certs
 server/.env
 server/node_modules
 
-# Lambdas
-lambdas/**/node_modules
-lambdas/**/*.zip
+# Secrets
+*.p8
 
 # Husky
 .husky/_

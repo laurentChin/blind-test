@@ -56,6 +56,12 @@ jobs:
             cat > .env <<ENVEOF
             PORT=${{ vars.SERVER_PORT }}
             CLIENT_URL=${{ vars.CLIENT_URL }}
+            SPOTIFY_CLIENT_ID=${{ vars.SPOTIFY_CLIENT_ID }}
+            SPOTIFY_CLIENT_SECRET=${{ secrets.SPOTIFY_CLIENT_SECRET }}
+            SPOTIFY_TOKEN_ENDPOINT=${{ vars.SPOTIFY_TOKEN_API_ENDPOINT }}
+            APPLE_TEAM_ID=${{ secrets.APPLE_TEAM_ID }}
+            APPLE_KEY_ID=${{ secrets.APPLE_KEY_ID }}
+            APPLE_PRIVATE_KEY=${{ secrets.APPLE_PRIVATE_KEY }}
             ENVEOF
             docker stop blind-test-server || true
             docker rm blind-test-server || true
