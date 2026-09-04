@@ -131,6 +131,70 @@ describe("<JoinForm />", () => {
     expect(getByText("Join")).not.toBeDisabled();
   });
 
+  it("Should display the list of already-joined players below the form", () => {
+    const { getByText } = render(
+      <JoinForm
+        socket={mockSocket}
+        onJoin={jest.fn()}
+        sessionUuid="525452ee-5863-412f-b6e2-0cf9385c09e6"
+      />
+    );
+
+    expect(getByText("bob")).toBeInTheDocument();
+  });
+
+  it("Should let the player pick another color when theirs was just taken", async () => {
+    mockSocket.emit = jest.fn((event, _, callback) => {
+      switch (event) {
+        case "joinWaitingRoom":
+          callback({
+            challengers: [],
+            colors: [
+              { background: "230, 25, 75", text: "255, 255, 255" },
+              { background: "245, 130, 49", text: "0, 0, 0" },
+            ],
+          });
+          break;
+        case "join":
+          callback({
+            error: "colorTaken",
+            colors: [{ background: "245, 130, 49", text: "0, 0, 0" }],
+          });
+          break;
+      }
+    });
+
+    const onJoin = jest.fn();
+    const { getByText, container } = render(
+      <JoinForm
+        socket={mockSocket}
+        onJoin={onJoin}
+        sessionUuid="525452ee-5863-412f-b6e2-0cf9385c09e6"
+      />
+    );
+
+    const nameInput = container.querySelector(
+      "[data-testid='player-name-input']"
+    );
+
+    await act(async () => {
+      fireEvent(
+        nameInput,
+        createEvent.change(nameInput, { target: { value: "Jane" } })
+      );
+      fireEvent.click(container.querySelector(".color-button"));
+    });
+
+    fireEvent.click(getByText("Join"));
+
+    expect(onJoin).not.toHaveBeenCalled();
+    expect(
+      getByText("That color was just taken — please pick another one.")
+    ).toBeInTheDocument();
+    expect(container.querySelectorAll(".color-button")).toHaveLength(1);
+    expect(getByText("Join")).toBeDisabled();
+  });
+
   it("Should call the onJoin props when joining a session", async () => {
     const onJoin = jest.fn();
 

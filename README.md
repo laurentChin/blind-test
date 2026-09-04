@@ -19,7 +19,7 @@ The server has no database: all session/game state lives in memory and is lost o
 - Node.js 22
 - [Yarn](https://yarnpkg.com/) (client and root tooling) and npm (server)
 - [tmux](https://github.com/tmux/tmux) for the side-by-side dev launcher (`brew install tmux`) — optional, see [Running both together](#running-both-together)
-- [mkcert](https://github.com/FiloSottile/mkcert) for a locally-trusted HTTPS cert on the client dev server — optional, see [Client setup](#client-setup)
+- [mkcert](https://github.com/FiloSottile/mkcert) for a locally-trusted HTTPS cert shared by the client dev server and the server's socket.io/HTTP endpoints — optional, see [Client setup](#client-setup)
 
 ## Setup
 
@@ -40,6 +40,8 @@ Create `server/.env`:
 | `SPOTIFY_TOKEN_ENDPOINT` | Spotify's OAuth token endpoint |
 | `APPLE_TEAM_ID` / `APPLE_KEY_ID` / `APPLE_PRIVATE_KEY` | Apple Developer credentials used to sign MusicKit developer tokens (`APPLE_PRIVATE_KEY` is the `.p8` key content, with newlines escaped as `\n`) |
 
+The server speaks HTTPS/WSS automatically when it finds the client's mkcert certificate at `client/.certs` (see [Client setup](#client-setup)); otherwise it falls back to plain HTTP. Since the client dev server always runs over HTTPS, a plain-HTTP server means browsers reject its socket.io connection as mixed content (Safari does this outright; other browsers may warn) — so mkcert is effectively required for local dev, not just for avoiding a client-side certificate warning.
+
 ### Client setup
 
 ```bash
@@ -51,14 +53,14 @@ Create `client/.env`:
 
 | Variable | Purpose |
 | --- | --- |
-| `REACT_APP_SOCKET_URI` | URL of the server's socket.io endpoint, e.g. `http://localhost:5001` |
+| `REACT_APP_SOCKET_URI` | URL of the server's socket.io endpoint, e.g. `https://localhost:5001` (must be `https://` — see the mkcert note below) |
 | `REACT_APP_URL` | Public URL of the client itself, used to build the QR-code join link, e.g. `https://127.0.0.1:3001` |
 | `REACT_APP_SPOTIFY_CLIENT_ID` | Spotify app client ID |
 | `REACT_APP_SPOTIFY_AUTHORIZE_ENDPOINT` / `REACT_APP_SPOTIFY_TOKEN_ENDPOINT` / `REACT_APP_SPOTIFY_API_ENDPONT` | Spotify OAuth authorize/token endpoints and Web API base URL |
 | `REACT_APP_APPLE_MUSIC_DEVELOPER_TOKEN_ENDPOINT` | The server's endpoint for fetching a MusicKit developer token |
 | `REACT_APP_GIPHY_API_KEY` | Giphy API key, used for result-screen GIFs |
 
-The client's dev server ([Rsbuild](https://rsbuild.dev/)) runs over HTTPS, self-signed by default (browsers will warn). To use a locally-trusted certificate instead:
+The client's dev server ([Rsbuild](https://rsbuild.dev/)) runs over HTTPS, self-signed by default (browsers will warn). To use a locally-trusted certificate instead — this same certificate is also picked up by the server (see [Server setup](#server-setup)) so its socket.io/HTTP endpoints can run over HTTPS/WSS too:
 
 ```bash
 brew install mkcert
@@ -67,7 +69,7 @@ mkdir -p client/.certs
 mkcert -cert-file client/.certs/localhost.pem -key-file client/.certs/localhost-key.pem localhost 127.0.0.1 ::1
 ```
 
-`client/.certs` is gitignored; the dev server picks up the certificate automatically when present. The `mkcert` command above already includes `127.0.0.1` in the certificate (see the Spotify note below), so no extra step is needed there.
+`client/.certs` is gitignored; the client dev server and the server both pick up the certificate automatically when present (the server reads it straight out of `client/.certs`, without its own copy). The `mkcert` command above already includes `127.0.0.1` in the certificate (see the Spotify note below), so no extra step is needed there.
 
 **Spotify login locally must go through `127.0.0.1`, not `localhost`.** Spotify no longer accepts `localhost` as a redirect URI ([migration guide](https://developer.spotify.com/documentation/web-api/tutorials/migration-insecure-redirect-uri)) — it must be the loopback IP literal. This means:
 - `CLIENT_URL` (server) and `REACT_APP_URL` (client) must both be `https://127.0.0.1:3001`, and the client dev server must actually be reachable there — `rsbuild.config.mjs` sets `server.host: "0.0.0.0"` for this, since some setups otherwise bind only the IPv6 loopback (`localhost` resolves there and works, `127.0.0.1` doesn't).

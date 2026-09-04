@@ -1,6 +1,6 @@
 .ColorPicker {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   flex-wrap: wrap;
   gap: var(--space-2);
   border: none;
@@ -11,7 +11,7 @@
 .color-button {
   flex-basis: 2.5rem;
   height: 2.5rem;
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-sm);
   border: 3px solid transparent;
   background-color: var(--swatch-color);
   cursor: pointer;

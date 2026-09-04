@@ -14,6 +14,7 @@ const JoinForm = ({ socket, onJoin, sessionUuid }) => {
   const [playerColor, setPlayerColor] = useState(null);
   const [teamUuid, setTeamUuid] = useState("-");
   const [joinMode, setJoinMode] = useState("solo");
+  const [joinError, setJoinError] = useState("");
   const teamSelector = useRef();
   const nameInputId = useId();
   const joinModeName = useId();
@@ -47,6 +48,15 @@ const JoinForm = ({ socket, onJoin, sessionUuid }) => {
         },
       },
       (response) => {
+        if (response.error) {
+          setJoinError(
+            "That color was just taken — please pick another one."
+          );
+          setPlayerColor(null);
+          setColors(response.colors);
+          return;
+        }
+
         const { player } = response;
         sessionStorage.setItem("player", JSON.stringify(player));
         sessionStorage.setItem("sessionUuid", response.sessionUuid);
@@ -105,9 +115,13 @@ const JoinForm = ({ socket, onJoin, sessionUuid }) => {
             <ColorPicker
               colors={colors}
               value={playerColor}
-              onChange={setPlayerColor}
+              onChange={(color) => {
+                setJoinError("");
+                setPlayerColor(color);
+              }}
             />
           )}
+          {joinError && <p className="join-error">{joinError}</p>}
         </div>
       ) : (
         <div className="panel">
@@ -146,6 +160,25 @@ const JoinForm = ({ socket, onJoin, sessionUuid }) => {
       >
         Join
       </button>
+      {challengers.length > 0 && (
+        <div className="joined-players">
+          <h2 className="visually-hidden">Players who already joined</h2>
+          <ul className="joined-players-list">
+            {challengers.map((challenger) => (
+              <li key={challenger.uuid}>
+                <span
+                  className="joined-player-swatch"
+                  style={{
+                    "--swatch-color": `rgb(${challenger.color.background})`,
+                  }}
+                  aria-hidden="true"
+                />
+                <span>{challenger.name}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 };
