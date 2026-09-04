@@ -1,7 +1,11 @@
 import * as dotenv from "dotenv";
 
 dotenv.config();
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 import { createServer } from "http";
+import { createServer as createHttpsServer } from "https";
 import { Server } from "socket.io";
 import { v4 } from "uuid";
 import * as logger from "./src/logger.js";
@@ -16,11 +20,26 @@ const sessions = new Map();
 // on it, computed from actual WCAG contrast rather than assumed.
 const colors = generateSessionColors();
 
+// Reuses the client's mkcert certificate (see README) so the server can
+// speak wss:// / https:// too — the client dev server runs on HTTPS, and
+// browsers (Safari in particular) refuse a plain ws:// connection from an
+// https:// page as mixed content.
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const certDir = path.join(__dirname, "..", "client", ".certs");
+const certPath = path.join(certDir, "localhost.pem");
+const keyPath = path.join(certDir, "localhost-key.pem");
+const hasLocalCert = fs.existsSync(certPath) && fs.existsSync(keyPath);
+
 // Registered before socket.io attaches so Engine.IO preserves it as a
 // fallback for any request that isn't one of its own (see its `attach`
 // behavior) — that's how these plain HTTP routes and the socket.io
 // handshake share the same port.
-const httpServer = createServer(createHttpRequestListener());
+const httpServer = hasLocalCert
+  ? createHttpsServer(
+      { cert: fs.readFileSync(certPath), key: fs.readFileSync(keyPath) },
+      createHttpRequestListener()
+    )
+  : createServer(createHttpRequestListener());
 const io = new Server(httpServer, {
   cors: {
     origin: process.env.CLIENT_URL,
@@ -361,6 +380,10 @@ io.on("connection", socket => {
 });
 
 httpServer.listen(process.env.PORT, () => {
-  logger.notice(`Server listening on PORT ${process.env.PORT}`);
+  logger.notice(
+    `Server listening on PORT ${process.env.PORT} (${
+      hasLocalCert ? "https" : "http"
+    })`
+  );
   logger.info(`CORS allowed for ${process.env.CLIENT_URL}`);
 });
