@@ -9,6 +9,10 @@
   position: relative;
 }
 
+.Join-Session-Form .panel .ColorPicker {
+  margin-top: var(--space-3);
+}
+
 .Join-Session-Form .join-mode-picker {
   display: flex;
   gap: var(--space-2);
