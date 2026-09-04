@@ -1,11 +1,11 @@
-FROM oven/bun:1-alpine
+FROM node:22-alpine
 
 WORKDIR /app
 
-COPY package.json bun.lock ./
-RUN bun install --frozen-lockfile --production
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev
 
 COPY index.js ./
 COPY src ./src
 
-CMD ["bun", "index.js"]
+CMD ["node", "index.js"]
