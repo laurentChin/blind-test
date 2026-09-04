@@ -62,7 +62,9 @@ describe("<JoinForm />", () => {
 
     expect(queryByText("Join")).toBeDisabled();
 
-    const nameInput = container.querySelector("input");
+    const nameInput = container.querySelector(
+      "[data-testid='player-name-input']"
+    );
     const changeEvent = createEvent.change(nameInput, {
       target: { value: "John" },
     });
@@ -77,19 +79,48 @@ describe("<JoinForm />", () => {
     expect(getByText("Join")).not.toBeDisabled();
   });
 
-  it("Should display join button if the user has selected a team", async () => {
-    const onJoin = jest.fn();
+  it("Should default to the solo mode and disable the team option when no player is registered", async () => {
+    mockSocket.emit = jest.fn((event, _, callback) => {
+      if (event === "joinWaitingRoom") {
+        callback({ challengers: [], colors: [] });
+      }
+    });
 
-    const { getByText, queryByText, container } = render(
+    const { getByLabelText } = render(
       <JoinForm
         socket={mockSocket}
-        onJoin={onJoin}
+        onJoin={jest.fn()}
         sessionUuid="525452ee-5863-412f-b6e2-0cf9385c09e6"
       />
     );
 
+    expect(getByLabelText("Play solo")).toBeChecked();
+    expect(getByLabelText("Join a team")).toBeDisabled();
+  });
+
+  it("Should isolate the solo and team forms and display join button once a team is selected", async () => {
+    const onJoin = jest.fn();
+
+    const { getByText, getByLabelText, queryByText, queryByTestId, container } =
+      render(
+        <JoinForm
+          socket={mockSocket}
+          onJoin={onJoin}
+          sessionUuid="525452ee-5863-412f-b6e2-0cf9385c09e6"
+        />
+      );
+
     expect(queryByText("Join")).toBeDisabled();
-    expect(getByText("Join a team")).toBeInTheDocument();
+    expect(getByLabelText("Play solo")).toBeChecked();
+    expect(queryByTestId("player-name-input")).toBeInTheDocument();
+    expect(queryByText("Join a team", { selector: "h2" })).not.toBeInTheDocument();
+
+    await act(async () => {
+      fireEvent.click(getByLabelText("Join a team"));
+    });
+
+    expect(queryByTestId("player-name-input")).not.toBeInTheDocument();
+    expect(getByText("Join a team", { selector: "h2" })).toBeInTheDocument();
 
     await act(async () => {
       fireEvent.change(container.querySelector("select"), {
@@ -112,7 +143,9 @@ describe("<JoinForm />", () => {
     );
 
     expect(queryByText("Join")).toBeDisabled();
-    const nameInput = container.querySelector("input");
+    const nameInput = container.querySelector(
+      "[data-testid='player-name-input']"
+    );
     const changeEvent = createEvent.change(nameInput, {
       target: { value: "James" },
     });
