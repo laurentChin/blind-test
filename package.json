@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "dev": "bash scripts/dev.sh",
-    "dev:interleaved": "concurrently -n server,client -c blue,green \"yarn --cwd server start:watch\" \"PORT=3001 yarn --cwd client start\"",
+    "dev:interleaved": "concurrently -n server,client -c blue,green \"bun run --cwd server start:watch\" \"PORT=3001 yarn --cwd client start\"",
     "attach": "tmux attach -t blind-test-dev",
     "prepare": "husky"
   },

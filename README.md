@@ -9,15 +9,16 @@ A real-time, multiplayer blind-test music game. A host builds a playlist from Sp
 
 ```
 client/   React app (Rsbuild) — session creation, board/host views, player view
-server/   Node/socket.io server — game state (in-memory) + music-provider token endpoints
+server/   Bun/socket.io server — game state (in-memory) + music-provider token endpoints
 ```
 
 The server has no database: all session/game state lives in memory and is lost on restart.
 
 ## Prerequisites
 
-- Node.js 22
-- [Yarn](https://yarnpkg.com/) (client and root tooling) and npm (server)
+- Node.js 22 (client and root tooling)
+- [Bun](https://bun.sh/) 1.x (server runtime, package manager, and test runner)
+- [Yarn](https://yarnpkg.com/) (client and root tooling)
 - [tmux](https://github.com/tmux/tmux) for the side-by-side dev launcher (`brew install tmux`) — optional, see [Running both together](#running-both-together)
 - [mkcert](https://github.com/FiloSottile/mkcert) for a locally-trusted HTTPS cert on the client dev server — optional, see [Client setup](#client-setup)
 
@@ -27,7 +28,7 @@ The server has no database: all session/game state lives in memory and is lost o
 
 ```bash
 cd server
-npm install
+bun install
 ```
 
 Create `server/.env`:
@@ -91,23 +92,24 @@ yarn dev:interleaved
 
 ```bash
 # server, with auto-restart on change
-cd server && npm run start:watch
+cd server && bun run start:watch
 
 # client
 cd client && PORT=3001 yarn start
 ```
 
-Server-side changes need a manual restart to take effect (`start:watch` uses nodemon; there is no hot patching of a running game). Restarting the server drops any live session, since state is in-memory only.
+Server-side changes need a manual restart to take effect (`start:watch` uses Bun's `--watch`; there is no hot patching of a running game). Restarting the server drops any live session, since state is in-memory only.
 
 ## Testing & linting
 
 ```bash
 cd client && yarn test    # Jest + Testing Library
 cd client && yarn lint    # ESLint
-cd server && npx eslint . # ESLint (no npm script wired up yet)
+cd server && bun test      # Bun's built-in test runner
+cd server && bunx eslint . # ESLint (no npm script wired up yet)
 ```
 
-Client tests also run in CI on every pull request (`.github/workflows/test-client.yaml`).
+Client and server tests both run in CI on every pull request (`.github/workflows/test-client.yaml`, `.github/workflows/test-server.yaml`).
 
 Commit messages are linted against [Conventional Commits](https://www.conventionalcommits.org/) on every pull request (`.github/workflows/commitlint.yaml`, via `commitlint.config.js` + a `commit-msg` Husky hook).
 
@@ -117,7 +119,7 @@ Commit messages are linted against [Conventional Commits](https://www.convention
 cd client && yarn build   # outputs client/build
 ```
 
-The server runs as a plain Node process (`node index.js`) or via its Docker image (`server/Dockerfile`, `node:22-alpine`, `npm ci --omit=dev`).
+The server runs as a plain Bun process (`bun index.js`) or via its Docker image (`server/Dockerfile`, `oven/bun:1-alpine`, `bun install --frozen-lockfile --production`).
 
 ## Deployment
 

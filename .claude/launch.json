@@ -10,8 +10,8 @@
     },
     {
       "name": "server",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["start", "--prefix", "server"],
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "--cwd", "server", "start"],
       "port": 5001,
       "autoPort": false
     }
