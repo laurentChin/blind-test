@@ -13,8 +13,10 @@ const JoinForm = ({ socket, onJoin, sessionUuid }) => {
   const [colors, setColors] = useState([]);
   const [playerColor, setPlayerColor] = useState(null);
   const [teamUuid, setTeamUuid] = useState("-");
+  const [joinMode, setJoinMode] = useState("solo");
   const teamSelector = useRef();
   const nameInputId = useId();
+  const joinModeName = useId();
 
   socket.on("challengersUpdate", setChallengers);
   socket.on("availableColorsUpdate", setColors);
@@ -25,6 +27,13 @@ const JoinForm = ({ socket, onJoin, sessionUuid }) => {
       setColors(response.colors);
     });
   }, [sessionUuid]);
+
+  useEffect(() => {
+    if (challengers.length === 0 && joinMode === "team") {
+      setJoinMode("solo");
+      setTeamUuid("-");
+    }
+  }, [challengers, joinMode]);
 
   const joinSession = () =>
     socket.emit(
@@ -56,60 +65,82 @@ const JoinForm = ({ socket, onJoin, sessionUuid }) => {
 
   return (
     <div className="Join-Session-Form">
-      <div className="panel">
-        <h2>Choose a name and a color</h2>
-        <label htmlFor={nameInputId}>Name</label>
-        <input
-          id={nameInputId}
-          className="field"
-          data-testid="player-name-input"
-          type="text"
-          value={name}
-          onChange={({ currentTarget }) => setName(currentTarget.value)}
-        />
-        {colors.length > 0 && (
-          <ColorPicker
-            colors={colors}
-            value={playerColor}
-            onChange={setPlayerColor}
+      <fieldset className="join-mode-picker">
+        <legend className="visually-hidden">How do you want to play?</legend>
+        <label className="join-mode-option">
+          <input
+            type="radio"
+            name={joinModeName}
+            value="solo"
+            checked={joinMode === "solo"}
+            onChange={() => setJoinMode("solo")}
           />
-        )}
-      </div>
-      {challengers.length > 0 && (
-        <>
-          <span className="panel-separator">OR</span>
-          <div className="panel">
-            <h2>Join a team</h2>
-            <label htmlFor={`${nameInputId}-team`}>Team</label>
-            <select
-              id={`${nameInputId}-team`}
-              className="field"
-              ref={teamSelector}
-              onChange={({ target: { value } }) => {
-                if (value !== "-") {
-                  setTeamUuid(value);
-                }
-              }}
-              defaultValue={"-"}
-            >
-              <option value="-">-</option>
-              {challengers.map((challenger) => (
-                <option key={challenger.uuid} value={challenger.uuid}>
-                  {challenger.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        </>
+          Play solo
+        </label>
+        <label className="join-mode-option">
+          <input
+            type="radio"
+            name={joinModeName}
+            value="team"
+            checked={joinMode === "team"}
+            disabled={challengers.length === 0}
+            onChange={() => setJoinMode("team")}
+          />
+          Join a team
+        </label>
+      </fieldset>
+      {joinMode === "solo" ? (
+        <div className="panel">
+          <h2>Choose a name and a color</h2>
+          <label htmlFor={nameInputId}>Name</label>
+          <input
+            id={nameInputId}
+            className="field"
+            data-testid="player-name-input"
+            type="text"
+            value={name}
+            onChange={({ currentTarget }) => setName(currentTarget.value)}
+          />
+          {colors.length > 0 && (
+            <ColorPicker
+              colors={colors}
+              value={playerColor}
+              onChange={setPlayerColor}
+            />
+          )}
+        </div>
+      ) : (
+        <div className="panel">
+          <h2>Join a team</h2>
+          <label htmlFor={`${nameInputId}-team`}>Team</label>
+          <select
+            id={`${nameInputId}-team`}
+            className="field"
+            ref={teamSelector}
+            onChange={({ target: { value } }) => {
+              if (value !== "-") {
+                setTeamUuid(value);
+              }
+            }}
+            defaultValue={"-"}
+          >
+            <option value="-">-</option>
+            {challengers.map((challenger) => (
+              <option key={challenger.uuid} value={challenger.uuid}>
+                {challenger.name}
+              </option>
+            ))}
+          </select>
+        </div>
       )}
       <button
         type="button"
         className="btn btn-positive join-button"
         data-testid="join-session-btn"
         disabled={
-          (!playerColor && name === "" && teamUuid === "-") ||
-          (!playerColor && name !== "") ||
-          (!!playerColor && name === "")
+          joinMode === "solo"
+            ? !playerColor || name === ""
+            : teamUuid === "-"
         }
         onClick={joinSession}
       >
