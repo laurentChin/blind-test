@@ -9,16 +9,15 @@ A real-time, multiplayer blind-test music game. A host builds a playlist from Sp
 
 ```
 client/   React app (Rsbuild) — session creation, board/host views, player view
-server/   Bun/socket.io server — game state (in-memory) + music-provider token endpoints
+server/   Node/socket.io server — game state (in-memory) + music-provider token endpoints
 ```
 
 The server has no database: all session/game state lives in memory and is lost on restart.
 
 ## Prerequisites
 
-- Node.js 22 (client tooling)
-- [Bun](https://bun.sh/) 1.x (root tooling, and the server's runtime, package manager, and test runner)
-- [Yarn](https://yarnpkg.com/) (client package manager)
+- Node.js 22
+- [Yarn](https://yarnpkg.com/) (client and root tooling) and npm (server)
 - [tmux](https://github.com/tmux/tmux) for the side-by-side dev launcher (`brew install tmux`) — optional, see [Running both together](#running-both-together)
 - [mkcert](https://github.com/FiloSottile/mkcert) for a locally-trusted HTTPS cert on the client dev server — optional, see [Client setup](#client-setup)
 
@@ -28,7 +27,7 @@ The server has no database: all session/game state lives in memory and is lost o
 
 ```bash
 cd server
-bun install
+npm install
 ```
 
 Create `server/.env`:
@@ -77,39 +76,38 @@ The client and server ports are cross-referenced in each other's `.env` (`CLIENT
 ### Running both together
 
 ```bash
-bun run dev
+yarn dev
 ```
 
-Starts server and client side by side in a tmux session (`blind-test-dev`), each in its own pane with its own logs and scroll. Detach without stopping anything with `Ctrl-b` then `d`; reattach later with `bun run attach`.
+Starts server and client side by side in a tmux session (`blind-test-dev`), each in its own pane with its own logs and scroll. Detach without stopping anything with `Ctrl-b` then `d`; reattach later with `yarn attach`.
 
 If tmux isn't available, run them interleaved in a single terminal instead:
 
 ```bash
-bun run dev:interleaved
+yarn dev:interleaved
 ```
 
 ### Running one side at a time
 
 ```bash
 # server, with auto-restart on change
-cd server && bun run start:watch
+cd server && npm run start:watch
 
 # client
 cd client && PORT=3001 yarn start
 ```
 
-Server-side changes need a manual restart to take effect (`start:watch` uses Bun's `--watch`; there is no hot patching of a running game). Restarting the server drops any live session, since state is in-memory only.
+Server-side changes need a manual restart to take effect (`start:watch` uses nodemon; there is no hot patching of a running game). Restarting the server drops any live session, since state is in-memory only.
 
 ## Testing & linting
 
 ```bash
 cd client && yarn test    # Jest + Testing Library
 cd client && yarn lint    # ESLint
-cd server && bun test      # Bun's built-in test runner
-cd server && bunx eslint . # ESLint (no npm script wired up yet)
+cd server && npx eslint . # ESLint (no npm script wired up yet)
 ```
 
-Client and server tests both run in CI on every pull request (`.github/workflows/test-client.yaml`, `.github/workflows/test-server.yaml`).
+Client tests also run in CI on every pull request (`.github/workflows/test-client.yaml`).
 
 Commit messages are linted against [Conventional Commits](https://www.conventionalcommits.org/) on every pull request (`.github/workflows/commitlint.yaml`, via `commitlint.config.js` + a `commit-msg` Husky hook).
 
@@ -119,7 +117,7 @@ Commit messages are linted against [Conventional Commits](https://www.convention
 cd client && yarn build   # outputs client/build
 ```
 
-The server runs as a plain Bun process (`bun index.js`) or via its Docker image (`server/Dockerfile`, `oven/bun:1-alpine`, `bun install --frozen-lockfile --production`).
+The server runs as a plain Node process (`node index.js`) or via its Docker image (`server/Dockerfile`, `node:22-alpine`, `npm ci --omit=dev`).
 
 ## Deployment
 

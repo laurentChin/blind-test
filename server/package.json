@@ -5,16 +5,15 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "start:watch": "bun --watch --inspect index.js",
-    "start": "bun index.js",
-    "test": "bun test --pass-with-no-tests"
+    "start:watch": "nodemon -- --inspect index.js",
+    "start": "node index.js"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/laurentChin/blind-test.git"
   },
   "keywords": [
-    "bun",
+    "node",
     "socket.io",
     "websocket"
   ],
@@ -28,6 +27,7 @@
     "eslint": "^10.8.1",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.6",
+    "nodemon": "^3.1.14",
     "prettier": "^3.9.6"
   },
   "dependencies": {
