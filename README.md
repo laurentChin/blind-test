@@ -16,9 +16,9 @@ The server has no database: all session/game state lives in memory and is lost o
 
 ## Prerequisites
 
-- Node.js 22 (client and root tooling)
-- [Bun](https://bun.sh/) 1.x (server runtime, package manager, and test runner)
-- [Yarn](https://yarnpkg.com/) (client and root tooling)
+- Node.js 22 (client tooling)
+- [Bun](https://bun.sh/) 1.x (root tooling, and the server's runtime, package manager, and test runner)
+- [Yarn](https://yarnpkg.com/) (client package manager)
 - [tmux](https://github.com/tmux/tmux) for the side-by-side dev launcher (`brew install tmux`) — optional, see [Running both together](#running-both-together)
 - [mkcert](https://github.com/FiloSottile/mkcert) for a locally-trusted HTTPS cert on the client dev server — optional, see [Client setup](#client-setup)
 
@@ -77,15 +77,15 @@ The client and server ports are cross-referenced in each other's `.env` (`CLIENT
 ### Running both together
 
 ```bash
-yarn dev
+bun run dev
 ```
 
-Starts server and client side by side in a tmux session (`blind-test-dev`), each in its own pane with its own logs and scroll. Detach without stopping anything with `Ctrl-b` then `d`; reattach later with `yarn attach`.
+Starts server and client side by side in a tmux session (`blind-test-dev`), each in its own pane with its own logs and scroll. Detach without stopping anything with `Ctrl-b` then `d`; reattach later with `bun run attach`.
 
 If tmux isn't available, run them interleaved in a single terminal instead:
 
 ```bash
-yarn dev:interleaved
+bun run dev:interleaved
 ```
 
 ### Running one side at a time
