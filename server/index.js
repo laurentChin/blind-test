@@ -56,17 +56,21 @@ io.on("connection", socket => {
     const playerUuid = player.teamUuid !== "" ? player.teamUuid : v4();
 
     if (player.name !== "") {
+      const colorIndex = session.colors.findIndex(
+        color => color.background === player.color.background
+      );
+
+      if (colorIndex === -1) {
+        callback({ error: "colorTaken", colors: session.colors });
+        return;
+      }
+
+      session.colors.splice(colorIndex, 1);
       session.challengers.set(playerUuid, {
         ...player,
         score: 0,
         uuid: playerUuid,
       });
-      session.colors.splice(
-        session.colors.findIndex(
-          color => color.background === player.color.background
-        ),
-        1
-      );
       io.to(sessionUuid).emit("availableColorsUpdate", session.colors);
       if (verboseOutput) {
         logger.notice(
@@ -330,6 +334,7 @@ io.on("connection", socket => {
         "challengersUpdate",
         Array.from(session.challengers.values())
       );
+      io.to(sessionUuid).emit("availableColorsUpdate", session.colors);
 
       callback();
     }
