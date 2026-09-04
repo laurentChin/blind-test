@@ -21,7 +21,11 @@ function useProviderAuth(provider, musicProvider) {
     }
     isFirstProviderRender.current = false;
 
-    musicProvider.login().then(() => setIsAuthenticated(true));
+    // login() resolves `false` when the provider's own session validation
+    // fails (e.g. a stored Spotify token that no longer works server-side)
+    // instead of unlocking downstream steps against a connection that's
+    // actually dead.
+    musicProvider.login().then((authenticated) => setIsAuthenticated(!!authenticated));
   }, [provider, musicProvider]);
 
   return isAuthenticated;

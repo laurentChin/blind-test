@@ -83,13 +83,28 @@ async function ensureConfigured() {
   return window.MusicKit.getInstance();
 }
 
+// authorize() resolving doesn't guarantee the session actually works against
+// the API (e.g. a subscription-less Apple ID can authorize but every catalog
+// request still fails) — a cheap authenticated request confirms it before
+// the caller is told login succeeded, mirroring Spotify's validateSession.
+async function validateSession() {
+  try {
+    await apiRequest("/v1/me/library/playlists", { params: { limit: 1 } });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 async function login() {
   const music = await ensureConfigured();
 
   await music.authorize();
-
-  isAuthenticated = true;
   storefrontId = music.storefrontId;
+
+  isAuthenticated = await validateSession();
+
+  return isAuthenticated;
 }
 
 // authorize() opens a sign-in popup, which browsers only allow within a

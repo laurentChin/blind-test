@@ -26,11 +26,12 @@ const startTokenRequestUri = `${
 let authTokenList =
   JSON.parse(sessionStorage.getItem("spotifyTokenList")) || {};
 
-let authExpiry =
-  JSON.parse(sessionStorage.getItem("spotifyAuthExpiry")) ||
-  new Date().getTime();
-
-let isAuthenticated = !!authTokenList && authExpiry > new Date().getTime();
+// A stored access token only means we *were* authenticated at some point —
+// it says nothing about whether Spotify still honors it (revoked, expired
+// past what a locally-computed expiry could track, ...). validateSession()
+// below is the real check; this is only the fast-path signal that there's a
+// token worth validating instead of redirecting straight to Spotify.
+let isAuthenticated = !!authTokenList.accessToken;
 
 let authorizationHeader = {
   Authorization: `Bearer ${authTokenList.accessToken}`,
@@ -40,8 +41,30 @@ let currentPlaylist = "";
 let player = {};
 let playerStateChangeCb = () => {};
 
-function hasAuthExpired() {
-  return authExpiry < new Date().getTime();
+function clearSession() {
+  authTokenList = {};
+  isAuthenticated = false;
+  authorizationHeader = { Authorization: undefined };
+  sessionStorage.removeItem("spotifyTokenList");
+}
+
+// The only reliable way to know a token still works: ask Spotify. A locally
+// tracked expiry can't catch a token revoked early or a failed refresh that
+// still got treated as a success (see getAccessToken below) — either would
+// otherwise sail through as "authenticated" until the first real API call
+// 401s deep inside some other screen.
+async function validateSession() {
+  const response = await fetch(
+    `${process.env.REACT_APP_SPOTIFY_API_ENDPONT}/me`,
+    { headers: { ...authorizationHeader } }
+  );
+
+  if (response.status === 401) {
+    clearSession();
+    return false;
+  }
+
+  return true;
 }
 
 async function getAccessToken(code) {
@@ -59,6 +82,14 @@ async function getAccessToken(code) {
     })
   ).json();
 
+  // A failed exchange (bad code, dead refresh token, upstream error) has no
+  // access_token — treat that as "still not logged in" rather than marking
+  // the session authenticated with an unusable "Bearer undefined" header.
+  if (!access_token) {
+    clearSession();
+    return { access_token: undefined };
+  }
+
   sessionStorage.setItem(
     "spotifyTokenList",
     JSON.stringify({
@@ -75,21 +106,20 @@ async function getAccessToken(code) {
   return { access_token, refresh_token, expires_in };
 }
 
-function login() {
+async function login() {
   const [, code] = SPOTIFY_CODE_PARAM.exec(window.location) || [];
 
-  if (!isAuthenticated && !code) {
-    window.location = startTokenRequestUri;
-    return new Promise(() => {});
+  if (code) {
+    await getAccessToken(code);
+    window.history.pushState({}, document.title, redirectUri);
   }
 
-  if (code || hasAuthExpired()) {
-    return getAccessToken(code).then(() => {
-      window.history.pushState({}, document.title, redirectUri);
-    });
+  if (isAuthenticated && (await validateSession())) {
+    return true;
   }
 
-  return Promise.resolve();
+  window.location = startTokenRequestUri;
+  return new Promise(() => {});
 }
 
 async function getPlaylists() {
