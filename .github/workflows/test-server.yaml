@@ -1,0 +1,16 @@
+name: Test server
+
+on:
+  pull_request:
+
+jobs:
+  test-server:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - name: Run server unit tests
+        working-directory: server
+        run: |
+          bun install --frozen-lockfile
+          bun run test
