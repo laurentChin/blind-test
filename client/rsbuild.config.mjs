@@ -18,6 +18,11 @@ export default defineConfig({
   plugins: [pluginReact(), ...(hasLocalCert ? [] : [pluginBasicSsl()])],
   server: {
     port: Number(process.env.PORT) || 3000,
+    // Without this, the dev server only binds the IPv6 loopback ([::1]) on
+    // some setups — "localhost" resolves there and works, but 127.0.0.1
+    // (which Spotify's OAuth now requires instead of "localhost", see
+    // README) can't connect at all.
+    host: "0.0.0.0",
     https: hasLocalCert
       ? { cert: fs.readFileSync(certPath), key: fs.readFileSync(keyPath) }
       : undefined,
