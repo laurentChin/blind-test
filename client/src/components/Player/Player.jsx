@@ -21,14 +21,22 @@ const Player = ({ nextTrackCallback, tracks = [] }) => {
   const player = getPlayer();
 
   useEffect(() => {
-    setPlayerStateChangeCb(setState);
+    // Both providers can report no state at all (e.g. Spotify's SDK fires
+    // player_state_changed with null right after connecting, before any
+    // track is loaded) — ignored rather than applied, so the last known
+    // display sticks instead of the player rendering against nothing.
+    setPlayerStateChangeCb((newState) => {
+      if (newState) setState(newState);
+    });
   }, [setPlayerStateChangeCb, player]);
 
   useEffect(() => {
     if (state.track_window) {
       const { current_track, next_tracks } = state.track_window;
-      setCurrentTrack(current_track);
-      setNextTrack(next_tracks[0]);
+      // next_tracks is legitimately empty once the queue reaches its last
+      // track — falling back to "" keeps nextTrack.name safe to read below.
+      setCurrentTrack(current_track || "");
+      setNextTrack(next_tracks[0] || "");
     }
   }, [state]);
 

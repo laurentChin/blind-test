@@ -81,6 +81,49 @@ describe("<Player />", () => {
     expect(mockTogglePlay).toHaveBeenCalled();
   });
 
+  it("should ignore a null player state instead of crashing", () => {
+    // The Spotify Web Playback SDK fires player_state_changed with null
+    // right after connecting, before any track is loaded.
+    let emit;
+    const setPlayerStateChangeCb = (cb) => {
+      emit = cb;
+    };
+    const getPlayer = jest.fn(() => ({
+      togglePlay: jest.fn(),
+      nextTrack: jest.fn(),
+    }));
+    useMusicProvider.mockReturnValue({ setPlayerStateChangeCb, getPlayer });
+
+    const { getByLabelText } = render(<Player nextTrackCallback={() => {}} />);
+
+    expect(() => emit(null)).not.toThrow();
+    expect(getByLabelText("Play")).toBeTruthy();
+  });
+
+  it("should treat an empty next_tracks array as no next track instead of crashing", () => {
+    // next_tracks is legitimately empty once the queue reaches its last track.
+    const lastTrackState = {
+      track_window: {
+        current_track: { name: "currentTrack" },
+        next_tracks: [],
+      },
+      paused: true,
+    };
+    const setPlayerStateChangeCb = (setState) => setState(lastTrackState);
+    const getPlayer = jest.fn(() => ({
+      togglePlay: jest.fn(),
+      nextTrack: jest.fn(),
+    }));
+    useMusicProvider.mockReturnValue({ setPlayerStateChangeCb, getPlayer });
+
+    const { getByText, queryByTestId } = render(
+      <Player nextTrackCallback={() => {}} />
+    );
+
+    expect(getByText(/currentTrack/)).toBeTruthy();
+    expect(queryByTestId("play-next-btn")).toBeNull();
+  });
+
   it("should call nextTrack and nextTrackCallback on 'Play next track' button click", () => {
     const setPlayerStateChangeCb = (setState) => setState(state);
     const mockTogglePlay = jest.fn();
