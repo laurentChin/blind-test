@@ -1,4 +1,4 @@
-import React, { useId } from "react";
+import React, { useEffect, useId, useState } from "react";
 import PropTypes from "prop-types";
 
 import "./ChallengeTimerConfig.css";
@@ -12,60 +12,76 @@ const MAX_COOLDOWN_SECONDS = 15;
 
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 
+// Typed digit-by-digit (as on a mobile numeric keypad), each keystroke fires
+// its own change event. Clamping on every keystroke fights the browser's
+// controlled value and can only ever settle on min or max, so the raw text
+// is kept in local state and only clamped once the field loses focus.
+const TimerNumberField = ({ id, testId, label, min, max, value, onCommit }) => {
+  const [draft, setDraft] = useState(String(value));
+
+  useEffect(() => {
+    setDraft(String(value));
+  }, [value]);
+
+  return (
+    <div className="timer-config-field">
+      <label htmlFor={id}>
+        {label} ({min}-{max}s)
+      </label>
+      <input
+        id={id}
+        className="field"
+        data-testid={testId}
+        type="number"
+        inputMode="numeric"
+        min={min}
+        max={max}
+        value={draft}
+        onChange={({ currentTarget }) => setDraft(currentTarget.value)}
+        onBlur={() => {
+          const committed = clamp(parseInt(draft, 10) || 0, min, max);
+          setDraft(String(committed));
+          onCommit(committed);
+        }}
+      />
+    </div>
+  );
+};
+
+TimerNumberField.propTypes = {
+  id: PropTypes.string.isRequired,
+  testId: PropTypes.string.isRequired,
+  label: PropTypes.string.isRequired,
+  min: PropTypes.number.isRequired,
+  max: PropTypes.number.isRequired,
+  value: PropTypes.number.isRequired,
+  onCommit: PropTypes.func.isRequired,
+};
+
 const ChallengeTimerConfig = ({ timerSeconds, cooldownSeconds, onChange }) => {
   const timerInputId = useId();
   const cooldownInputId = useId();
 
   return (
     <div className="ChallengeTimerConfig">
-      <div className="timer-config-field">
-        <label htmlFor={timerInputId}>
-          Timer to answer ({MIN_TIMER_SECONDS}-{MAX_TIMER_SECONDS}s)
-        </label>
-        <input
-          id={timerInputId}
-          className="field"
-          data-testid="timer-seconds-input"
-          type="number"
-          min={MIN_TIMER_SECONDS}
-          max={MAX_TIMER_SECONDS}
-          value={timerSeconds}
-          onChange={({ currentTarget }) =>
-            onChange({
-              timerSeconds: clamp(
-                parseInt(currentTarget.value, 10) || 0,
-                MIN_TIMER_SECONDS,
-                MAX_TIMER_SECONDS
-              ),
-              cooldownSeconds,
-            })
-          }
-        />
-      </div>
-      <div className="timer-config-field">
-        <label htmlFor={cooldownInputId}>
-          Cooldown after timeout ({MIN_COOLDOWN_SECONDS}-{MAX_COOLDOWN_SECONDS}s)
-        </label>
-        <input
-          id={cooldownInputId}
-          className="field"
-          data-testid="cooldown-seconds-input"
-          type="number"
-          min={MIN_COOLDOWN_SECONDS}
-          max={MAX_COOLDOWN_SECONDS}
-          value={cooldownSeconds}
-          onChange={({ currentTarget }) =>
-            onChange({
-              timerSeconds,
-              cooldownSeconds: clamp(
-                parseInt(currentTarget.value, 10) || 0,
-                MIN_COOLDOWN_SECONDS,
-                MAX_COOLDOWN_SECONDS
-              ),
-            })
-          }
-        />
-      </div>
+      <TimerNumberField
+        id={timerInputId}
+        testId="timer-seconds-input"
+        label="Timer to answer"
+        min={MIN_TIMER_SECONDS}
+        max={MAX_TIMER_SECONDS}
+        value={timerSeconds}
+        onCommit={(value) => onChange({ timerSeconds: value, cooldownSeconds })}
+      />
+      <TimerNumberField
+        id={cooldownInputId}
+        testId="cooldown-seconds-input"
+        label="Cooldown after timeout"
+        min={MIN_COOLDOWN_SECONDS}
+        max={MAX_COOLDOWN_SECONDS}
+        value={cooldownSeconds}
+        onCommit={(value) => onChange({ timerSeconds, cooldownSeconds: value })}
+      />
     </div>
   );
 };
