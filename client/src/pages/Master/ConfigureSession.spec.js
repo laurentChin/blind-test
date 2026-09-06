@@ -121,9 +121,11 @@ describe("<ConfigureSession />", () => {
     fireEvent.change(getByTestId("timer-seconds-input"), {
       target: { value: "10" },
     });
+    fireEvent.blur(getByTestId("timer-seconds-input"));
     fireEvent.change(getByTestId("cooldown-seconds-input"), {
       target: { value: "4" },
     });
+    fireEvent.blur(getByTestId("cooldown-seconds-input"));
     fireEvent.click(getByText("Launch the session"));
 
     expect(onLaunch).toHaveBeenCalledWith({

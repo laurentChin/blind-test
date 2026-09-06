@@ -123,9 +123,11 @@ describe("<ConfigureEverybodyPlaysSession />", () => {
     fireEvent.change(getByTestId("timer-seconds-input"), {
       target: { value: "8" },
     });
+    fireEvent.blur(getByTestId("timer-seconds-input"));
     fireEvent.change(getByTestId("cooldown-seconds-input"), {
       target: { value: "3" },
     });
+    fireEvent.blur(getByTestId("cooldown-seconds-input"));
 
     fireEvent.click(getByTestId("generate-and-launch-btn"));
 
