@@ -95,8 +95,12 @@ const EverybodyPlaysHost = () => {
     return <Navigate to="/" replace />;
   }
 
-  const startSession = () =>
-    run(() =>
+  const startSession = () => {
+    // See ManageSession.jsx: unlocks mobile autoplay policies before the
+    // remote play command below, otherwise playback stays paused on Android.
+    musicProvider.getPlayer().activateElement?.();
+
+    return run(() =>
       musicProvider.startPlayer(deviceId).then(() => {
         // Cue track 1 paused rather than autoplaying, same trick as the
         // classic flow (see ManageSession.jsx).
@@ -104,6 +108,7 @@ const EverybodyPlaysHost = () => {
         setHasSessionStart(true);
       })
     );
+  };
 
   const closeSession = () =>
     runCloseSession(() => {
