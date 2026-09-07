@@ -89,8 +89,15 @@ const ManageSession = ({ sessionUuid, socket, ...props }) => {
     player.resume?.();
   };
 
-  const startSession = () =>
-    run(() =>
+  const startSession = () => {
+    // Mobile browsers with strict autoplay policies keep playback paused
+    // after a remote play command (startPlayer's REST call below) unless the
+    // SDK is unlocked by a same-gesture activateElement() call first — a
+    // no-op on desktop/iOS and for Apple Music, whose player has no such
+    // method.
+    player.activateElement?.();
+
+    return run(() =>
       musicProvider.startPlayer(deviceId).then(() => {
         // Spotify's API has no way to load a context without immediately
         // playing it, so pausing right after is the only way to open the
@@ -100,6 +107,7 @@ const ManageSession = ({ sessionUuid, socket, ...props }) => {
         setSessionStartStatus(true);
       })
     );
+  };
 
   const closeSession = () =>
     runCloseSession(() => {
