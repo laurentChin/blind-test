@@ -281,6 +281,24 @@ async function reorderTrack(fromIndex, toIndex) {
   setTrackOrderIndices(reordered.map((track) => track.rawIndex));
 }
 
+const ARTWORK_SIZE = 300;
+
+// MediaItem.artwork only carries a URL template (with {w}/{h} placeholders),
+// not a usable image URL — MusicKit.formatArtworkURL() is what resolves it
+// to an actual size, mirroring what Spotify's own SDK state already gives us
+// natively as track.album.images[0].url.
+function toAlbum(item) {
+  const artwork = item?.artwork;
+
+  if (!artwork?.url) return undefined;
+
+  return {
+    images: [
+      { url: window.MusicKit.formatArtworkURL(artwork, ARTWORK_SIZE, ARTWORK_SIZE) },
+    ],
+  };
+}
+
 function buildPlayerState(music) {
   const currentTrack = music.nowPlayingItem;
   const nextTrack = music.queue?.nextPlayableItem;
@@ -289,11 +307,19 @@ function buildPlayerState(music) {
     paused: !music.isPlaying,
     track_window: {
       current_track: currentTrack
-        ? { name: currentTrack.title, artists: [{ name: currentTrack.artistName }] }
+        ? {
+            name: currentTrack.title,
+            artists: [{ name: currentTrack.artistName }],
+            album: toAlbum(currentTrack),
+          }
         : {},
       next_tracks: [
         nextTrack
-          ? { name: nextTrack.title, artists: [{ name: nextTrack.artistName }] }
+          ? {
+              name: nextTrack.title,
+              artists: [{ name: nextTrack.artistName }],
+              album: toAlbum(nextTrack),
+            }
           : {},
       ],
     },
