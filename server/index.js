@@ -64,6 +64,11 @@ io.on("connection", socket => {
       cooldowns: new Map(),
       challengeTimeoutHandle: null,
       currentTrack: null,
+      // Real playback state, reported by whichever client actually drives
+      // the Spotify/Apple Music player — see the playbackStateChanged
+      // handler below. Not inferred from trackReady/challenge state, which
+      // only says a track is cued, not that it's actually being played.
+      isPlaying: false,
       // everybodyPlays only: a correct answer was just broadcast to the
       // whole room (see setScore below) and the host hasn't cued the next
       // track yet — lets a reconnecting player know to show that same
@@ -160,6 +165,7 @@ io.on("connection", socket => {
           isExcluded: session.excludedPlayers.has(playerUuid),
           currentTrack: session.currentTrack,
           roundRevealed: session.roundRevealed,
+          isPlaying: session.isPlaying,
         });
       }
     }
@@ -364,6 +370,18 @@ io.on("connection", socket => {
     }
 
     io.to(sessionUuid).emit("trackReady", track);
+  });
+
+  // Relayed as-is, same reasoning as trackReady above: only the client
+  // driving actual playback knows whether it's really playing or paused, so
+  // it reports every change here for every player's screen.
+  socket.on("playbackStateChanged", ({ sessionUuid, isPlaying }) => {
+    const session = sessions.get(sessionUuid);
+    if (session) {
+      session.isPlaying = isPlaying;
+    }
+
+    io.to(sessionUuid).emit("playbackStateChanged", isPlaying);
   });
 
   socket.on("clearChallenge", ({ sessionUuid }) => {

@@ -121,6 +121,7 @@ const Session = () => {
             isExcluded: response.isExcluded,
             currentTrack: response.currentTrack,
             roundRevealed: response.roundRevealed,
+            isPlaying: response.isPlaying,
           });
         }
       );
