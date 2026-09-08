@@ -155,7 +155,16 @@ const ManageSession = ({ sessionUuid, socket, ...props }) => {
           </a>
         </div>
         {hasSessionStart && isPlayerReady && (
-          <Player nextTrackCallback={startNewChallenge} tracks={tracks} />
+          <Player
+            nextTrackCallback={startNewChallenge}
+            onPlaybackStateChange={(isPaused) =>
+              socket.emit("playbackStateChanged", {
+                sessionUuid,
+                isPlaying: !isPaused,
+              })
+            }
+            tracks={tracks}
+          />
         )}
         {hasSessionStart && challengerUuid && (
           <div className="challenge-buttons-container">

@@ -67,6 +67,10 @@ const EverybodyPlaysHost = () => {
     let lastTrackName = "";
     musicProvider.setPlayerStateChangeCb((state) => {
       setIsPaused(state.paused);
+      socket.emit("playbackStateChanged", {
+        sessionUuid: SESSION_UUID,
+        isPlaying: !state.paused,
+      });
 
       const track = state.track_window?.current_track;
       if (track && track.name && track.name !== lastTrackName) {

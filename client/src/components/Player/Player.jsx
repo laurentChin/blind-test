@@ -7,7 +7,7 @@ import { useMusicProvider } from "../../contexts/MusicProvider";
 
 import "./Player.css";
 
-const Player = ({ nextTrackCallback, tracks = [] }) => {
+const Player = ({ nextTrackCallback, onPlaybackStateChange, tracks = [] }) => {
   const { getPlayer, setPlayerStateChangeCb } = useMusicProvider();
 
   // Seeded from the playlist already fetched during setup rather than
@@ -26,8 +26,12 @@ const Player = ({ nextTrackCallback, tracks = [] }) => {
     // track is loaded) — ignored rather than applied, so the last known
     // display sticks instead of the player rendering against nothing.
     setPlayerStateChangeCb((newState) => {
-      if (newState) setState(newState);
+      if (newState) {
+        setState(newState);
+        onPlaybackStateChange?.(newState.paused);
+      }
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [setPlayerStateChangeCb, player]);
 
   useEffect(() => {
@@ -75,6 +79,7 @@ const Player = ({ nextTrackCallback, tracks = [] }) => {
 
 Player.propTypes = {
   nextTrackCallback: PropTypes.func.isRequired,
+  onPlaybackStateChange: PropTypes.func,
   tracks: PropTypes.array,
 };
 

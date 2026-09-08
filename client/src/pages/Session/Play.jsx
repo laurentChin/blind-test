@@ -51,6 +51,10 @@ const Play = ({
   // reveal screen to everyone, without score buttons, until the host moves
   // the game on.
   const [isTrackRevealed, setIsTrackRevealed] = useState(false);
+  // Real playback state, reported by whichever client actually drives the
+  // Spotify/Apple Music player (see playbackStateChanged below) — trackReady
+  // only means a track is cued, not that it's actually being played.
+  const [isSongPlaying, setIsSongPlaying] = useState(false);
   const challengerDialog = useRef();
 
   useEffect(() => {
@@ -63,7 +67,7 @@ const Play = ({
   useEffect(() => {
     if (!restoredState) return;
 
-    const { currentChallenger, isExcluded, currentTrack: restoredTrack, roundRevealed } = restoredState;
+    const { currentChallenger, isExcluded, currentTrack: restoredTrack, roundRevealed, isPlaying } = restoredState;
 
     if (currentChallenger) {
       setChallengeLock(true);
@@ -85,10 +89,14 @@ const Play = ({
     if (mode === "everybodyPlays" && roundRevealed) {
       setIsTrackRevealed(true);
     }
+
+    setIsSongPlaying(!!isPlaying);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restoredState]);
 
   socket.on("challengersUpdate", setChallengers);
+
+  socket.on("playbackStateChanged", setIsSongPlaying);
 
   socket.on("lockChallenge", (msg) => {
     setChallengeLock(true);
@@ -297,6 +305,17 @@ const Play = ({
             isChallengeLocked ? "is-timing" : ""
           } ${isOnCooldown ? "is-cooldown" : ""}`.trim()}
         >
+          <span
+            className={`song-equalizer ${
+              isSongPlaying ? "is-active" : ""
+            }`.trim()}
+            aria-hidden="true"
+          >
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+          </span>
           {isOnCooldown
             ? "Cooldown…"
             : isChallengeLocked
@@ -409,6 +428,7 @@ Play.propTypes = {
     isExcluded: PropTypes.bool,
     currentTrack: PropTypes.object,
     roundRevealed: PropTypes.bool,
+    isPlaying: PropTypes.bool,
   }),
 };
 
