@@ -69,6 +69,11 @@ const Session = () => {
   const [fullPoints, setFullPoints] = useState(() => getStoredFullPoints(uuid));
   const [inSession, setInSession] = useState(false);
   const [challengers, setChallengers] = useState([]);
+  // The round in progress on the server (if any) at the moment a refresh
+  // reconnects — null until joinAfterRefresh resolves, then applied once by
+  // Play so a reconnecting player's UI matches reality instead of resetting
+  // to "nothing is happening".
+  const [restoredState, setRestoredState] = useState(null);
 
   useEffect(() => {
     if (sessionStorage.getItem("sessionUuid") !== uuid) {
@@ -86,29 +91,39 @@ const Session = () => {
 
   useEffect(() => {
     if (player.uuid && !inSession) {
-      socket.emit("joinAfterRefresh", { sessionUuid: uuid }, (response) => {
-        setChallengers(response.challengers);
-        if (response.mode) {
-          setMode(response.mode);
-          sessionStorage.setItem("mode", response.mode);
+      socket.emit(
+        "joinAfterRefresh",
+        { sessionUuid: uuid, playerUuid: player.uuid },
+        (response) => {
+          setChallengers(response.challengers);
+          if (response.mode) {
+            setMode(response.mode);
+            sessionStorage.setItem("mode", response.mode);
+          }
+          if (response.challengeTimerSeconds) {
+            setTimerSeconds(response.challengeTimerSeconds);
+            sessionStorage.setItem("timerSeconds", response.challengeTimerSeconds);
+          }
+          if (response.challengeCooldownSeconds !== undefined) {
+            setCooldownSeconds(response.challengeCooldownSeconds);
+            sessionStorage.setItem("cooldownSeconds", response.challengeCooldownSeconds);
+          }
+          if (response.almostPoints !== undefined) {
+            setAlmostPoints(response.almostPoints);
+            sessionStorage.setItem("almostPoints", response.almostPoints);
+          }
+          if (response.fullPoints !== undefined) {
+            setFullPoints(response.fullPoints);
+            sessionStorage.setItem("fullPoints", response.fullPoints);
+          }
+          setRestoredState({
+            currentChallenger: response.currentChallenger,
+            isExcluded: response.isExcluded,
+            currentTrack: response.currentTrack,
+            roundRevealed: response.roundRevealed,
+          });
         }
-        if (response.challengeTimerSeconds) {
-          setTimerSeconds(response.challengeTimerSeconds);
-          sessionStorage.setItem("timerSeconds", response.challengeTimerSeconds);
-        }
-        if (response.challengeCooldownSeconds !== undefined) {
-          setCooldownSeconds(response.challengeCooldownSeconds);
-          sessionStorage.setItem("cooldownSeconds", response.challengeCooldownSeconds);
-        }
-        if (response.almostPoints !== undefined) {
-          setAlmostPoints(response.almostPoints);
-          sessionStorage.setItem("almostPoints", response.almostPoints);
-        }
-        if (response.fullPoints !== undefined) {
-          setFullPoints(response.fullPoints);
-          sessionStorage.setItem("fullPoints", response.fullPoints);
-        }
-      });
+      );
       setInSession(true);
     }
   }, [player, inSession, uuid]);
@@ -141,6 +156,7 @@ const Session = () => {
           player={player}
           socket={socket}
           challengers={challengers}
+          restoredState={restoredState}
           timerSeconds={timerSeconds}
           cooldownSeconds={cooldownSeconds}
           almostPoints={almostPoints}

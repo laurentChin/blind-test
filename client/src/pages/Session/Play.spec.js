@@ -496,6 +496,89 @@ describe("<Play />", () => {
       );
     });
 
+    it("should keep bystanders locked out while the challenger is mid-reveal, releasing them only once the challenger submits", async () => {
+      const bystander = {
+        uuid: "player-bystander",
+        name: "alice",
+        color: { background: "1, 2, 3", text: "255, 255, 255" },
+      };
+      const { getByTestId } = render(
+        <Play
+          mode="everybodyPlays"
+          sessionUuid="session-12345"
+          player={bystander}
+          socket={mockSocket}
+          onLeave={jest.fn()}
+          challengers={[]}
+        />
+      );
+
+      await act(async () => {
+        mockSocket.emit("lockChallenge", "player-12345");
+        mockSocket.emit("challengeTimedOut", "player-12345");
+      });
+
+      // The challenger's own timer ran out, but they're still mid-reveal —
+      // a bystander must not be handed the buzzer back until that's over,
+      // or they could steal the round out from under the challenger.
+      expect(getByTestId("challenge-button")).toBeDisabled();
+
+      await act(async () => {
+        mockSocket.emit("challengerRelease", []);
+      });
+
+      expect(getByTestId("challenge-button")).not.toBeDisabled();
+    });
+
+    it("should restore an in-progress lock, exclusion, and track on reconnect via restoredState", async () => {
+      const { getByTestId } = render(
+        <Play
+          mode="everybodyPlays"
+          sessionUuid="session-12345"
+          player={player}
+          socket={mockSocket}
+          onLeave={jest.fn()}
+          challengers={[]}
+          restoredState={{
+            currentChallenger: "player-12345",
+            currentTrack: {
+              name: "Hallelujah",
+              artists: "Jeff Buckley",
+              image: "https://img/cover.jpg",
+            },
+          }}
+        />
+      );
+
+      // Reconnecting as the player who was mid-answer lands straight back
+      // on the score buttons — the timer itself doesn't need restoring
+      // since scoring is self-reported.
+      expect(getByTestId("revealed-cover")).toHaveAttribute(
+        "src",
+        "https://img/cover.jpg"
+      );
+      expect(getByTestId("self-score-full-btn")).toBeInTheDocument();
+    });
+
+    it("should restore an already-excluded state on reconnect", () => {
+      const { getByTestId } = render(
+        <Play
+          mode="everybodyPlays"
+          sessionUuid="session-12345"
+          player={player}
+          socket={mockSocket}
+          onLeave={jest.fn()}
+          challengers={[]}
+          restoredState={{ isExcluded: true }}
+        />
+      );
+
+      expect(getByTestId("challenge-button")).toBeDisabled();
+      expect(getByTestId("challenge-button")).toHaveTextContent(
+        "Already tried this track"
+      );
+    });
+
     it("should reset the excluded/revealed state on a new track", async () => {
       const { getByTestId } = render(
         <Play

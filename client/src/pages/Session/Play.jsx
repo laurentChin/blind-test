@@ -24,6 +24,7 @@ const Play = ({
   fullPoints = 1,
   isHost = false,
   onSkipTrack,
+  restoredState,
   ...props
 }) => {
   const [challengers, setChallengers] = useState(props.challengers || []);
@@ -56,6 +57,37 @@ const Play = ({
     setChallengers(props.challengers)
   }, [props.challengers])
 
+  // Applies once, right after a refresh reconnects mid-round — restoredState
+  // is null on a fresh join (nothing to restore) and only ever set once by
+  // Session.jsx, so this can't clobber state from events that arrive later.
+  useEffect(() => {
+    if (!restoredState) return;
+
+    const { currentChallenger, isExcluded, currentTrack: restoredTrack, roundRevealed } = restoredState;
+
+    if (currentChallenger) {
+      setChallengeLock(true);
+      setChallengerUuid(currentChallenger);
+
+      if (mode === "everybodyPlays" && currentChallenger === player.uuid) {
+        setIsRevealed(true);
+      }
+    }
+
+    if (isExcluded) {
+      setIsExcluded(true);
+    }
+
+    if (restoredTrack) {
+      setCurrentTrack(restoredTrack);
+    }
+
+    if (mode === "everybodyPlays" && roundRevealed) {
+      setIsTrackRevealed(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [restoredState]);
+
   socket.on("challengersUpdate", setChallengers);
 
   socket.on("lockChallenge", (msg) => {
@@ -70,18 +102,24 @@ const Play = ({
   });
 
   socket.on("challengeTimedOut", (timedOutPlayerUuid) => {
+    // Everybody plays: the timer running out is what reveals the answer —
+    // there's no manual "reveal" step, so the challenger goes straight to
+    // the score buttons instead of a cooldown. The lock itself stays up for
+    // everyone else too (the server keeps currentChallenger set through this
+    // window) until challengerRelease confirms the round is actually over —
+    // otherwise a bystander could buzz in and steal the round out from under
+    // the player who's still mid-reveal.
+    if (mode === "everybodyPlays") {
+      if (timedOutPlayerUuid === player.uuid) {
+        setIsRevealed(true);
+      }
+      return;
+    }
+
     setChallengeLock(false);
     setChallengerUuid(undefined);
 
     if (timedOutPlayerUuid !== player.uuid) return;
-
-    // Everybody plays: the timer running out is what reveals the answer —
-    // there's no manual "reveal" step, so this player goes straight to the
-    // score buttons instead of a cooldown.
-    if (mode === "everybodyPlays") {
-      setIsRevealed(true);
-      return;
-    }
 
     clearTimeout(cooldownTimeoutRef.current);
     setIsOnCooldown(true);
@@ -366,6 +404,12 @@ Play.propTypes = {
       color: colorPropType.isRequired,
     })
   ),
+  restoredState: PropTypes.shape({
+    currentChallenger: PropTypes.string,
+    isExcluded: PropTypes.bool,
+    currentTrack: PropTypes.object,
+    roundRevealed: PropTypes.bool,
+  }),
 };
 
 export { Play };
