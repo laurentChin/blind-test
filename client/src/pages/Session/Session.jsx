@@ -69,6 +69,8 @@ const Session = () => {
   const [fullPoints, setFullPoints] = useState(() => getStoredFullPoints(uuid));
   const [inSession, setInSession] = useState(false);
   const [challengers, setChallengers] = useState([]);
+  const [totalTracks, setTotalTracks] = useState();
+  const [playedCount, setPlayedCount] = useState();
   // The round in progress on the server (if any) at the moment a refresh
   // reconnects — null until joinAfterRefresh resolves, then applied once by
   // Play so a reconnecting player's UI matches reality instead of resetting
@@ -116,6 +118,8 @@ const Session = () => {
             setFullPoints(response.fullPoints);
             sessionStorage.setItem("fullPoints", response.fullPoints);
           }
+          setTotalTracks(response.totalTracks);
+          setPlayedCount(response.playedCount);
           setRestoredState({
             currentChallenger: response.currentChallenger,
             isExcluded: response.isExcluded,
@@ -143,6 +147,8 @@ const Session = () => {
               setCooldownSeconds(response.challengeCooldownSeconds ?? 2);
               setAlmostPoints(response.almostPoints ?? 0.5);
               setFullPoints(response.fullPoints ?? 1);
+              setTotalTracks(response.totalTracks);
+              setPlayedCount(response.playedCount);
               setInSession(true);
               setChallengers(response.challengers);
             }}
@@ -158,6 +164,8 @@ const Session = () => {
           socket={socket}
           challengers={challengers}
           restoredState={restoredState}
+          totalTracks={totalTracks}
+          playedCount={playedCount}
           timerSeconds={timerSeconds}
           cooldownSeconds={cooldownSeconds}
           almostPoints={almostPoints}

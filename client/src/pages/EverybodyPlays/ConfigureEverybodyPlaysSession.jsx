@@ -129,6 +129,7 @@ const ConfigureEverybodyPlaysSession = ({ sessionUuid, socket, onLaunch }) => {
         cooldownSeconds,
         almostPoints,
         fullPoints,
+        totalTracks: trackCount,
       });
 
       const { id: playlistId } = await musicProvider.createPlaylist(

@@ -50,7 +50,7 @@ const io = new Server(httpServer, {
 const verboseOutput = process.env.VERBOSE;
 
 io.on("connection", socket => {
-  socket.on("createSession", ({ sessionUuid, mode, timerSeconds, cooldownSeconds, almostPoints, fullPoints }) => {
+  socket.on("createSession", ({ sessionUuid, mode, timerSeconds, cooldownSeconds, almostPoints, fullPoints, totalTracks }) => {
     sessions.set(sessionUuid, {
       currentChallenger: null,
       challengers: new Map(),
@@ -64,6 +64,10 @@ io.on("connection", socket => {
       cooldowns: new Map(),
       challengeTimeoutHandle: null,
       currentTrack: null,
+      // Playlist progress (see trackReady below, which increments
+      // playedCount) — surfaced to players as a "count/total" indicator.
+      totalTracks: totalTracks ?? 0,
+      playedCount: 0,
       // Real playback state, reported by whichever client actually drives
       // the Spotify/Apple Music player — see the playbackStateChanged
       // handler below. Not inferred from trackReady/challenge state, which
@@ -127,6 +131,8 @@ io.on("connection", socket => {
       challengeCooldownSeconds: session.challengeCooldownSeconds,
       almostPoints: session.almostPoints,
       fullPoints: session.fullPoints,
+      totalTracks: session.totalTracks,
+      playedCount: session.playedCount,
     });
 
     io.to(sessionUuid).emit("challengersUpdate", challengers);
@@ -166,6 +172,8 @@ io.on("connection", socket => {
           currentTrack: session.currentTrack,
           roundRevealed: session.roundRevealed,
           isPlaying: session.isPlaying,
+          totalTracks: session.totalTracks,
+          playedCount: session.playedCount,
         });
       }
     }
@@ -367,9 +375,14 @@ io.on("connection", socket => {
     if (session) {
       session.currentTrack = track;
       session.roundRevealed = false;
+      session.playedCount += 1;
     }
 
-    io.to(sessionUuid).emit("trackReady", track);
+    io.to(sessionUuid).emit("trackReady", {
+      track,
+      playedCount: session?.playedCount,
+      totalTracks: session?.totalTracks,
+    });
   });
 
   // Relayed as-is, same reasoning as trackReady above: only the client

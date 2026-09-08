@@ -256,9 +256,11 @@ describe("<Play />", () => {
 
       await act(async () => {
         mockSocket.emit("trackReady", {
-          name: "Hallelujah",
-          artists: "Jeff Buckley",
-          image: "https://img/cover.jpg",
+          track: {
+            name: "Hallelujah",
+            artists: "Jeff Buckley",
+            image: "https://img/cover.jpg",
+          },
         });
         mockSocket.emit("lockChallenge", "player-12345");
       });
@@ -334,7 +336,7 @@ describe("<Play />", () => {
       );
 
       await act(async () => {
-        mockSocket.emit("trackReady", { name: "Hallelujah", artists: "Jeff Buckley" });
+        mockSocket.emit("trackReady", { track: { name: "Hallelujah", artists: "Jeff Buckley" } });
         mockSocket.emit("lockChallenge", "player-12345");
         mockSocket.emit("challengeTimedOut", "player-12345");
       });
@@ -363,7 +365,7 @@ describe("<Play />", () => {
       );
 
       await act(async () => {
-        mockSocket.emit("trackReady", { name: "Hallelujah", artists: "Jeff Buckley" });
+        mockSocket.emit("trackReady", { track: { name: "Hallelujah", artists: "Jeff Buckley" } });
         mockSocket.emit("lockChallenge", "player-12345");
         mockSocket.emit("challengeTimedOut", "player-12345");
       });
@@ -389,7 +391,7 @@ describe("<Play />", () => {
       // A genuinely new track (someone else eventually got it, or the host
       // skipped) brings back the normal play screen.
       await act(async () => {
-        mockSocket.emit("trackReady", { name: "Yesterday", artists: "The Beatles" });
+        mockSocket.emit("trackReady", { track: { name: "Yesterday", artists: "The Beatles" } });
       });
 
       expect(getByTestId("challenge-button")).not.toBeDisabled();
@@ -414,7 +416,7 @@ describe("<Play />", () => {
       );
 
       await act(async () => {
-        mockSocket.emit("trackReady", { name: "Hallelujah", artists: "Jeff Buckley" });
+        mockSocket.emit("trackReady", { track: { name: "Hallelujah", artists: "Jeff Buckley" } });
         // Someone else buzzes in and answers — this player never does.
         mockSocket.emit("lockChallenge", "player-12345");
         mockSocket.emit("challengeResult", {
@@ -450,7 +452,7 @@ describe("<Play />", () => {
       );
 
       await act(async () => {
-        mockSocket.emit("trackReady", { name: "Hallelujah", artists: "Jeff Buckley" });
+        mockSocket.emit("trackReady", { track: { name: "Hallelujah", artists: "Jeff Buckley" } });
       });
 
       expect(queryByTestId("reveal-next-track-btn")).toBeFalsy();
@@ -603,7 +605,7 @@ describe("<Play />", () => {
       expect(getByTestId("challenge-button")).toBeDisabled();
 
       await act(async () => {
-        mockSocket.emit("trackReady", { name: "Yesterday", artists: "The Beatles" });
+        mockSocket.emit("trackReady", { track: { name: "Yesterday", artists: "The Beatles" } });
       });
 
       expect(getByTestId("challenge-button")).not.toBeDisabled();

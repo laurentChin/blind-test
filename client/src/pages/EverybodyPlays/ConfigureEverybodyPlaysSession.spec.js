@@ -140,6 +140,7 @@ describe("<ConfigureEverybodyPlaysSession />", () => {
       cooldownSeconds: 3,
       almostPoints: 0.5,
       fullPoints: 1,
+      totalTracks: 10,
     });
   });
 
