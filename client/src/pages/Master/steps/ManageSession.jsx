@@ -38,6 +38,7 @@ const ManageSession = ({ sessionUuid, socket, ...props }) => {
         sessionUuid,
         timerSeconds: props.timerSeconds,
         cooldownSeconds: props.cooldownSeconds,
+        totalTracks: tracks.length,
       });
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -161,6 +162,19 @@ const ManageSession = ({ sessionUuid, socket, ...props }) => {
               socket.emit("playbackStateChanged", {
                 sessionUuid,
                 isPlaying: !isPaused,
+              })
+            }
+            onTrackChange={(track) =>
+              socket.emit("trackReady", {
+                sessionUuid,
+                track: {
+                  name: track.name,
+                  artists: (track.artists || [])
+                    .map((artist) => artist.name)
+                    .join(", ")
+                    .trim(),
+                  image: track.album?.images?.[0]?.url,
+                },
               })
             }
             tracks={tracks}

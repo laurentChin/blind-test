@@ -3,6 +3,51 @@
   max-width: var(--content-max-width);
 }
 
+.Session-progress {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: calc(100vw - (var(--space-4) * 2));
+  max-width: var(--content-max-width);
+  margin: 0 auto var(--space-4);
+}
+
+.Session-progress-bar {
+  flex: 1;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  height: var(--space-2);
+  border: none;
+  border-radius: var(--radius-full);
+  background-color: var(--color-surface-recessed);
+}
+
+.Session-progress-bar::-webkit-progress-bar {
+  background-color: var(--color-surface-recessed);
+  border-radius: var(--radius-full);
+}
+
+.Session-progress-bar::-webkit-progress-value {
+  background-color: var(--color-accent);
+  border-radius: var(--radius-full);
+  transition: width var(--duration-slow) var(--ease-standard);
+}
+
+.Session-progress-bar::-moz-progress-bar {
+  background-color: var(--color-accent);
+  border-radius: var(--radius-full);
+}
+
+.Session-progress-count {
+  flex-shrink: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
 .Session-challenge-button {
   box-sizing: border-box;
   /* Unlike .challenger-list-wrapper above (position: fixed, so 100vw is

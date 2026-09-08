@@ -33,6 +33,8 @@ const EverybodyPlaysHost = () => {
   const [challengeCooldownSeconds, setChallengeCooldownSeconds] = useState();
   const [almostPoints, setAlmostPoints] = useState();
   const [fullPoints, setFullPoints] = useState();
+  const [totalTracks, setTotalTracks] = useState();
+  const [playedCount, setPlayedCount] = useState();
   const [deviceId, setDeviceId] = useState("");
   const [hasSessionStart, setHasSessionStart] = useState(false);
   const [isPaused, setIsPaused] = useState(true);
@@ -57,6 +59,8 @@ const EverybodyPlaysHost = () => {
         setChallengeCooldownSeconds(response.challengeCooldownSeconds);
         setAlmostPoints(response.almostPoints);
         setFullPoints(response.fullPoints);
+        setTotalTracks(response.totalTracks);
+        setPlayedCount(response.playedCount);
       }
     );
 
@@ -235,6 +239,8 @@ const EverybodyPlaysHost = () => {
           cooldownSeconds={challengeCooldownSeconds}
           almostPoints={almostPoints}
           fullPoints={fullPoints}
+          totalTracks={totalTracks}
+          playedCount={playedCount}
           isHost
           onSkipTrack={() => socket.emit("startNewChallenge", SESSION_UUID)}
           onLeave={closeSession}

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import PropTypes from "prop-types";
 import { FaRegPlayCircle, FaRegPauseCircle } from "react-icons/fa";
 import { MdSkipNext } from "react-icons/md";
@@ -7,7 +7,7 @@ import { useMusicProvider } from "../../contexts/MusicProvider";
 
 import "./Player.css";
 
-const Player = ({ nextTrackCallback, onPlaybackStateChange, tracks = [] }) => {
+const Player = ({ nextTrackCallback, onPlaybackStateChange, onTrackChange, tracks = [] }) => {
   const { getPlayer, setPlayerStateChangeCb } = useMusicProvider();
 
   // Seeded from the playlist already fetched during setup rather than
@@ -17,6 +17,10 @@ const Player = ({ nextTrackCallback, onPlaybackStateChange, tracks = [] }) => {
   const [state, setState] = useState({ paused: true });
   const [currentTrack, setCurrentTrack] = useState(tracks[0] || "");
   const [nextTrack, setNextTrack] = useState(tracks[1] || "");
+  // Guards onTrackChange below against firing again for the same track on
+  // every unrelated player_state_changed event (e.g. a plain play/pause
+  // toggle also carries the current track_window).
+  const lastTrackNameRef = useRef("");
 
   const player = getPlayer();
 
@@ -41,7 +45,13 @@ const Player = ({ nextTrackCallback, onPlaybackStateChange, tracks = [] }) => {
       // track — falling back to "" keeps nextTrack.name safe to read below.
       setCurrentTrack(current_track || "");
       setNextTrack(next_tracks[0] || "");
+
+      if (current_track?.name && current_track.name !== lastTrackNameRef.current) {
+        lastTrackNameRef.current = current_track.name;
+        onTrackChange?.(current_track);
+      }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state]);
 
   return (
@@ -80,6 +90,7 @@ const Player = ({ nextTrackCallback, onPlaybackStateChange, tracks = [] }) => {
 Player.propTypes = {
   nextTrackCallback: PropTypes.func.isRequired,
   onPlaybackStateChange: PropTypes.func,
+  onTrackChange: PropTypes.func,
   tracks: PropTypes.array,
 };
 

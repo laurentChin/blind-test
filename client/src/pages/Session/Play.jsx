@@ -25,9 +25,13 @@ const Play = ({
   isHost = false,
   onSkipTrack,
   restoredState,
+  totalTracks,
+  playedCount,
   ...props
 }) => {
   const [challengers, setChallengers] = useState(props.challengers || []);
+  const [songsPlayed, setSongsPlayed] = useState(playedCount ?? 0);
+  const [songsTotal, setSongsTotal] = useState(totalTracks ?? 0);
   const [isChallengeLocked, setChallengeLock] = useState(false);
   const [challengerUuid, setChallengerUuid] = useState();
   const [isOnCooldown, setIsOnCooldown] = useState(false);
@@ -60,6 +64,18 @@ const Play = ({
   useEffect(() => {
     setChallengers(props.challengers)
   }, [props.challengers])
+
+  // Mirrors challengers above: totalTracks/playedCount only change here when
+  // Session.jsx gets a fresh value from the server (on join or a
+  // joinAfterRefresh reconnect) — ongoing updates during play come from the
+  // trackReady handler below instead.
+  useEffect(() => {
+    if (totalTracks !== undefined) setSongsTotal(totalTracks);
+  }, [totalTracks]);
+
+  useEffect(() => {
+    if (playedCount !== undefined) setSongsPlayed(playedCount);
+  }, [playedCount]);
 
   // Applies once, right after a refresh reconnects mid-round — restoredState
   // is null on a fresh join (nothing to restore) and only ever set once by
@@ -139,12 +155,14 @@ const Play = ({
 
   useEffect(() => () => clearTimeout(cooldownTimeoutRef.current), []);
 
-  socket.on("trackReady", (track) => {
+  socket.on("trackReady", ({ track, playedCount: newPlayedCount, totalTracks: newTotalTracks }) => {
     setCurrentTrack(track);
     setIsRevealed(false);
     setIsExcluded(false);
     setIsScoreSubmitted(false);
     setIsTrackRevealed(false);
+    if (newPlayedCount !== undefined) setSongsPlayed(newPlayedCount);
+    if (newTotalTracks !== undefined) setSongsTotal(newTotalTracks);
   });
 
   socket.on("challengeResult", ({ track }) => {
@@ -218,6 +236,19 @@ const Play = ({
   return (
     <div className="Play">
       <h1 className="visually-hidden">Play</h1>
+      {songsTotal > 0 && (
+        <div className="Session-progress" data-testid="song-progress">
+          <progress
+            className="Session-progress-bar"
+            data-testid="song-progress-bar"
+            value={songsPlayed}
+            max={songsTotal}
+          />
+          <span className="Session-progress-count">
+            {songsPlayed}/{songsTotal}
+          </span>
+        </div>
+      )}
       {isSelfChallenging || isRevealed || isTrackRevealed ? (
         <div className="reveal-container" data-testid="reveal-container">
           {isSelfChallenging && !isRevealed ? (
@@ -408,6 +439,8 @@ Play.propTypes = {
   fullPoints: PropTypes.number,
   isHost: PropTypes.bool,
   onSkipTrack: PropTypes.func,
+  totalTracks: PropTypes.number,
+  playedCount: PropTypes.number,
   player: PropTypes.shape({
     uuid: PropTypes.string.isRequired,
     color: colorPropType.isRequired,
