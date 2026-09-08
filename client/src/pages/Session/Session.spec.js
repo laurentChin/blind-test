@@ -4,6 +4,7 @@ import { useParams } from "react-router-dom";
 import { Session } from "./Session";
 
 const listeners = {};
+let joinAfterRefreshResponseOverrides = {};
 
 jest.mock("react-router-dom");
 jest.mock("socket.io-client", () => {
@@ -30,7 +31,8 @@ jest.mock("socket.io-client", () => {
           break;
         case "joinAfterRefresh":
           callback({
-            challengers: []
+            challengers: [],
+            ...joinAfterRefreshResponseOverrides,
           });
           break;
       }
@@ -51,6 +53,7 @@ describe("<Session />", () => {
 
   afterEach(() => {
     jest.clearAllMocks();
+    joinAfterRefreshResponseOverrides = {};
   });
 
   it("Should display the join session form when user is not in a session", async () => {
@@ -79,6 +82,28 @@ describe("<Session />", () => {
     const { getByTestId, getAllByTestId } = render(<Session />);
 
     expect(getByTestId("challenge-button")).toBeInTheDocument();
+  });
+
+  it("Should restore an in-progress lock for a reconnecting player instead of showing a blank interactive button", async () => {
+    joinAfterRefreshResponseOverrides = { currentChallenger: "player-12345" };
+    Object.defineProperty(window, "sessionStorage", {
+      configurable: true,
+      value: {
+        getItem: jest.fn((key) => ({
+          player: JSON.stringify({
+            uuid: "player-12345",
+            color: { background: "245, 130, 49", text: "0, 0, 0" },
+          }),
+          sessionUuid: "session-12345",
+        }[key])),
+        removeItem: jest.fn(),
+        setItem: jest.fn(),
+      },
+    });
+
+    const { getByTestId } = render(<Session />);
+
+    expect(getByTestId("challenge-button")).toBeDisabled();
   });
 
   it("Should reset the stored player and show the join form when the url points to a different session", async () => {

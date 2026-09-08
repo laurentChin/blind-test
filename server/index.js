@@ -63,6 +63,12 @@ io.on("connection", socket => {
       fullPoints: fullPoints ?? 1,
       cooldowns: new Map(),
       challengeTimeoutHandle: null,
+      currentTrack: null,
+      // everybodyPlays only: a correct answer was just broadcast to the
+      // whole room (see setScore below) and the host hasn't cued the next
+      // track yet — lets a reconnecting player know to show that same
+      // reveal screen instead of the interactive challenge button.
+      roundRevealed: false,
     });
 
     socket.join(sessionUuid);
@@ -129,7 +135,7 @@ io.on("connection", socket => {
     }
   });
 
-  socket.on("joinAfterRefresh", ({ sessionUuid }, callback) => {
+  socket.on("joinAfterRefresh", ({ sessionUuid, playerUuid }, callback) => {
     if (verboseOutput) {
       logger.info(`joinAfterRefresh event received for session ${sessionUuid}`);
     }
@@ -145,6 +151,15 @@ io.on("connection", socket => {
           challengeCooldownSeconds: session.challengeCooldownSeconds,
           almostPoints: session.almostPoints,
           fullPoints: session.fullPoints,
+          // The round in progress (if any) — without this, a client that
+          // reconnects mid-round has no way to know a challenge is locked,
+          // that it already tried and failed this track, or what the
+          // current track even is, and ends up permanently out of step
+          // with the game until the next track starts.
+          currentChallenger: session.currentChallenger,
+          isExcluded: session.excludedPlayers.has(playerUuid),
+          currentTrack: session.currentTrack,
+          roundRevealed: session.roundRevealed,
         });
       }
     }
@@ -204,20 +219,33 @@ io.on("connection", socket => {
       return;
     }
 
+    // Someone else already holds the lock — without this, a client whose
+    // local state is out of sync with the server (e.g. it reconnected
+    // before catching up on the current round) could steal an in-progress
+    // challenge from under the player who's actually answering.
+    if (session.currentChallenger && session.currentChallenger !== playerUuid) {
+      if (callback) {
+        callback({ rejected: true });
+      }
+      return;
+    }
+
     session.currentChallenger = playerUuid;
     io.to(sessionUuid).emit("lockChallenge", playerUuid);
 
     clearTimeout(session.challengeTimeoutHandle);
     session.challengeTimeoutHandle = setTimeout(() => {
-      session.currentChallenger = null;
-
       // Classic mode only: the timer running out there means the challenger
       // failed to answer, and the cooldown rate-limits re-buzzing. In
       // everybodyPlays, the timer running out is the normal trigger for the
       // auto-revealed answer screen — not a failure — so no cooldown should
       // outlive the round and block this player's next, genuinely new,
-      // buzz-in once the track changes.
+      // buzz-in once the track changes. currentChallenger is left set too:
+      // this player still owns the round until they self-score (see setScore
+      // / markWrongAnswer below), which is what lets a mid-reveal refresh
+      // restore the right screen instead of a fresh, unlocked one.
       if (session.mode !== "everybodyPlays") {
+        session.currentChallenger = null;
         session.cooldowns.set(
           playerUuid,
           Date.now() + session.challengeCooldownSeconds * 1000
@@ -250,16 +278,19 @@ io.on("connection", socket => {
 
     // Classic mode's master scores while the challenge is still locked, so
     // session.currentChallenger is still valid there and playerUuid isn't
-    // sent. everybodyPlays scores after its own timer already expired —
-    // which is what nulls session.currentChallenger server-side (see the
-    // "challenge" handler's timeout) — so it must identify the challenger
-    // explicitly instead.
+    // sent. everybodyPlays scores after its own timer already expired, and a
+    // player could in theory have reconnected in between — relying on
+    // session.currentChallenger there would trust a value the client can't
+    // fully vouch for, so it identifies the challenger explicitly instead.
     const challengerUuid = playerUuid ?? session.currentChallenger;
     const challenger = session.challengers.get(challengerUuid);
     if (!challenger) return;
 
     clearTimeout(session.challengeTimeoutHandle);
     session.currentChallenger = null;
+    if (session.mode === "everybodyPlays") {
+      session.roundRevealed = true;
+    }
     challenger.score = parseFloat(challenger.score) + parseFloat(score);
 
     if (verboseOutput) {
@@ -326,6 +357,12 @@ io.on("connection", socket => {
   // player), so it broadcasts it here for every player's screen to privately
   // cache ahead of that player's own "reveal" action.
   socket.on("trackReady", ({ sessionUuid, track }) => {
+    const session = sessions.get(sessionUuid);
+    if (session) {
+      session.currentTrack = track;
+      session.roundRevealed = false;
+    }
+
     io.to(sessionUuid).emit("trackReady", track);
   });
 
@@ -358,6 +395,8 @@ io.on("connection", socket => {
     const session = sessions.get(sessionUuid);
     if (session) {
       session.excludedPlayers.clear();
+      session.currentChallenger = null;
+      session.roundRevealed = false;
     }
 
     io.to(sessionUuid).emit("startNewChallenge");
