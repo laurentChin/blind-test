@@ -138,6 +138,8 @@ describe("<ConfigureEverybodyPlaysSession />", () => {
       mode: "everybodyPlays",
       timerSeconds: 8,
       cooldownSeconds: 3,
+      almostPoints: 0.5,
+      fullPoints: 1,
     });
   });
 

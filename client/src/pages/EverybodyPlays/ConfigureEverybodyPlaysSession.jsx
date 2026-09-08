@@ -10,6 +10,11 @@ import {
   DEFAULT_TIMER_SECONDS,
   DEFAULT_COOLDOWN_SECONDS,
 } from "../../components/ChallengeTimerConfig/ChallengeTimerConfig";
+import {
+  AnswerScoreConfig,
+  DEFAULT_ALMOST_POINTS,
+  DEFAULT_FULL_POINTS,
+} from "../../components/AnswerScoreConfig/AnswerScoreConfig";
 import { THEMES } from "./themes";
 
 import "./ConfigureEverybodyPlaysSession.css";
@@ -78,6 +83,8 @@ const ConfigureEverybodyPlaysSession = ({ sessionUuid, socket, onLaunch }) => {
   const [isCustomCount, setIsCustomCount] = useState(false);
   const [timerSeconds, setTimerSeconds] = useState(DEFAULT_TIMER_SECONDS);
   const [cooldownSeconds, setCooldownSeconds] = useState(DEFAULT_COOLDOWN_SECONDS);
+  const [almostPoints, setAlmostPoints] = useState(DEFAULT_ALMOST_POINTS);
+  const [fullPoints, setFullPoints] = useState(DEFAULT_FULL_POINTS);
 
   const [addedCount, setAddedCount] = useState(0);
   const [error, setError] = useState("");
@@ -120,6 +127,8 @@ const ConfigureEverybodyPlaysSession = ({ sessionUuid, socket, onLaunch }) => {
         mode: "everybodyPlays",
         timerSeconds,
         cooldownSeconds,
+        almostPoints,
+        fullPoints,
       });
 
       const { id: playlistId } = await musicProvider.createPlaylist(
@@ -286,6 +295,21 @@ const ConfigureEverybodyPlaysSession = ({ sessionUuid, socket, onLaunch }) => {
           onChange={({ timerSeconds, cooldownSeconds }) => {
             setTimerSeconds(timerSeconds);
             setCooldownSeconds(cooldownSeconds);
+          }}
+        />
+      </section>
+
+      <section
+        className="config-step"
+        inert={!isIdentityValid || !isPlaylistNameValid || !isThemeValid}
+      >
+        <h2>6. Scoring</h2>
+        <AnswerScoreConfig
+          almostPoints={almostPoints}
+          fullPoints={fullPoints}
+          onChange={({ almostPoints, fullPoints }) => {
+            setAlmostPoints(almostPoints);
+            setFullPoints(fullPoints);
           }}
         />
       </section>

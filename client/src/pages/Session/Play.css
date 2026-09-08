@@ -34,14 +34,14 @@
    duration, exposed as CSS custom properties so JS never has to hardcode or
    re-derive the animation length — see ChallengeTimerConfig. */
 .Session-challenge-button.is-timing,
-.reveal-answer-btn.is-timing,
+.answering-timer.is-timing,
 .Session-challenge-button.is-cooldown {
   position: relative;
   overflow: hidden;
 }
 
 .Session-challenge-button.is-timing::after,
-.reveal-answer-btn.is-timing::after {
+.answering-timer.is-timing::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -101,10 +101,28 @@
   border: 1px solid var(--color-surface-border);
 }
 
-.reveal-answer-btn {
+.answering-timer {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
   height: 4rem;
   padding: 0 var(--space-6);
+  border-radius: var(--radius-md);
+  background-color: var(--color-canvas-deep);
+  color: var(--color-text);
+  font-family: var(--font-display);
+  font-weight: 800;
   font-size: var(--font-size-lg);
+}
+
+.revealed-cover {
+  width: 100%;
+  max-width: 260px;
+  aspect-ratio: 1;
+  border-radius: var(--radius-md);
+  object-fit: cover;
 }
 
 .revealed-track {
@@ -114,10 +132,37 @@
 }
 
 .self-score-buttons {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: var(--space-3);
+  width: 100%;
+  max-width: 400px;
+}
+
+.next-track-btn {
+  margin-top: var(--space-2);
+}
+
+/* Draw the host's eye to this button without requiring an actual hover —
+   .btn's own glow-spin (see base.css) only plays on :hover, so it's
+   replayed here on a loop instead. */
+.next-track-btn::before {
+  opacity: 1;
+  animation: btn-glow-spin 4s linear infinite;
+}
+
+/* "Title or Artist" (the 3rd, partial-credit button) spans the full width
+   taken up by the other two combined, on its own row below them. */
+.self-score-buttons .btn:last-child {
+  grid-column: 1 / -1;
+}
+
+/* Scoped to this screen only — .btn-score-full is shared with the classic
+   mode's master scoring UI (ManageSession.jsx), which keeps its own blue. */
+.reveal-container .btn-score-full {
+  --btn-role-color: var(--color-positive);
+  border-color: var(--color-positive);
+  color: var(--color-positive);
 }
 
 .challenger-dialog {

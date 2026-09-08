@@ -43,12 +43,30 @@ const getStoredCooldownSeconds = (uuid) => {
   return parseInt(sessionStorage.getItem("cooldownSeconds"), 10) || 2;
 };
 
+const getStoredAlmostPoints = (uuid) => {
+  if (sessionStorage.getItem("sessionUuid") !== uuid) {
+    return 0.5;
+  }
+
+  return parseFloat(sessionStorage.getItem("almostPoints")) || 0.5;
+};
+
+const getStoredFullPoints = (uuid) => {
+  if (sessionStorage.getItem("sessionUuid") !== uuid) {
+    return 1;
+  }
+
+  return parseFloat(sessionStorage.getItem("fullPoints")) || 1;
+};
+
 const Session = () => {
   const { uuid } = useParams();
   const [player, setPlayer] = useState(() => getStoredPlayer(uuid));
   const [mode, setMode] = useState(() => getStoredMode(uuid));
   const [timerSeconds, setTimerSeconds] = useState(() => getStoredTimerSeconds(uuid));
   const [cooldownSeconds, setCooldownSeconds] = useState(() => getStoredCooldownSeconds(uuid));
+  const [almostPoints, setAlmostPoints] = useState(() => getStoredAlmostPoints(uuid));
+  const [fullPoints, setFullPoints] = useState(() => getStoredFullPoints(uuid));
   const [inSession, setInSession] = useState(false);
   const [challengers, setChallengers] = useState([]);
 
@@ -59,6 +77,8 @@ const Session = () => {
       sessionStorage.removeItem("mode");
       sessionStorage.removeItem("timerSeconds");
       sessionStorage.removeItem("cooldownSeconds");
+      sessionStorage.removeItem("almostPoints");
+      sessionStorage.removeItem("fullPoints");
       setPlayer({});
       setInSession(false);
     }
@@ -80,6 +100,14 @@ const Session = () => {
           setCooldownSeconds(response.challengeCooldownSeconds);
           sessionStorage.setItem("cooldownSeconds", response.challengeCooldownSeconds);
         }
+        if (response.almostPoints !== undefined) {
+          setAlmostPoints(response.almostPoints);
+          sessionStorage.setItem("almostPoints", response.almostPoints);
+        }
+        if (response.fullPoints !== undefined) {
+          setFullPoints(response.fullPoints);
+          sessionStorage.setItem("fullPoints", response.fullPoints);
+        }
       });
       setInSession(true);
     }
@@ -97,6 +125,8 @@ const Session = () => {
               setMode(response.mode || "classic");
               setTimerSeconds(response.challengeTimerSeconds || 5);
               setCooldownSeconds(response.challengeCooldownSeconds ?? 2);
+              setAlmostPoints(response.almostPoints ?? 0.5);
+              setFullPoints(response.fullPoints ?? 1);
               setInSession(true);
               setChallengers(response.challengers);
             }}
@@ -113,6 +143,8 @@ const Session = () => {
           challengers={challengers}
           timerSeconds={timerSeconds}
           cooldownSeconds={cooldownSeconds}
+          almostPoints={almostPoints}
+          fullPoints={fullPoints}
           onLeave={() => {
             setPlayer({});
             setInSession(false);
