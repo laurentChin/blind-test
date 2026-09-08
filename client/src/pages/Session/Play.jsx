@@ -20,6 +20,10 @@ const Play = ({
   mode = "classic",
   timerSeconds = 5,
   cooldownSeconds = 2,
+  almostPoints = 0.5,
+  fullPoints = 1,
+  isHost = false,
+  onSkipTrack,
   ...props
 }) => {
   const [challengers, setChallengers] = useState(props.challengers || []);
@@ -28,8 +32,8 @@ const Play = ({
   const [isOnCooldown, setIsOnCooldown] = useState(false);
   const cooldownTimeoutRef = useRef();
   // "everybodyPlays" only: the current/upcoming track, privately cached from
-  // the host's trackReady broadcast ahead of time and only ever shown once
-  // this player reveals it themselves (see Play mode docs in the plan).
+  // the host's trackReady broadcast ahead of time and only shown once this
+  // player's own challenge timer runs out (see challengeTimedOut below).
   const [currentTrack, setCurrentTrack] = useState();
   const [isRevealed, setIsRevealed] = useState(false);
   // Locally known "already tried this track and got it wrong" — set
@@ -37,6 +41,15 @@ const Play = ({
   // rejects a buzz-in (e.g. after a refresh mid-track). Reset whenever a new
   // track is cued.
   const [isExcluded, setIsExcluded] = useState(false);
+  // Set once this player has clicked one of the 3 score buttons — the
+  // answer stays on screen (until the next trackReady) but the buttons
+  // themselves are disabled so a submission can't be sent twice.
+  const [isScoreSubmitted, setIsScoreSubmitted] = useState(false);
+  // "everybodyPlays" only: a correct answer is broadcast to every player
+  // (not just the one who scored) via challengeResult — this shows the same
+  // reveal screen to everyone, without score buttons, until the host moves
+  // the game on.
+  const [isTrackRevealed, setIsTrackRevealed] = useState(false);
   const challengerDialog = useRef();
 
   useEffect(() => {
@@ -60,14 +73,22 @@ const Play = ({
     setChallengeLock(false);
     setChallengerUuid(undefined);
 
-    if (timedOutPlayerUuid === player.uuid) {
-      clearTimeout(cooldownTimeoutRef.current);
-      setIsOnCooldown(true);
-      cooldownTimeoutRef.current = setTimeout(
-        () => setIsOnCooldown(false),
-        cooldownSeconds * 1000
-      );
+    if (timedOutPlayerUuid !== player.uuid) return;
+
+    // Everybody plays: the timer running out is what reveals the answer —
+    // there's no manual "reveal" step, so this player goes straight to the
+    // score buttons instead of a cooldown.
+    if (mode === "everybodyPlays") {
+      setIsRevealed(true);
+      return;
     }
+
+    clearTimeout(cooldownTimeoutRef.current);
+    setIsOnCooldown(true);
+    cooldownTimeoutRef.current = setTimeout(
+      () => setIsOnCooldown(false),
+      cooldownSeconds * 1000
+    );
   });
 
   useEffect(() => () => clearTimeout(cooldownTimeoutRef.current), []);
@@ -76,6 +97,15 @@ const Play = ({
     setCurrentTrack(track);
     setIsRevealed(false);
     setIsExcluded(false);
+    setIsScoreSubmitted(false);
+    setIsTrackRevealed(false);
+  });
+
+  socket.on("challengeResult", ({ track }) => {
+    if (mode !== "everybodyPlays") return;
+
+    setCurrentTrack(track);
+    setIsTrackRevealed(true);
   });
 
   const clearSession = () => {
@@ -106,13 +136,18 @@ const Play = ({
 
   const markWrong = () => {
     socket.emit("markWrongAnswer", { sessionUuid, playerUuid: player.uuid });
-    setIsRevealed(false);
+    setIsScoreSubmitted(true);
     setIsExcluded(true);
   };
 
   const selfScore = (score) => {
-    socket.emit("setScore", { sessionUuid, score, track: currentTrack });
-    setIsRevealed(false);
+    socket.emit("setScore", {
+      sessionUuid,
+      playerUuid: player.uuid,
+      score,
+      track: currentTrack,
+    });
+    setIsScoreSubmitted(true);
   };
 
   const ranked = [...challengers].sort((a, b) => b.score - a.score);
@@ -137,54 +172,75 @@ const Play = ({
   return (
     <div className="Play">
       <h1 className="visually-hidden">Play</h1>
-      {isSelfChallenging ? (
+      {isSelfChallenging || isRevealed || isTrackRevealed ? (
         <div className="reveal-container" data-testid="reveal-container">
-          {!isRevealed ? (
-            <button
-              type="button"
-              data-testid="reveal-answer-btn"
-              className={`btn btn-accent reveal-answer-btn ${
+          {isSelfChallenging && !isRevealed ? (
+            <div
+              className={`answering-timer ${
                 isChallengeLocked ? "is-timing" : ""
               }`.trim()}
               style={{ "--timer-duration": `${timerSeconds}s` }}
-              onClick={() => setIsRevealed(true)}
+              data-testid="answering-timer"
             >
-              Reveal the answer
-            </button>
+              Answer out loud…
+            </div>
           ) : (
             <>
+              {currentTrack?.image && (
+                <img
+                  className="revealed-cover"
+                  data-testid="revealed-cover"
+                  src={currentTrack.image}
+                  alt=""
+                />
+              )}
               {currentTrack && (
-                <p className="revealed-track">
+                <p className="revealed-track" data-testid="revealed-track">
                   <strong>{currentTrack.name}</strong>
                   {currentTrack.artists && ` — ${currentTrack.artists}`}
                 </p>
               )}
-              <div className="self-score-buttons">
+              {isRevealed && (
+                <div className="self-score-buttons">
+                  <button
+                    type="button"
+                    data-testid="self-score-none-btn"
+                    className="btn btn-danger-strong"
+                    disabled={isScoreSubmitted}
+                    onClick={markWrong}
+                  >
+                    Fake news
+                  </button>
+                  <button
+                    type="button"
+                    data-testid="self-score-full-btn"
+                    className="btn btn-score-full"
+                    disabled={isScoreSubmitted}
+                    onClick={() => selfScore(fullPoints)}
+                  >
+                    Jackpot
+                  </button>
+                  <button
+                    type="button"
+                    data-testid="self-score-almost-btn"
+                    className="btn btn-score-half"
+                    disabled={isScoreSubmitted}
+                    onClick={() => selfScore(almostPoints)}
+                  >
+                    Title or Artist
+                  </button>
+                </div>
+              )}
+              {isHost && isTrackRevealed && (
                 <button
                   type="button"
-                  data-testid="self-score-wrong-btn"
-                  className="btn btn-danger-strong"
-                  onClick={markWrong}
+                  data-testid="reveal-next-track-btn"
+                  className="btn btn-ghost next-track-btn"
+                  onClick={onSkipTrack}
                 >
-                  Wrong
+                  Next song
                 </button>
-                <button
-                  type="button"
-                  data-testid="self-score-half-btn"
-                  className="btn btn-score-half"
-                  onClick={() => selfScore(0.5)}
-                >
-                  Success .5pt
-                </button>
-                <button
-                  type="button"
-                  data-testid="self-score-full-btn"
-                  className="btn btn-score-full"
-                  onClick={() => selfScore(1)}
-                >
-                  Success 1pt
-                </button>
-              </div>
+              )}
             </>
           )}
         </div>
@@ -291,6 +347,10 @@ Play.propTypes = {
   mode: PropTypes.oneOf(["classic", "everybodyPlays"]),
   timerSeconds: PropTypes.number,
   cooldownSeconds: PropTypes.number,
+  almostPoints: PropTypes.number,
+  fullPoints: PropTypes.number,
+  isHost: PropTypes.bool,
+  onSkipTrack: PropTypes.func,
   player: PropTypes.shape({
     uuid: PropTypes.string.isRequired,
     color: colorPropType.isRequired,

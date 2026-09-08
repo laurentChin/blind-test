@@ -242,7 +242,7 @@ describe("<Play />", () => {
       color: { background: "230, 25, 75", text: "255, 255, 255" },
     };
 
-    it("should show a reveal button instead of the buzzer once this player is locked in, then the score buttons once revealed", async () => {
+    it("should show a non-interactive answering timer instead of the buzzer once this player is locked in, then auto-reveal the score buttons once the timer times out", async () => {
       const { getByTestId, queryByTestId } = render(
         <Play
           mode="everybodyPlays"
@@ -255,17 +255,28 @@ describe("<Play />", () => {
       );
 
       await act(async () => {
-        mockSocket.emit("trackReady", { name: "Hallelujah", artists: "Jeff Buckley" });
+        mockSocket.emit("trackReady", {
+          name: "Hallelujah",
+          artists: "Jeff Buckley",
+          image: "https://img/cover.jpg",
+        });
         mockSocket.emit("lockChallenge", "player-12345");
       });
 
       expect(queryByTestId("challenge-button")).toBeFalsy();
-      expect(getByTestId("reveal-answer-btn")).toBeInTheDocument();
+      expect(getByTestId("answering-timer")).toBeInTheDocument();
+      expect(queryByTestId("self-score-none-btn")).toBeFalsy();
 
-      fireEvent.click(getByTestId("reveal-answer-btn"));
+      await act(async () => {
+        mockSocket.emit("challengeTimedOut", "player-12345");
+      });
 
-      expect(getByTestId("self-score-wrong-btn")).toBeInTheDocument();
-      expect(getByTestId("self-score-half-btn")).toBeInTheDocument();
+      expect(getByTestId("revealed-cover")).toHaveAttribute(
+        "src",
+        "https://img/cover.jpg"
+      );
+      expect(getByTestId("self-score-none-btn")).toBeInTheDocument();
+      expect(getByTestId("self-score-almost-btn")).toBeInTheDocument();
       expect(getByTestId("self-score-full-btn")).toBeInTheDocument();
     });
 
@@ -307,7 +318,7 @@ describe("<Play />", () => {
       expect(dialog.open).toBeFalsy();
     });
 
-    it("should emit setScore with the revealed track when a success button is clicked", async () => {
+    it("should emit setScore with the configured points when a score button is clicked", async () => {
       mockSocket.on("setScore", jest.fn());
       const { getByTestId } = render(
         <Play
@@ -317,27 +328,30 @@ describe("<Play />", () => {
           socket={mockSocket}
           onLeave={jest.fn()}
           challengers={[]}
+          almostPoints={0.5}
+          fullPoints={2}
         />
       );
 
       await act(async () => {
         mockSocket.emit("trackReady", { name: "Hallelujah", artists: "Jeff Buckley" });
         mockSocket.emit("lockChallenge", "player-12345");
+        mockSocket.emit("challengeTimedOut", "player-12345");
       });
 
-      fireEvent.click(getByTestId("reveal-answer-btn"));
       fireEvent.click(getByTestId("self-score-full-btn"));
 
       expect(mockSocket.emit).toHaveBeenCalledWith("setScore", {
         sessionUuid: "session-12345",
-        score: 1,
+        playerUuid: "player-12345",
+        score: 2,
         track: { name: "Hallelujah", artists: "Jeff Buckley" },
       });
     });
 
-    it("should emit markWrongAnswer and disable further buzzing on this track when 'Wrong' is clicked", async () => {
+    it("should emit markWrongAnswer, then keep showing the answer with the score buttons disabled, when 'Fake news' is clicked", async () => {
       mockSocket.on("markWrongAnswer", jest.fn());
-      const { getByTestId } = render(
+      const { getByTestId, queryByTestId } = render(
         <Play
           mode="everybodyPlays"
           sessionUuid="session-12345"
@@ -351,10 +365,10 @@ describe("<Play />", () => {
       await act(async () => {
         mockSocket.emit("trackReady", { name: "Hallelujah", artists: "Jeff Buckley" });
         mockSocket.emit("lockChallenge", "player-12345");
+        mockSocket.emit("challengeTimedOut", "player-12345");
       });
 
-      fireEvent.click(getByTestId("reveal-answer-btn"));
-      fireEvent.click(getByTestId("self-score-wrong-btn"));
+      fireEvent.click(getByTestId("self-score-none-btn"));
 
       expect(mockSocket.emit).toHaveBeenCalledWith("markWrongAnswer", {
         sessionUuid: "session-12345",
@@ -365,10 +379,92 @@ describe("<Play />", () => {
         mockSocket.emit("challengerRelease", []);
       });
 
-      expect(getByTestId("challenge-button")).toBeDisabled();
-      expect(getByTestId("challenge-button")).toHaveTextContent(
-        "Already tried this track"
+      // Still on the answer screen (not back to the buzzer) — same track
+      // keeps playing for other players until someone advances it.
+      expect(queryByTestId("challenge-button")).toBeFalsy();
+      expect(getByTestId("self-score-none-btn")).toBeDisabled();
+      expect(getByTestId("self-score-almost-btn")).toBeDisabled();
+      expect(getByTestId("self-score-full-btn")).toBeDisabled();
+
+      // A genuinely new track (someone else eventually got it, or the host
+      // skipped) brings back the normal play screen.
+      await act(async () => {
+        mockSocket.emit("trackReady", { name: "Yesterday", artists: "The Beatles" });
+      });
+
+      expect(getByTestId("challenge-button")).not.toBeDisabled();
+      expect(getByTestId("challenge-button")).toHaveTextContent("Challenge");
+    });
+
+    it("should broadcast the answer reveal to a player who never challenged, without any score buttons", async () => {
+      const bystander = {
+        uuid: "player-bystander",
+        name: "alice",
+        color: { background: "1, 2, 3", text: "255, 255, 255" },
+      };
+      const { getByTestId, queryByTestId } = render(
+        <Play
+          mode="everybodyPlays"
+          sessionUuid="session-12345"
+          player={bystander}
+          socket={mockSocket}
+          onLeave={jest.fn()}
+          challengers={[]}
+        />
       );
+
+      await act(async () => {
+        mockSocket.emit("trackReady", { name: "Hallelujah", artists: "Jeff Buckley" });
+        // Someone else buzzes in and answers — this player never does.
+        mockSocket.emit("lockChallenge", "player-12345");
+        mockSocket.emit("challengeResult", {
+          score: 1,
+          track: { name: "Hallelujah", artists: "Jeff Buckley", image: "https://img/cover.jpg" },
+        });
+      });
+
+      expect(getByTestId("revealed-cover")).toHaveAttribute(
+        "src",
+        "https://img/cover.jpg"
+      );
+      expect(getByTestId("revealed-track")).toHaveTextContent("Hallelujah");
+      expect(queryByTestId("self-score-none-btn")).toBeFalsy();
+      expect(queryByTestId("self-score-almost-btn")).toBeFalsy();
+      expect(queryByTestId("self-score-full-btn")).toBeFalsy();
+      expect(queryByTestId("reveal-next-track-btn")).toBeFalsy();
+    });
+
+    it("should only show the 'Next song' button to the host, on the broadcast reveal screen", async () => {
+      const onSkipTrack = jest.fn();
+      const { getByTestId, queryByTestId } = render(
+        <Play
+          mode="everybodyPlays"
+          sessionUuid="session-12345"
+          player={player}
+          socket={mockSocket}
+          onLeave={jest.fn()}
+          challengers={[]}
+          isHost
+          onSkipTrack={onSkipTrack}
+        />
+      );
+
+      await act(async () => {
+        mockSocket.emit("trackReady", { name: "Hallelujah", artists: "Jeff Buckley" });
+      });
+
+      expect(queryByTestId("reveal-next-track-btn")).toBeFalsy();
+
+      await act(async () => {
+        mockSocket.emit("challengeResult", {
+          score: 1,
+          track: { name: "Hallelujah", artists: "Jeff Buckley" },
+        });
+      });
+
+      fireEvent.click(getByTestId("reveal-next-track-btn"));
+
+      expect(onSkipTrack).toHaveBeenCalled();
     });
 
     it("should disable buzzing when the server rejects a challenge as already-excluded", () => {

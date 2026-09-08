@@ -50,7 +50,7 @@ const io = new Server(httpServer, {
 const verboseOutput = process.env.VERBOSE;
 
 io.on("connection", socket => {
-  socket.on("createSession", ({ sessionUuid, mode, timerSeconds, cooldownSeconds }) => {
+  socket.on("createSession", ({ sessionUuid, mode, timerSeconds, cooldownSeconds, almostPoints, fullPoints }) => {
     sessions.set(sessionUuid, {
       currentChallenger: null,
       challengers: new Map(),
@@ -59,6 +59,8 @@ io.on("connection", socket => {
       excludedPlayers: new Set(),
       challengeTimerSeconds: timerSeconds ?? 5,
       challengeCooldownSeconds: cooldownSeconds ?? 2,
+      almostPoints: almostPoints ?? 0.5,
+      fullPoints: fullPoints ?? 1,
       cooldowns: new Map(),
       challengeTimeoutHandle: null,
     });
@@ -112,6 +114,8 @@ io.on("connection", socket => {
       mode: session.mode,
       challengeTimerSeconds: session.challengeTimerSeconds,
       challengeCooldownSeconds: session.challengeCooldownSeconds,
+      almostPoints: session.almostPoints,
+      fullPoints: session.fullPoints,
     });
 
     io.to(sessionUuid).emit("challengersUpdate", challengers);
@@ -139,6 +143,8 @@ io.on("connection", socket => {
           mode: session.mode,
           challengeTimerSeconds: session.challengeTimerSeconds,
           challengeCooldownSeconds: session.challengeCooldownSeconds,
+          almostPoints: session.almostPoints,
+          fullPoints: session.fullPoints,
         });
       }
     }
@@ -159,6 +165,8 @@ io.on("connection", socket => {
       mode: session ? session.mode : "classic",
       challengeTimerSeconds: session ? session.challengeTimerSeconds : 5,
       challengeCooldownSeconds: session ? session.challengeCooldownSeconds : 2,
+      almostPoints: session ? session.almostPoints : 0.5,
+      fullPoints: session ? session.fullPoints : 1,
     });
   });
 
@@ -170,6 +178,16 @@ io.on("connection", socket => {
     }
 
     const session = sessions.get(sessionUuid);
+
+    // The session can be gone from memory (e.g. a server restart) while a
+    // client still holds a stale sessionUuid from before it — reject rather
+    // than crash the whole process on the next line.
+    if (!session) {
+      if (callback) {
+        callback({ rejected: true });
+      }
+      return;
+    }
 
     const cooldownUntil = session.cooldowns.get(playerUuid);
     if (cooldownUntil && cooldownUntil > Date.now()) {
@@ -192,10 +210,20 @@ io.on("connection", socket => {
     clearTimeout(session.challengeTimeoutHandle);
     session.challengeTimeoutHandle = setTimeout(() => {
       session.currentChallenger = null;
-      session.cooldowns.set(
-        playerUuid,
-        Date.now() + session.challengeCooldownSeconds * 1000
-      );
+
+      // Classic mode only: the timer running out there means the challenger
+      // failed to answer, and the cooldown rate-limits re-buzzing. In
+      // everybodyPlays, the timer running out is the normal trigger for the
+      // auto-revealed answer screen — not a failure — so no cooldown should
+      // outlive the round and block this player's next, genuinely new,
+      // buzz-in once the track changes.
+      if (session.mode !== "everybodyPlays") {
+        session.cooldowns.set(
+          playerUuid,
+          Date.now() + session.challengeCooldownSeconds * 1000
+        );
+      }
+
       io.to(sessionUuid).emit("challengeTimedOut", playerUuid);
 
       if (verboseOutput) {
@@ -210,7 +238,7 @@ io.on("connection", socket => {
     }
   });
 
-  socket.on("setScore", ({ sessionUuid, score, track }) => {
+  socket.on("setScore", ({ sessionUuid, playerUuid, score, track }) => {
     if (verboseOutput) {
       logger.info(
         `setScore event received for session ${sessionUuid} with score ${score}`
@@ -218,7 +246,17 @@ io.on("connection", socket => {
     }
 
     const session = sessions.get(sessionUuid);
-    const challenger = session.challengers.get(session.currentChallenger);
+    if (!session) return;
+
+    // Classic mode's master scores while the challenge is still locked, so
+    // session.currentChallenger is still valid there and playerUuid isn't
+    // sent. everybodyPlays scores after its own timer already expired —
+    // which is what nulls session.currentChallenger server-side (see the
+    // "challenge" handler's timeout) — so it must identify the challenger
+    // explicitly instead.
+    const challengerUuid = playerUuid ?? session.currentChallenger;
+    const challenger = session.challengers.get(challengerUuid);
+    if (!challenger) return;
 
     clearTimeout(session.challengeTimeoutHandle);
     session.currentChallenger = null;
@@ -249,15 +287,10 @@ io.on("connection", socket => {
       );
     }
 
-    // No game master to manually cue the next round in this mode — a
-    // successful self-reported score is the signal to move on. Clears
-    // excludedPlayers directly (rather than relying on the startNewChallenge
-    // handler below) since this emit is server-originated, not relayed from
-    // a client's own startNewChallenge event.
-    if (session.mode === "everybodyPlays") {
-      session.excludedPlayers.clear();
-      io.to(sessionUuid).emit("startNewChallenge");
-    }
+    // A correct answer no longer auto-advances the track: challengeResult
+    // above puts everyone on the answer-reveal screen (see Play.jsx), and in
+    // everybodyPlays mode only the host can move on from there, via the
+    // startNewChallenge handler below (which clears excludedPlayers itself).
   });
 
   // A player self-reports a wrong answer: unlike setScore above, this never

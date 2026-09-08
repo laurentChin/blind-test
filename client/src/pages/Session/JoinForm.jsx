@@ -69,6 +69,8 @@ const JoinForm = ({ socket, onJoin, sessionUuid }) => {
           "cooldownSeconds",
           response.challengeCooldownSeconds ?? 2
         );
+        sessionStorage.setItem("almostPoints", response.almostPoints ?? 0.5);
+        sessionStorage.setItem("fullPoints", response.fullPoints ?? 1);
         onJoin(response);
       }
     );

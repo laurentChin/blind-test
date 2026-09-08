@@ -31,6 +31,8 @@ const EverybodyPlaysHost = () => {
   const [challengers, setChallengers] = useState([]);
   const [challengeTimerSeconds, setChallengeTimerSeconds] = useState();
   const [challengeCooldownSeconds, setChallengeCooldownSeconds] = useState();
+  const [almostPoints, setAlmostPoints] = useState();
+  const [fullPoints, setFullPoints] = useState();
   const [deviceId, setDeviceId] = useState("");
   const [hasSessionStart, setHasSessionStart] = useState(false);
   const [isPaused, setIsPaused] = useState(true);
@@ -53,6 +55,8 @@ const EverybodyPlaysHost = () => {
         setChallengers(response.challengers);
         setChallengeTimerSeconds(response.challengeTimerSeconds);
         setChallengeCooldownSeconds(response.challengeCooldownSeconds);
+        setAlmostPoints(response.almostPoints);
+        setFullPoints(response.fullPoints);
       }
     );
 
@@ -75,6 +79,7 @@ const EverybodyPlaysHost = () => {
               .map((artist) => artist.name)
               .join(", ")
               .trim(),
+            image: track.album?.images?.[0]?.url,
           },
         });
       }
@@ -86,8 +91,12 @@ const EverybodyPlaysHost = () => {
     socket.on("startNewChallenge", () => musicProvider.getPlayer().nextTrack?.());
     // Same player instance is the one that must stop the music as soon as
     // anyone buzzes in (mirrors ManageSession.jsx's classic-mode handler).
+    // Playback stays paused through the timeout and the answer-reveal
+    // screen, resuming only once the challenger submits (Fake news / Title
+    // or Artist / Jackpot) — server emits challengerRelease for all three,
+    // whether or not that submission also advances the track.
     socket.on("lockChallenge", () => musicProvider.getPlayer().pause?.());
-    socket.on("challengeTimedOut", () => musicProvider.getPlayer().resume?.());
+    socket.on("challengerRelease", () => musicProvider.getPlayer().resume?.());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [identity]);
 
@@ -220,6 +229,10 @@ const EverybodyPlaysHost = () => {
           challengers={challengers}
           timerSeconds={challengeTimerSeconds}
           cooldownSeconds={challengeCooldownSeconds}
+          almostPoints={almostPoints}
+          fullPoints={fullPoints}
+          isHost
+          onSkipTrack={() => socket.emit("startNewChallenge", SESSION_UUID)}
           onLeave={closeSession}
         />
       )}

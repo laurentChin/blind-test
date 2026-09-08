@@ -1,0 +1,12 @@
+.AnswerScoreConfig {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.points-config-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  max-width: 220px;
+}
