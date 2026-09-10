@@ -68,7 +68,6 @@ async function collectCandidates(musicProvider, query, count) {
 const ConfigureEverybodyPlaysSession = ({ sessionUuid, socket, onLaunch }) => {
   const musicProvider = useMusicProvider();
   const nameInputId = useId();
-  const playlistNameInputId = useId();
   const customThemeInputId = useId();
   const customTrackCountInputId = useId();
 
@@ -76,7 +75,6 @@ const ConfigureEverybodyPlaysSession = ({ sessionUuid, socket, onLaunch }) => {
   const [creatorColor, setCreatorColor] = useState(null);
   const [colors, setColors] = useState([]);
 
-  const [playlistName, setPlaylistName] = useState("");
   const [themeId, setThemeId] = useState("");
   const [customTheme, setCustomTheme] = useState("");
   const [trackCount, setTrackCount] = useState(TRACK_COUNT_PRESETS[0]);
@@ -86,7 +84,6 @@ const ConfigureEverybodyPlaysSession = ({ sessionUuid, socket, onLaunch }) => {
   const [almostPoints, setAlmostPoints] = useState(DEFAULT_ALMOST_POINTS);
   const [fullPoints, setFullPoints] = useState(DEFAULT_FULL_POINTS);
 
-  const [addedCount, setAddedCount] = useState(0);
   const [error, setError] = useState("");
   const { run, className: loadingClassName } = useAsyncAction();
 
@@ -111,16 +108,13 @@ const ConfigureEverybodyPlaysSession = ({ sessionUuid, socket, onLaunch }) => {
     : customTheme.trim();
 
   const isIdentityValid = creatorName.trim() !== "" && !!creatorColor;
-  const isPlaylistNameValid = playlistName.trim() !== "";
   const isThemeValid = !!effectiveQuery;
   const isTrackCountValid = trackCount >= MIN_TRACKS && trackCount <= MAX_TRACKS;
-  const isReadyToLaunch =
-    isIdentityValid && isPlaylistNameValid && isThemeValid && isTrackCountValid;
+  const isReadyToLaunch = isIdentityValid && isThemeValid && isTrackCountValid;
 
   const generateAndLaunch = () =>
     run(async () => {
       setError("");
-      setAddedCount(0);
 
       socket.emit("createSession", {
         sessionUuid,
@@ -131,11 +125,6 @@ const ConfigureEverybodyPlaysSession = ({ sessionUuid, socket, onLaunch }) => {
         fullPoints,
         totalTracks: trackCount,
       });
-
-      const { id: playlistId } = await musicProvider.createPlaylist(
-        playlistName
-      );
-      musicProvider.setCurrentPlaylist(playlistId);
 
       const uniqueCandidates = await collectCandidates(
         musicProvider,
@@ -152,12 +141,11 @@ const ConfigureEverybodyPlaysSession = ({ sessionUuid, socket, onLaunch }) => {
 
       const selected = shuffle(uniqueCandidates).slice(0, trackCount);
 
-      for (let index = 0; index < selected.length; index++) {
-        await musicProvider.addTrack(selected[index].uri);
-        setAddedCount(index + 1);
-      }
-
-      onLaunch({ name: creatorName, color: creatorColor });
+      onLaunch({
+        name: creatorName,
+        color: creatorColor,
+        trackUris: selected.map((track) => track.uri),
+      });
     });
 
   return (
@@ -183,25 +171,9 @@ const ConfigureEverybodyPlaysSession = ({ sessionUuid, socket, onLaunch }) => {
       </section>
 
       <section className="config-step" inert={!isIdentityValid}>
-        <h2>2. Name the playlist</h2>
-        <label htmlFor={playlistNameInputId}>Playlist name</label>
-        <input
-          id={playlistNameInputId}
-          className="field"
-          data-testid="playlist-name-input"
-          type="text"
-          value={playlistName}
-          onChange={({ currentTarget }) => setPlaylistName(currentTarget.value)}
-        />
-      </section>
-
-      <section
-        className="config-step"
-        inert={!isIdentityValid || !isPlaylistNameValid}
-      >
-        <h2>3. Choose a theme</h2>
+        <h2>2. Choose a theme</h2>
         <p className="config-step-hint">
-          The playlist is built for you — you won't see what's in it.
+          The songs are picked for you — you won't see the list.
         </p>
         <div className="panel">
           <div className="theme-grid">
@@ -234,11 +206,8 @@ const ConfigureEverybodyPlaysSession = ({ sessionUuid, socket, onLaunch }) => {
         </div>
       </section>
 
-      <section
-        className="config-step"
-        inert={!isIdentityValid || !isPlaylistNameValid || !isThemeValid}
-      >
-        <h2>4. How many tracks?</h2>
+      <section className="config-step" inert={!isIdentityValid || !isThemeValid}>
+        <h2>3. How many tracks?</h2>
         <div className="track-count-grid">
           {TRACK_COUNT_PRESETS.map((count) => (
             <button
@@ -285,11 +254,8 @@ const ConfigureEverybodyPlaysSession = ({ sessionUuid, socket, onLaunch }) => {
         )}
       </section>
 
-      <section
-        className="config-step"
-        inert={!isIdentityValid || !isPlaylistNameValid || !isThemeValid}
-      >
-        <h2>5. Timer settings</h2>
+      <section className="config-step" inert={!isIdentityValid || !isThemeValid}>
+        <h2>4. Timer settings</h2>
         <ChallengeTimerConfig
           timerSeconds={timerSeconds}
           cooldownSeconds={cooldownSeconds}
@@ -300,11 +266,8 @@ const ConfigureEverybodyPlaysSession = ({ sessionUuid, socket, onLaunch }) => {
         />
       </section>
 
-      <section
-        className="config-step"
-        inert={!isIdentityValid || !isPlaylistNameValid || !isThemeValid}
-      >
-        <h2>6. Scoring</h2>
+      <section className="config-step" inert={!isIdentityValid || !isThemeValid}>
+        <h2>5. Scoring</h2>
         <AnswerScoreConfig
           almostPoints={almostPoints}
           fullPoints={fullPoints}
@@ -324,9 +287,7 @@ const ConfigureEverybodyPlaysSession = ({ sessionUuid, socket, onLaunch }) => {
           className={`btn btn-positive launch-button ${loadingClassName}`.trim()}
           onClick={generateAndLaunch}
         >
-          {addedCount > 0
-            ? `Adding tracks… ${addedCount}/${trackCount}`
-            : "Generate & launch"}
+          Generate & launch
         </button>
       )}
     </div>

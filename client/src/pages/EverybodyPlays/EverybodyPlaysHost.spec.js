@@ -1,5 +1,5 @@
 import React from "react";
-import { render, fireEvent, waitFor } from "@testing-library/react";
+import { render, fireEvent, waitFor, act } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 
 import { EverybodyPlaysHost } from "./EverybodyPlaysHost";
@@ -21,7 +21,13 @@ jest.mock("./ConfigureEverybodyPlaysSession", () => ({
   ConfigureEverybodyPlaysSession: ({ onLaunch }) => (
     <button
       data-testid="mock-launch-btn"
-      onClick={() => onLaunch({ name: "Alice", color: { background: "1, 2, 3", text: "255, 255, 255" } })}
+      onClick={() =>
+        onLaunch({
+          name: "Alice",
+          color: { background: "1, 2, 3", text: "255, 255, 255" },
+          trackUris: ["uri:track-0", "uri:track-1"],
+        })
+      }
     >
       launch
     </button>
@@ -191,6 +197,145 @@ describe("<EverybodyPlaysHost />", () => {
     (socketListeners["startNewChallenge"] || []).forEach((listener) => listener());
 
     expect(nextTrack).toHaveBeenCalled();
+  });
+
+  it("should start the player with the tracks picked during configuration, not a saved playlist, and start playing immediately", async () => {
+    getSelectedProvider.mockReturnValue("spotify");
+    const startPlayer = jest.fn().mockResolvedValue();
+    const resume = jest.fn();
+    useMusicProvider.mockReturnValue({
+      isAuthenticated: true,
+      login: jest.fn().mockResolvedValue(),
+      setupPlayer: jest.fn((cb) => cb("device-1")),
+      getPlayer: jest.fn().mockReturnValue({ resume, activateElement: jest.fn() }),
+      setPlayerStateChangeCb: jest.fn(),
+      startPlayer,
+    });
+
+    const { getByTestId } = render(
+      <MemoryRouter initialEntries={["/create-session/everybody-plays"]}>
+        <EverybodyPlaysHost />
+      </MemoryRouter>
+    );
+
+    fireEvent.click(getByTestId("mock-launch-btn"));
+
+    await waitFor(() => expect(getByTestId("mock-play")).toBeInTheDocument());
+
+    fireEvent.click(getByTestId("start-session-btn"));
+
+    await waitFor(() =>
+      expect(startPlayer).toHaveBeenCalledWith("device-1", ["uri:track-0", "uri:track-1"])
+    );
+    // Apple Music's setQueue() never starts playback on its own (unlike
+    // Spotify's play endpoint, which does) — resume() is what makes
+    // playback start right away on both providers instead of requiring a
+    // separate manual play click.
+    await waitFor(() => expect(resume).toHaveBeenCalled());
+  });
+
+  it("should hide the 'Skip' button once the last track is up, keeping the play/pause toggle", async () => {
+    getSelectedProvider.mockReturnValue("spotify");
+    socketEmit = jest.fn((event, data, callback) => {
+      if (event === "join" && callback) {
+        callback({
+          player: { uuid: "player-1", color: { background: "1, 2, 3", text: "255, 255, 255" } },
+          challengers: [],
+          totalTracks: 2,
+          playedCount: 1,
+        });
+      }
+    });
+    useMusicProvider.mockReturnValue({
+      isAuthenticated: true,
+      login: jest.fn().mockResolvedValue(),
+      setupPlayer: jest.fn((cb) => cb("device-1")),
+      getPlayer: jest.fn().mockReturnValue({ activateElement: jest.fn(), pause: jest.fn() }),
+      setPlayerStateChangeCb: jest.fn(),
+      startPlayer: jest.fn().mockResolvedValue(),
+    });
+
+    const { getByTestId, queryByTestId } = render(
+      <MemoryRouter initialEntries={["/create-session/everybody-plays"]}>
+        <EverybodyPlaysHost />
+      </MemoryRouter>
+    );
+
+    fireEvent.click(getByTestId("mock-launch-btn"));
+
+    await waitFor(() => expect(getByTestId("mock-play")).toBeInTheDocument());
+
+    fireEvent.click(getByTestId("start-session-btn"));
+
+    await waitFor(() => expect(getByTestId("skip-track-btn")).toBeInTheDocument());
+
+    act(() => {
+      (socketListeners["trackReady"] || []).forEach((listener) =>
+        listener({ playedCount: 2, totalTracks: 2 })
+      );
+    });
+
+    await waitFor(() => expect(queryByTestId("skip-track-btn")).toBeFalsy());
+    expect(getByTestId("toggle-play-pause-btn")).toBeInTheDocument();
+  });
+
+  it("should ignore a stray player state change received before the session is started, and only announce the real track once it starts", async () => {
+    getSelectedProvider.mockReturnValue("spotify");
+    let playerStateChangeCb;
+    useMusicProvider.mockReturnValue({
+      isAuthenticated: true,
+      login: jest.fn().mockResolvedValue(),
+      setupPlayer: jest.fn((cb) => cb("device-1")),
+      getPlayer: jest.fn().mockReturnValue({ activateElement: jest.fn(), pause: jest.fn() }),
+      setPlayerStateChangeCb: jest.fn((cb) => {
+        playerStateChangeCb = cb;
+      }),
+      startPlayer: jest.fn().mockResolvedValue(),
+    });
+
+    const { getByTestId } = render(
+      <MemoryRouter initialEntries={["/create-session/everybody-plays"]}>
+        <EverybodyPlaysHost />
+      </MemoryRouter>
+    );
+
+    fireEvent.click(getByTestId("mock-launch-btn"));
+
+    await waitFor(() => expect(getByTestId("mock-play")).toBeInTheDocument());
+
+    // A stray state change before "Start the session" is clicked (e.g. the
+    // SDK's own connect handshake) must not be mistaken for track 1.
+    act(() => {
+      playerStateChangeCb({
+        paused: true,
+        track_window: { current_track: { name: "Stray pre-session state", artists: [] } },
+      });
+    });
+
+    expect(socketEmit).not.toHaveBeenCalledWith(
+      "trackReady",
+      expect.anything()
+    );
+
+    fireEvent.click(getByTestId("start-session-btn"));
+
+    await waitFor(() => expect(getByTestId("skip-track-btn")).toBeInTheDocument());
+
+    act(() => {
+      playerStateChangeCb({
+        paused: false,
+        track_window: { current_track: { name: "Real track 1", artists: [] } },
+      });
+    });
+
+    expect(socketEmit).toHaveBeenCalledWith(
+      "trackReady",
+      expect.objectContaining({ track: expect.objectContaining({ name: "Real track 1" }) })
+    );
+    expect(socketEmit).not.toHaveBeenCalledWith(
+      "trackReady",
+      expect.objectContaining({ track: expect.objectContaining({ name: "Stray pre-session state" }) })
+    );
   });
 
   it("should pause the player when closing the session", async () => {

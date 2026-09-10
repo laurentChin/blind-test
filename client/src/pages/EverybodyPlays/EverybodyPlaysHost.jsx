@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { v4 } from "uuid";
 import io from "socket.io-client";
 import { Navigate, useNavigate } from "react-router-dom";
@@ -27,6 +27,7 @@ const EverybodyPlaysHost = () => {
   const isAuthenticated = useProviderAuth(provider, musicProvider);
 
   const [identity, setIdentity] = useState(null);
+  const [trackUris, setTrackUris] = useState([]);
   const [selfPlayer, setSelfPlayer] = useState(null);
   const [challengers, setChallengers] = useState([]);
   const [challengeTimerSeconds, setChallengeTimerSeconds] = useState();
@@ -37,6 +38,15 @@ const EverybodyPlaysHost = () => {
   const [playedCount, setPlayedCount] = useState();
   const [deviceId, setDeviceId] = useState("");
   const [hasSessionStart, setHasSessionStart] = useState(false);
+  // setPlayerStateChangeCb below is registered as soon as identity is set —
+  // i.e. as soon as the config screen launches, well before "Start the
+  // session" is clicked — so a stray player_state_changed the SDK fires
+  // during that idle wait (Spotify's SDK is known to fire one right after
+  // connect(), sometimes with a null state) must not be mistaken for track 1
+  // actually starting. A ref (not state) because startSession needs to flip
+  // it synchronously, read by a callback closure that's only ever created
+  // once (the effect below only depends on [identity]).
+  const hasSessionStartRef = useRef(false);
   const [isPaused, setIsPaused] = useState(true);
   const { run, className: startLoadingClassName } = useAsyncAction();
   const { run: runCloseSession, isArmed: isCloseArmed } = useConfirmAction();
@@ -70,11 +80,21 @@ const EverybodyPlaysHost = () => {
     // dedicated trackReady relay, once the SDK actually reports it changed.
     let lastTrackName = "";
     musicProvider.setPlayerStateChangeCb((state) => {
+      // Both providers can report no state at all right after connecting
+      // (see Player.jsx's own guard for the same Spotify SDK quirk) —
+      // ignored rather than applied.
+      if (!state) return;
+
       setIsPaused(state.paused);
       socket.emit("playbackStateChanged", {
         sessionUuid: SESSION_UUID,
         isPlaying: !state.paused,
       });
+
+      // Nothing has actually started yet — don't let a stray pre-session
+      // event prime lastTrackName, or track 1's genuine load would look
+      // like a no-op (same name already seen) and never get announced.
+      if (!hasSessionStartRef.current) return;
 
       const track = state.track_window?.current_track;
       if (track && track.name && track.name !== lastTrackName) {
@@ -105,6 +125,12 @@ const EverybodyPlaysHost = () => {
     // whether or not that submission also advances the track.
     socket.on("lockChallenge", () => musicProvider.getPlayer().pause?.());
     socket.on("challengerRelease", () => musicProvider.getPlayer().resume?.());
+    // Keeps the "Skip" button's last-track check (below) accurate as the
+    // session progresses — the join response above only gives its value at
+    // join time, before any track has actually played.
+    socket.on("trackReady", ({ playedCount: newPlayedCount }) => {
+      if (newPlayedCount !== undefined) setPlayedCount(newPlayedCount);
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [identity]);
 
@@ -116,12 +142,19 @@ const EverybodyPlaysHost = () => {
     // See ManageSession.jsx: unlocks mobile autoplay policies before the
     // remote play command below, otherwise playback stays paused on Android.
     musicProvider.getPlayer().activateElement?.();
+    // Flipped before the actual play command below (not in its .then()) so
+    // whichever player_state_changed event genuinely reports track 1 —
+    // whether it arrives before or after startPlayer's fetch resolves — is
+    // captured instead of ignored as a pre-session stray.
+    hasSessionStartRef.current = true;
 
     return run(() =>
-      musicProvider.startPlayer(deviceId).then(() => {
-        // Cue track 1 paused rather than autoplaying, same trick as the
-        // classic flow (see ManageSession.jsx).
-        musicProvider.getPlayer().pause?.();
+      musicProvider.startPlayer(deviceId, trackUris).then(() => {
+        // Starts playback immediately rather than cueing track 1 paused —
+        // unlike Spotify (whose play endpoint autoplays on its own),
+        // Apple Music's setQueue() never starts playback by itself, so this
+        // resume() is what makes both providers actually start playing here.
+        musicProvider.getPlayer().resume?.();
         setHasSessionStart(true);
       })
     );
@@ -142,7 +175,10 @@ const EverybodyPlaysHost = () => {
           <ConfigureEverybodyPlaysSession
             sessionUuid={SESSION_UUID}
             socket={socket}
-            onLaunch={setIdentity}
+            onLaunch={({ name, color, trackUris }) => {
+              setIdentity({ name, color });
+              setTrackUris(trackUris);
+            }}
           />
         ) : (
           <p>Connecting…</p>
@@ -152,6 +188,9 @@ const EverybodyPlaysHost = () => {
   }
 
   const joinUrl = `${window.origin}/session/${SESSION_UUID}`;
+  // Nothing left to skip to once the last track is up — Play.jsx's own
+  // final-score dialog takes over from there instead.
+  const isLastTrack = totalTracks > 0 && playedCount >= totalTracks;
 
   return (
     <section className="EverybodyPlaysHost">
@@ -189,25 +228,25 @@ const EverybodyPlaysHost = () => {
           </button>
         )}
         {hasSessionStart && (
-          <>
-            <button
-              type="button"
-              className="btn btn-ghost"
-              data-testid="toggle-play-pause-btn"
-              aria-label={isPaused ? "Play" : "Pause"}
-              onClick={() => musicProvider.getPlayer().togglePlay()}
-            >
-              {isPaused ? <FaPlay /> : <FaPause />}
-            </button>
-            <button
-              type="button"
-              className="btn btn-ghost"
-              data-testid="skip-track-btn"
-              onClick={() => socket.emit("startNewChallenge", SESSION_UUID)}
-            >
-              <MdSkipNext aria-hidden="true" /> Skip
-            </button>
-          </>
+          <button
+            type="button"
+            className="btn btn-ghost"
+            data-testid="toggle-play-pause-btn"
+            aria-label={isPaused ? "Play" : "Pause"}
+            onClick={() => musicProvider.getPlayer().togglePlay()}
+          >
+            {isPaused ? <FaPlay /> : <FaPause />}
+          </button>
+        )}
+        {hasSessionStart && !isLastTrack && (
+          <button
+            type="button"
+            className="btn btn-ghost"
+            data-testid="skip-track-btn"
+            onClick={() => socket.emit("startNewChallenge", SESSION_UUID)}
+          >
+            <MdSkipNext aria-hidden="true" /> Skip
+          </button>
         )}
         <div className="host-controls-row">
           {deviceId && (

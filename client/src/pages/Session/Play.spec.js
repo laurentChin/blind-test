@@ -469,6 +469,94 @@ describe("<Play />", () => {
       expect(onSkipTrack).toHaveBeenCalled();
     });
 
+    it("should hide the 'Next song' button and show the final scores dialog once the last track's answer is revealed", async () => {
+      const onSkipTrack = jest.fn();
+      const { getByTestId, queryByTestId } = render(
+        <Play
+          mode="everybodyPlays"
+          sessionUuid="session-12345"
+          player={player}
+          socket={mockSocket}
+          onLeave={jest.fn()}
+          challengers={[
+            { uuid: "player-12345", name: "bob", score: 2 },
+            { uuid: "player-99999", name: "alice", score: 3 },
+          ]}
+          isHost
+          onSkipTrack={onSkipTrack}
+          totalTracks={2}
+          playedCount={2}
+        />
+      );
+
+      await act(async () => {
+        mockSocket.emit("trackReady", {
+          track: { name: "Hallelujah", artists: "Jeff Buckley" },
+          playedCount: 2,
+          totalTracks: 2,
+        });
+        mockSocket.emit("challengeResult", {
+          score: 1,
+          track: { name: "Hallelujah", artists: "Jeff Buckley" },
+        });
+      });
+
+      expect(queryByTestId("reveal-next-track-btn")).toBeFalsy();
+      const dialog = getByTestId("final-score-dialog");
+      expect(dialog.open).toBeTruthy();
+      expect(dialog).toHaveTextContent("alice");
+      expect(dialog).toHaveTextContent("3");
+      expect(dialog).toHaveTextContent("bob");
+      expect(dialog).toHaveTextContent("2");
+    });
+
+    it("should not show the final scores dialog until the self-scoring challenger has actually submitted a score, even on the last track", async () => {
+      const { getByTestId, container } = render(
+        <Play
+          mode="everybodyPlays"
+          sessionUuid="session-12345"
+          player={player}
+          socket={mockSocket}
+          onLeave={jest.fn()}
+          challengers={[{ ...player, score: 0 }]}
+          totalTracks={1}
+          playedCount={1}
+        />
+      );
+
+      const dialog = container.querySelector(".final-score-dialog");
+
+      await act(async () => {
+        mockSocket.emit("trackReady", {
+          track: { name: "Hallelujah", artists: "Jeff Buckley" },
+          playedCount: 1,
+          totalTracks: 1,
+        });
+        mockSocket.emit("lockChallenge", "player-12345");
+        mockSocket.emit("challengeTimedOut", "player-12345");
+      });
+
+      // Timer ran out and the answer is revealed to this challenger, but they
+      // haven't clicked a score button yet — the dialog must stay hidden so
+      // it doesn't cover those buttons.
+      expect(dialog.open).toBeFalsy();
+      expect(getByTestId("self-score-full-btn")).toBeInTheDocument();
+
+      fireEvent.click(getByTestId("self-score-full-btn"));
+
+      // The server only reveals the round to everyone (challengeResult) once
+      // the score is actually submitted.
+      await act(async () => {
+        mockSocket.emit("challengeResult", {
+          score: 1,
+          track: { name: "Hallelujah", artists: "Jeff Buckley" },
+        });
+      });
+
+      expect(dialog.open).toBeTruthy();
+      expect(dialog.textContent).toContain("bob");
+    });
+
     it("should disable buzzing when the server rejects a challenge as already-excluded", () => {
       mockSocket.on("challenge", jest.fn());
       const { getByTestId } = render(

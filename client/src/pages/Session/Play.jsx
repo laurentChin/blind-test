@@ -60,6 +60,7 @@ const Play = ({
   // only means a track is cued, not that it's actually being played.
   const [isSongPlaying, setIsSongPlaying] = useState(false);
   const challengerDialog = useRef();
+  const finalScoreDialog = useRef();
 
   useEffect(() => {
     setChallengers(props.challengers)
@@ -224,6 +225,16 @@ const Play = ({
   // (now generic) challenge button label.
   const isLockedBySomeoneElse =
     mode === "everybodyPlays" && isChallengeLocked && !isSelfChallenging;
+  // There's nothing left to skip/advance to once the last track's round is
+  // over — the final scoreboard dialog below takes over instead. Gated on
+  // isTrackRevealed alone (not isRevealed): isRevealed flips true as soon as
+  // this player's own answering timer runs out, before they've had a chance
+  // to click a score button — showing the dialog at that point would cover
+  // the score buttons before they could be used. isTrackRevealed only fires
+  // once a score has actually been submitted (see the challengeResult
+  // handler below), for every player including the one who just scored.
+  const isLastTrack = songsTotal > 0 && songsPlayed >= songsTotal;
+  const shouldShowFinalScore = mode === "everybodyPlays" && isLastTrack && isTrackRevealed;
 
   useEffect(() => {
     if (isLockedBySomeoneElse) {
@@ -232,6 +243,14 @@ const Play = ({
       challengerDialog.current?.close();
     }
   }, [isLockedBySomeoneElse]);
+
+  useEffect(() => {
+    if (shouldShowFinalScore) {
+      finalScoreDialog.current?.showModal();
+    } else {
+      finalScoreDialog.current?.close();
+    }
+  }, [shouldShowFinalScore]);
 
   return (
     <div className="Play">
@@ -308,7 +327,7 @@ const Play = ({
                   </button>
                 </div>
               )}
-              {isHost && isTrackRevealed && (
+              {isHost && isTrackRevealed && !isLastTrack && (
                 <button
                   type="button"
                   data-testid="reveal-next-track-btn"
@@ -379,6 +398,29 @@ const Play = ({
               {lockedChallenger.name}
             </p>
           )}
+        </dialog>
+      )}
+      {mode === "everybodyPlays" && (
+        <dialog
+          ref={finalScoreDialog}
+          className="final-score-dialog"
+          data-testid="final-score-dialog"
+          onClick={(event) => {
+            if (event.target === finalScoreDialog.current) {
+              finalScoreDialog.current.close();
+            }
+          }}
+        >
+          <div className="final-score-card">
+            <h2>Final scores</h2>
+            <ol className="challenger-list">
+              {ranked.map((challenger) => (
+                <li key={challenger.uuid}>
+                  <span>{challenger.name}</span> <span>{challenger.score}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
         </dialog>
       )}
       <button
