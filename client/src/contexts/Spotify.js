@@ -287,15 +287,22 @@ function setPlayerStateChangeCb(cb) {
   playerStateChangeCb = cb;
 }
 
-async function startPlayer(deviceID) {
+// trackUris lets a caller play an ad-hoc list of tracks straight from the
+// Web API's own queue instead of a saved playlist (see everybody-plays'
+// ConfigureEverybodyPlaysSession) — player.nextTrack() and the SDK's natural
+// end-of-track auto-advance work the same either way, since both become a
+// real queue on Spotify's side.
+async function startPlayer(deviceID, trackUris) {
   await fetch(
     `${process.env.REACT_APP_SPOTIFY_API_ENDPONT}/me/player/play?device_id=${deviceID}`,
     {
       method: "PUT",
       headers: { ...authorizationHeader },
-      body: JSON.stringify({
-        context_uri: `spotify:playlist:${currentPlaylist}`,
-      }),
+      body: JSON.stringify(
+        trackUris?.length
+          ? { uris: trackUris }
+          : { context_uri: `spotify:playlist:${currentPlaylist}` }
+      ),
     }
   );
 }

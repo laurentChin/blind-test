@@ -16,10 +16,7 @@ const makeTracks = (count) =>
 
 const setup = ({ candidateCount = 15 } = {}) => {
   const musicProvider = {
-    createPlaylist: jest.fn().mockResolvedValue({ id: "playlist-1" }),
-    setCurrentPlaylist: jest.fn(),
     search: jest.fn().mockResolvedValue({ items: makeTracks(candidateCount) }),
-    addTrack: jest.fn().mockResolvedValue(),
   };
   useMusicProvider.mockReturnValue(musicProvider);
 
@@ -60,30 +57,24 @@ describe("<ConfigureEverybodyPlaysSession />", () => {
     jest.clearAllMocks();
   });
 
-  it("should only show the launch button once identity, playlist name, theme and track count are all set", () => {
+  it("should only show the launch button once identity, theme and track count are all set", () => {
     const utils = setup();
     const { getByTestId, queryByTestId } = utils;
 
     expect(queryByTestId("generate-and-launch-btn")).toBeFalsy();
 
     fillIdentity(utils);
-    fireEvent.change(getByTestId("playlist-name-input"), {
-      target: { value: "Friday night" },
-    });
     fireEvent.click(getByTestId("select-theme-80s-btn"));
     fireEvent.click(getByTestId("select-count-10-btn"));
 
     expect(getByTestId("generate-and-launch-btn")).toBeTruthy();
   });
 
-  it("should generate a playlist from the chosen preset theme and launch with the creator's identity", async () => {
+  it("should pick tracks from the chosen preset theme and launch with the creator's identity", async () => {
     const utils = setup({ candidateCount: 15 });
     const { getByTestId, musicProvider, onLaunch } = utils;
 
     fillIdentity(utils);
-    fireEvent.change(getByTestId("playlist-name-input"), {
-      target: { value: "Friday night" },
-    });
     fireEvent.click(getByTestId("select-theme-80s-btn"));
     fireEvent.click(getByTestId("select-count-10-btn"));
 
@@ -91,23 +82,20 @@ describe("<ConfigureEverybodyPlaysSession />", () => {
 
     await waitFor(() => expect(onLaunch).toHaveBeenCalled());
 
-    expect(musicProvider.createPlaylist).toHaveBeenCalledWith("Friday night");
-    expect(musicProvider.setCurrentPlaylist).toHaveBeenCalledWith("playlist-1");
     expect(musicProvider.search).toHaveBeenCalledWith("80s hits", {
       limit: 50,
       offset: 0,
     });
-    expect(musicProvider.addTrack).toHaveBeenCalledTimes(10);
 
-    // Every added uri came from the search results, and none repeats.
-    const addedUris = musicProvider.addTrack.mock.calls.map(([uri]) => uri);
-    expect(new Set(addedUris).size).toBe(10);
-    addedUris.forEach((uri) => expect(uri).toMatch(/^uri:track-/));
+    const [{ name, color, trackUris }] = onLaunch.mock.calls[0];
 
-    expect(onLaunch).toHaveBeenCalledWith({
-      name: "Alice",
-      color: { background: "1, 2, 3", text: "255, 255, 255" },
-    });
+    // Every picked uri came from the search results, and none repeats.
+    expect(trackUris).toHaveLength(10);
+    expect(new Set(trackUris).size).toBe(10);
+    trackUris.forEach((uri) => expect(uri).toMatch(/^uri:track-/));
+
+    expect(name).toBe("Alice");
+    expect(color).toEqual({ background: "1, 2, 3", text: "255, 255, 255" });
   });
 
   it("should create the session with the default timer/cooldown, or the edited values", async () => {
@@ -115,9 +103,6 @@ describe("<ConfigureEverybodyPlaysSession />", () => {
     const { getByTestId, socket, onLaunch } = utils;
 
     fillIdentity(utils);
-    fireEvent.change(getByTestId("playlist-name-input"), {
-      target: { value: "Friday night" },
-    });
     fireEvent.click(getByTestId("select-theme-80s-btn"));
     fireEvent.click(getByTestId("select-count-10-btn"));
     fireEvent.change(getByTestId("timer-seconds-input"), {
@@ -149,9 +134,6 @@ describe("<ConfigureEverybodyPlaysSession />", () => {
     const { getByTestId, musicProvider, onLaunch } = utils;
 
     fillIdentity(utils);
-    fireEvent.change(getByTestId("playlist-name-input"), {
-      target: { value: "Friday night" },
-    });
     fireEvent.change(getByTestId("custom-theme-input"), {
       target: { value: "Céline Dion" },
     });
@@ -181,9 +163,6 @@ describe("<ConfigureEverybodyPlaysSession />", () => {
     );
 
     fillIdentity(utils);
-    fireEvent.change(getByTestId("playlist-name-input"), {
-      target: { value: "Friday night" },
-    });
     fireEvent.click(getByTestId("select-theme-80s-btn"));
     fireEvent.click(getByTestId("select-count-40-btn"));
 
@@ -201,17 +180,16 @@ describe("<ConfigureEverybodyPlaysSession />", () => {
       limit: 50,
       offset: 25,
     });
-    expect(musicProvider.addTrack).toHaveBeenCalledTimes(40);
+
+    const [{ trackUris }] = onLaunch.mock.calls[0];
+    expect(trackUris).toHaveLength(40);
   });
 
   it("should show an error and not launch when there aren't enough unique tracks for the requested count", async () => {
     const utils = setup({ candidateCount: 3 });
-    const { getByTestId, findByText, musicProvider, onLaunch } = utils;
+    const { getByTestId, findByText, onLaunch } = utils;
 
     fillIdentity(utils);
-    fireEvent.change(getByTestId("playlist-name-input"), {
-      target: { value: "Friday night" },
-    });
     fireEvent.click(getByTestId("select-theme-80s-btn"));
     fireEvent.click(getByTestId("select-count-10-btn"));
 
@@ -219,7 +197,6 @@ describe("<ConfigureEverybodyPlaysSession />", () => {
 
     await findByText(/Not enough tracks/);
 
-    expect(musicProvider.addTrack).not.toHaveBeenCalled();
     expect(onLaunch).not.toHaveBeenCalled();
   });
 

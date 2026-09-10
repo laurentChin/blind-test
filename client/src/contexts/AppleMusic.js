@@ -355,14 +355,22 @@ function setPlayerStateChangeCb(cb) {
   playerStateChangeCb = cb;
 }
 
-async function startPlayer() {
+// trackUris lets a caller play an ad-hoc list of tracks instead of a saved
+// playlist (see everybody-plays' ConfigureEverybodyPlaysSession) —
+// skipToNextItem() and MusicKit's natural end-of-track auto-advance work the
+// same either way, since both become a real queue.
+async function startPlayer(_deviceID, trackUris) {
   const music = await ensureConfigured();
 
   // Loads the queue without playing it — the initial "current/next track"
   // display doesn't depend on this (the caller seeds it from its own
   // already-fetched track list instead), so there's no need to briefly
   // start and immediately pause playback just to populate it.
-  await music.setQueue({ playlist: currentPlaylist });
+  await music.setQueue(
+    trackUris?.length
+      ? { songs: trackUris.map(toCatalogId) }
+      : { playlist: currentPlaylist }
+  );
 }
 
 const AppleMusicContext = createContext({

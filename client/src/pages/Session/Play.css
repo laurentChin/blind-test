@@ -276,6 +276,37 @@
   background-color: var(--color-overlay);
 }
 
+.final-score-dialog {
+  border: none;
+  background: transparent;
+  max-width: none;
+}
+
+.final-score-dialog::backdrop {
+  background-color: var(--color-overlay);
+}
+
+.final-score-card {
+  box-sizing: border-box;
+  width: 100vw;
+  max-width: var(--content-max-width);
+  padding: var(--space-6);
+  border-radius: var(--radius-md);
+  background-color: var(--color-canvas-deep);
+  color: var(--color-text);
+  text-align: center;
+}
+
+.final-score-card h2 {
+  margin: 0 0 var(--space-4);
+  font-family: var(--font-display);
+}
+
+.final-score-card .challenger-list {
+  padding: 0;
+  text-align: left;
+}
+
 .dialog-challenger-name {
   margin: 0;
   padding: var(--space-4) var(--space-6);
