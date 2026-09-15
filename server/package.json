@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "start:watch": "nodemon -- --inspect index.js",
-    "start": "node index.js"
+    "start": "node index.js",
+    "test": "node --test src/**/*.spec.js"
   },
   "repository": {
     "type": "git",
