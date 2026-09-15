@@ -14,6 +14,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
       - name: Run client unit tests
         working-directory: client
         run: |
@@ -24,6 +27,9 @@ jobs:
     needs: ["run-client-tests"]
     steps:
       - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
       - name: Build client
         working-directory: client
         run: |
