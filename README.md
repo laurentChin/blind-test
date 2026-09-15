@@ -16,7 +16,7 @@ The server has no database: all session/game state lives in memory and is lost o
 
 ## Prerequisites
 
-- Node.js 22
+- Node.js 24
 - [Yarn](https://yarnpkg.com/) (client and root tooling) and npm (server)
 - [tmux](https://github.com/tmux/tmux) for the side-by-side dev launcher (`brew install tmux`) — optional, see [Running both together](#running-both-together)
 - [mkcert](https://github.com/FiloSottile/mkcert) for a locally-trusted HTTPS cert shared by the client dev server and the server's socket.io/HTTP endpoints — optional, see [Client setup](#client-setup)
@@ -124,7 +124,7 @@ Commit messages are linted against [Conventional Commits](https://www.convention
 cd client && yarn build   # outputs client/build
 ```
 
-The server runs as a plain Node process (`node index.js`) or via its Docker image (`server/Dockerfile`, `node:22-alpine`, `npm ci --omit=dev`).
+The server runs as a plain Node process (`node index.js`) or via its Docker image (`server/Dockerfile`, `node:24-alpine`, `npm ci --omit=dev`).
 
 ## Deployment
 

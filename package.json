@@ -1,6 +1,9 @@
 {
   "name": "blind-test",
   "private": true,
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
     "dev": "bash scripts/dev.sh",
     "dev:interleaved": "concurrently -n server,client -c blue,green \"yarn --cwd server start:watch\" \"PORT=3001 yarn --cwd client start\"",

@@ -4,6 +4,9 @@
   "description": "The websocket part of the Blind App",
   "main": "index.js",
   "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
     "start:watch": "nodemon -- --inspect index.js",
     "start": "node index.js",
