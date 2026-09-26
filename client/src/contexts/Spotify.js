@@ -134,24 +134,15 @@ async function getPlaylists() {
 }
 
 async function createPlaylist(sessionName) {
-  const user = await (
-    await fetch(`${process.env.REACT_APP_SPOTIFY_API_ENDPONT}/me`, {
-      headers: { ...authorizationHeader },
-    })
-  ).json();
-
   const { id } = await (
-    await fetch(
-      `${process.env.REACT_APP_SPOTIFY_API_ENDPONT}/users/${user.id}/playlists`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...authorizationHeader,
-        },
-        body: JSON.stringify({ name: sessionName, public: false }),
-      }
-    )
+    await fetch(`${process.env.REACT_APP_SPOTIFY_API_ENDPONT}/me/playlists`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...authorizationHeader,
+      },
+      body: JSON.stringify({ name: sessionName, public: false }),
+    })
   ).json();
 
   return { id };
@@ -222,7 +213,7 @@ function themeQueries({ text, years, genres = [], keywords = [], albumPhrases = 
 }
 
 async function getTracks() {
-  const { tracks } = await (
+  const { items } = await (
     await fetch(
       `${process.env.REACT_APP_SPOTIFY_API_ENDPONT}/playlists/${currentPlaylist}`,
       {
@@ -235,13 +226,19 @@ async function getTracks() {
   // needed by removeTrack below, since the same song can appear more than
   // once in a playlist and Spotify's delete-by-uri removes every occurrence
   // unless a specific position is also given.
-  return tracks.items.map(({ track }, rawIndex) => ({ ...track, rawIndex }));
+  //
+  // Spotify only returns `items` for playlists the user owns or collaborates
+  // on — any other playlist comes back as metadata only.
+  return (items?.items ?? []).map(({ item }, rawIndex) => ({
+    ...item,
+    rawIndex,
+  }));
 }
 
 async function addTrack(uri) {
   await (
     await fetch(
-      `${process.env.REACT_APP_SPOTIFY_API_ENDPONT}/playlists/${currentPlaylist}/tracks`,
+      `${process.env.REACT_APP_SPOTIFY_API_ENDPONT}/playlists/${currentPlaylist}/items`,
       {
         method: "POST",
         headers: { ...authorizationHeader },
@@ -254,18 +251,20 @@ async function addTrack(uri) {
 // Targets the specific occurrence via `positions` rather than deleting by
 // uri alone — Spotify's delete-by-uri removes every occurrence of that
 // track from the playlist, which would take out every duplicate of a
-// repeated song instead of just the one that was removed.
+// repeated song instead of just the one that was removed. `positions` isn't
+// part of the documented /items body (it wasn't documented on /tracks
+// either), but it's what keeps duplicates intact.
 async function removeTrack({ uri, rawIndex }) {
   await (
     await fetch(
-      `${process.env.REACT_APP_SPOTIFY_API_ENDPONT}/playlists/${currentPlaylist}/tracks`,
+      `${process.env.REACT_APP_SPOTIFY_API_ENDPONT}/playlists/${currentPlaylist}/items`,
       {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
           ...authorizationHeader,
         },
-        body: JSON.stringify({ tracks: [{ uri, positions: [rawIndex] }] }),
+        body: JSON.stringify({ items: [{ uri, positions: [rawIndex] }] }),
       }
     )
   ).json();
@@ -273,7 +272,7 @@ async function removeTrack({ uri, rawIndex }) {
 
 async function reorderTrack(fromIndex, toIndex) {
   await fetch(
-    `${process.env.REACT_APP_SPOTIFY_API_ENDPONT}/playlists/${currentPlaylist}/tracks`,
+    `${process.env.REACT_APP_SPOTIFY_API_ENDPONT}/playlists/${currentPlaylist}/items`,
     {
       method: "PUT",
       headers: {
