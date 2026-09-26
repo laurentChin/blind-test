@@ -139,6 +139,10 @@ function toTrack({ id, attributes }, rawIndex) {
     rawIndex,
     name: attributes.name,
     artists: [{ name: attributes.artistName }],
+    // Shaped like Spotify's track.album so theme filtering (see
+    // pages/EverybodyPlays/playlistGenerator.js) reads both providers alike.
+    album: { name: attributes.albumName, release_date: attributes.releaseDate },
+    genres: attributes.genreNames,
     preview_url: attributes.previews?.[0]?.url,
   };
 }
@@ -209,6 +213,10 @@ function setCurrentPlaylist(id) {
   currentPlaylist = id;
 }
 
+const SEARCH_PAGE_SIZE = 25;
+const EDITORIAL_PLAYLISTS_PER_THEME = 2;
+const EDITORIAL_PLAYLIST_TRACKS_LIMIT = 100;
+
 async function search(terms, { limit, offset } = {}) {
   const { results } = await apiRequest(`/v1/catalog/${storefrontId}/search`, {
     params: {
@@ -218,12 +226,54 @@ async function search(terms, { limit, offset } = {}) {
       // here so callers (e.g. the everybody-plays playlist generator) can
       // ask for a bigger page without worrying about each provider's own
       // ceiling.
-      ...(limit ? { limit: Math.min(limit, 25) } : {}),
+      ...(limit ? { limit: Math.min(limit, SEARCH_PAGE_SIZE) } : {}),
       ...(offset ? { offset } : {}),
     },
   });
 
   return { items: (results.songs?.data || []).map(toTrack) };
+}
+
+// Apple's catalog search has no field filters (term and types only), so a
+// theme's plain-text terms are all it can be given — the precision comes
+// from getEditorialTracks() below and from the generator's own filtering.
+function themeQueries({ terms }) {
+  return [terms];
+}
+
+// Apple Music's editorial playlists ("80s Hits Essentials", "Disney Hits",
+// ...) are hand-curated around a theme with original recordings, which is
+// far more accurate than any search — so they're looked up first, and only
+// topped up with search results when they don't hold enough tracks.
+async function getEditorialTracks(terms) {
+  const { results } = await apiRequest(`/v1/catalog/${storefrontId}/search`, {
+    params: { term: terms, types: "playlists" },
+  });
+
+  const editorialPlaylists = (results.playlists?.data || [])
+    .filter(
+      ({ attributes }) =>
+        attributes?.playlistType === "editorial" ||
+        attributes?.curatorName === "Apple Music"
+    )
+    .slice(0, EDITORIAL_PLAYLISTS_PER_THEME);
+
+  const trackLists = await Promise.all(
+    editorialPlaylists.map(({ id }) =>
+      apiRequest(`/v1/catalog/${storefrontId}/playlists/${id}/tracks`, {
+        params: { limit: EDITORIAL_PLAYLIST_TRACKS_LIMIT },
+      })
+        .then(({ data = [] }) => data)
+        // One unreadable playlist shouldn't sink the whole theme — search
+        // results still back it up.
+        .catch(() => [])
+    )
+  );
+
+  return trackLists
+    .flat()
+    .filter(({ type }) => type === "songs")
+    .map(toTrack);
 }
 
 async function getTracks() {
@@ -384,6 +434,9 @@ const AppleMusicContext = createContext({
   removeTrack,
   reorderTrack,
   search,
+  searchPageSize: SEARCH_PAGE_SIZE,
+  themeQueries,
+  getEditorialTracks,
   setupPlayer,
   getPlayer,
   setPlayerStateChangeCb,

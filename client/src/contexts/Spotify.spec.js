@@ -88,3 +88,22 @@ describe("Spotify provider session validation", () => {
     expect(sessionStorage.getItem("spotifyTokenList")).toBeNull();
   });
 });
+
+describe("Spotify theme queries", () => {
+  it("turns theme criteria into Spotify's field-filtered search syntax", () => {
+    const { themeQueries } = loadSpotifyContext();
+
+    expect(themeQueries({ years: [1980, 1989], terms: "80s hits" })).toEqual([
+      "year:1980-1989",
+    ]);
+    expect(
+      themeQueries({ genres: ["chanson", "variete francaise"], terms: "variété française" })
+    ).toEqual(['genre:chanson', 'genre:"variete francaise"']);
+    expect(
+      themeQueries({ keywords: ["disney"], soundtrack: true, terms: "disney" })
+    ).toEqual(["album:disney", "disney soundtrack"]);
+    expect(themeQueries({ custom: true, keywords: ["Céline Dion"], terms: "Céline Dion" })).toEqual([
+      "Céline Dion",
+    ]);
+  });
+});

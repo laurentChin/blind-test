@@ -15,55 +15,13 @@ import {
   DEFAULT_ALMOST_POINTS,
   DEFAULT_FULL_POINTS,
 } from "../../components/AnswerScoreConfig/AnswerScoreConfig";
-import { THEMES } from "./themes";
+import { THEMES, toCustomTheme } from "./themes";
+import { generateThemePlaylist } from "./playlistGenerator";
 
 import "./ConfigureEverybodyPlaysSession.css";
 
 const MAX_TRACKS = 60;
 const TRACK_COUNT_PRESETS = [10, 20, 40];
-const SEARCH_PAGE_SIZE = 50;
-const MAX_SEARCH_PAGES = 4;
-
-// Fisher-Yates: picking N random unique tracks out of the search results
-// needs an unbiased shuffle, not just Math.random()-based sort.
-function shuffle(items) {
-  const shuffled = [...items];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
-  return shuffled;
-}
-
-// A single search page isn't always enough to hit a high track count: Apple
-// Music's catalog search caps at 25 results per page (Spotify caps at 50),
-// so this pages through search() — deduping by id as it goes — until either
-// enough unique candidates are collected or the provider runs out of results.
-async function collectCandidates(musicProvider, query, count) {
-  const candidatesById = new Map();
-  let offset = 0;
-
-  // Tracked by how many items actually came back rather than a fixed
-  // page*SEARCH_PAGE_SIZE stride: providers clamp the requested limit to
-  // their own ceiling (Apple Music caps at 25 regardless of what's asked
-  // for), so the real page size can be smaller than SEARCH_PAGE_SIZE — a
-  // fixed stride would silently skip results in that case.
-  for (let page = 0; page < MAX_SEARCH_PAGES && candidatesById.size < count; page++) {
-    const { items = [] } = await musicProvider.search(query, {
-      limit: SEARCH_PAGE_SIZE,
-      offset,
-    });
-
-    if (items.length === 0) {
-      break;
-    }
-
-    items.forEach((track) => candidatesById.set(track.id, track));
-    offset += items.length;
-  }
-
-  return Array.from(candidatesById.values());
-}
 
 const ConfigureEverybodyPlaysSession = ({ sessionUuid, socket, onLaunch }) => {
   const musicProvider = useMusicProvider();
@@ -103,12 +61,12 @@ const ConfigureEverybodyPlaysSession = ({ sessionUuid, socket, onLaunch }) => {
     setThemeId("");
   };
 
-  const effectiveQuery = themeId
-    ? THEMES.find((theme) => theme.id === themeId)?.query
-    : customTheme.trim();
+  const effectiveTheme = themeId
+    ? THEMES.find((theme) => theme.id === themeId)
+    : customTheme.trim() && toCustomTheme(customTheme.trim());
 
   const isIdentityValid = creatorName.trim() !== "" && !!creatorColor;
-  const isThemeValid = !!effectiveQuery;
+  const isThemeValid = !!effectiveTheme;
   const isTrackCountValid = trackCount >= MIN_TRACKS && trackCount <= MAX_TRACKS;
   const isReadyToLaunch = isIdentityValid && isThemeValid && isTrackCountValid;
 
@@ -126,20 +84,18 @@ const ConfigureEverybodyPlaysSession = ({ sessionUuid, socket, onLaunch }) => {
         totalTracks: trackCount,
       });
 
-      const uniqueCandidates = await collectCandidates(
+      const selected = await generateThemePlaylist(
         musicProvider,
-        effectiveQuery,
+        effectiveTheme,
         trackCount
       );
 
-      if (uniqueCandidates.length < trackCount) {
+      if (selected.length < trackCount) {
         setError(
           "Not enough tracks found for this theme — try a broader theme or a lower track count."
         );
         return;
       }
-
-      const selected = shuffle(uniqueCandidates).slice(0, trackCount);
 
       onLaunch({
         name: creatorName,
