@@ -4,7 +4,7 @@
 // it exposes them (Apple Music — hand-curated, trusted as-is), then its
 // search, queried with whatever field filters it supports (Spotify's
 // `year:`/`genre:`/`album:`). Search results are then re-checked against the
-// theme, stripped of covers/karaoke, and deduped by title so only the
+// theme's criteria, stripped of covers/karaoke, and deduped by title so only the
 // best-ranked version of a song survives — neither provider exposes a
 // popularity score anymore (Spotify dropped it in February 2026), so the
 // provider's own search ranking is the best proxy for "the original
@@ -53,10 +53,9 @@ function isCover(track) {
   );
 }
 
-// A plain-text search for "variété française" happily matches an artist
-// literally named "Variété Française" (a compilation/cover act) — never the
-// original singer, so a preset theme's own words showing up as the artist
-// name is a reject.
+// A plain-text search for "80s hits" happily matches an artist literally
+// named "80s Hits" (a compilation/cover act) — never the original singer,
+// so a theme's own words showing up as the artist name is a reject.
 function artistEchoesTheme(track, { terms, genres = [], keywords = [] }) {
   const themeTerms = normalize(terms);
   const themeWords = [...genres, ...keywords].map(normalize);
@@ -98,37 +97,39 @@ function matchesGenres(track, genres) {
 // Keeps a "Disney" theme to songs actually released on a soundtrack (or an
 // album named after the keyword), which rules out e.g. Miley Cyrus' solo
 // catalog showing up just because her name is associated with Disney.
-function matchesSoundtrack(track, { soundtrack, keywords = [] }) {
-  if (!soundtrack) {
-    return true;
-  }
-
+// albumPhrases themes are stricter: the album name must hold the phrase.
+function matchesAlbum(track, { soundtrack, keywords = [], albumPhrases }) {
   const albumName = track.album?.name || "";
   const normalizedAlbum = normalize(albumName);
 
+  if (albumPhrases?.length) {
+    return albumPhrases.some((phrase) => normalizedAlbum.includes(normalize(phrase)));
+  }
+
   return (
+    !soundtrack ||
     SOUNDTRACK_PATTERN.test(albumName) ||
     keywords.some((keyword) => normalizedAlbum.includes(normalize(keyword)))
   );
 }
 
+// Free text is what the user typed to find (an artist, most likely): its
+// own words matching the artist name is then the point, not a reject.
 function matchesTheme(track, theme) {
-  if (theme.custom) {
-    return true;
-  }
-
   return (
-    !artistEchoesTheme(track, theme) &&
+    (!!theme.text || !artistEchoesTheme(track, theme)) &&
     matchesYears(track, theme.years) &&
     matchesGenres(track, theme.genres) &&
-    matchesSoundtrack(track, theme)
+    matchesAlbum(track, theme)
   );
 }
 
 // candidates: [{ track, weight, editorial }], in any order. Returns the
 // playable pool: theme-matching, no covers, one version per song (the
-// heaviest), and — for preset themes — a bounded number of songs per artist
-// so a single artist can't take over the whole playlist.
+// heaviest), and — unless free text asked for it — a bounded number of
+// songs per artist so a single artist can't take over the whole playlist.
+// Editorial tracks are trusted as-is for a preset (the playlist was curated
+// for that very theme), but not for a custom combination of criteria.
 function selectCandidates(candidates, theme) {
   const byWeight = [...candidates].sort((a, b) => b.weight - a.weight);
   const seenIds = new Set();
@@ -140,7 +141,7 @@ function selectCandidates(candidates, theme) {
       return false;
     }
 
-    if (!editorial && !matchesTheme(track, theme)) {
+    if ((!editorial || theme.custom) && !matchesTheme(track, theme)) {
       return false;
     }
 
@@ -150,7 +151,7 @@ function selectCandidates(candidates, theme) {
     }
 
     const artist = normalize(artistNames(track)[0]);
-    if (!theme.custom && (perArtist.get(artist) || 0) >= MAX_TRACKS_PER_ARTIST) {
+    if (!theme.text && (perArtist.get(artist) || 0) >= MAX_TRACKS_PER_ARTIST) {
       return false;
     }
 
@@ -261,13 +262,15 @@ function shuffle(items) {
   return shuffled;
 }
 
-// Resolves with up to `count` tracks — fewer means the theme didn't have
-// enough matching songs, which the caller reports.
+// Resolves with up to `count` picked candidates ({ track, weight,
+// editorial }) in play order — fewer means the theme didn't have enough
+// matching songs, which the caller reports. Weight and source are kept
+// alongside each track for the dev-only track list (TrackListDebug).
 async function generateThemePlaylist(musicProvider, theme, count) {
   const candidates = await collectCandidates(musicProvider, theme, count);
   const pool = selectCandidates(candidates, theme);
 
-  return shuffle(weightedSample(pool, count)).map(({ track }) => track);
+  return shuffle(weightedSample(pool, count));
 }
 
 export { generateThemePlaylist, selectCandidates, titleKey };

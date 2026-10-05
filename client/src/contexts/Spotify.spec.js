@@ -96,14 +96,38 @@ describe("Spotify theme queries", () => {
     expect(themeQueries({ years: [1980, 1989], terms: "80s hits" })).toEqual([
       "year:1980-1989",
     ]);
-    expect(
-      themeQueries({ genres: ["chanson", "variete francaise"], terms: "variété française" })
-    ).toEqual(['genre:chanson', 'genre:"variete francaise"']);
+    expect(themeQueries({ years: [1985, 1985], terms: "1985 hits" })).toEqual([
+      "year:1985",
+    ]);
+    expect(themeQueries({ genres: ["hip hop", "rap"], terms: "hip hop hits" })).toEqual([
+      'genre:"hip hop"',
+      "genre:rap",
+    ]);
     expect(
       themeQueries({ keywords: ["disney"], soundtrack: true, terms: "disney" })
     ).toEqual(["album:disney", "disney soundtrack"]);
-    expect(themeQueries({ custom: true, keywords: ["Céline Dion"], terms: "Céline Dion" })).toEqual([
+    expect(
+      themeQueries({
+        albumPhrases: ["series soundtrack", "television soundtrack"],
+        terms: "original series soundtrack",
+      })
+    ).toEqual(['album:"series soundtrack"', 'album:"television soundtrack"']);
+  });
+
+  it("narrows free text with the other criteria of a custom theme", () => {
+    const { themeQueries } = loadSpotifyContext();
+
+    expect(themeQueries({ custom: true, text: "Céline Dion", terms: "Céline Dion" })).toEqual([
       "Céline Dion",
     ]);
+    expect(
+      themeQueries({
+        custom: true,
+        text: "Queen",
+        years: [1980, 1989],
+        genres: ["rock"],
+        terms: "Queen 80s Rock",
+      })
+    ).toEqual(["Queen genre:rock year:1980-1989"]);
   });
 });

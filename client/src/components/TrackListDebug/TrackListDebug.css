@@ -1,0 +1,64 @@
+/* Dev-only tool: styled to read as such (dashed info border, monospace
+   numbers) so it can't be mistaken for part of the game UI. */
+
+.track-list-debug-trigger {
+  position: fixed;
+  inset: auto auto var(--space-3) var(--space-3);
+  padding: var(--space-1) var(--space-3);
+  border: 1px dashed var(--color-info);
+  border-radius: var(--radius-full);
+  background-color: var(--color-canvas-deep);
+  color: var(--color-info);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+}
+
+.track-list-debug {
+  container-type: inline-size;
+  box-sizing: border-box;
+  width: min(100vw - 2 * var(--space-4), 60rem);
+  max-height: 80dvh;
+  overflow: auto;
+  padding: var(--space-4);
+  border: 1px dashed var(--color-info);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-canvas-deep);
+  color: var(--color-text);
+}
+
+.track-list-debug::backdrop {
+  background-color: var(--color-overlay);
+}
+
+.track-list-debug table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-sm);
+}
+
+.track-list-debug caption {
+  padding-bottom: var(--space-3);
+  text-align: start;
+  font-weight: bold;
+}
+
+.track-list-debug th,
+.track-list-debug td {
+  padding: var(--space-1) var(--space-2);
+  border-bottom: 1px solid var(--color-surface-border);
+  text-align: start;
+  vertical-align: top;
+}
+
+.track-list-debug td:is(:first-child, :nth-child(5), :last-child) {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Album and weight are the least useful columns at a glance — dropped
+   first when the panel gets narrow (phone width). */
+@container (width < 36rem) {
+  .track-list-debug :is(th, td):is(:nth-child(4), :nth-child(7)) {
+    display: none;
+  }
+}

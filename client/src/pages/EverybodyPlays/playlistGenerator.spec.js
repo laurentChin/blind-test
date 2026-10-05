@@ -1,5 +1,5 @@
 import { selectCandidates, titleKey } from "./playlistGenerator";
-import { THEMES, toCustomTheme } from "./themes";
+import { THEMES, buildCustomTheme } from "./themes";
 
 const theme = (id) => THEMES.find((preset) => preset.id === id);
 
@@ -44,13 +44,13 @@ describe("selectCandidates", () => {
   it("drops artists named after the theme itself (compilation/cover acts)", () => {
     const selected = selectCandidates(
       fromSearch([
-        track({ name: "Les Lacs du Connemara", artist: "Variété Française" }),
-        track({ name: "Foule sentimentale", artist: "Alain Souchon" }),
+        track({ name: "Africa", artist: "80s Hits" }),
+        track({ name: "Take On Me", artist: "a-ha" }),
       ]),
-      theme("french")
+      theme("80s")
     );
 
-    expect(names(selected)).toEqual(["Foule sentimentale"]);
+    expect(names(selected)).toEqual(["Take On Me"]);
   });
 
   it("keeps only the best-ranked version of a song found several times", () => {
@@ -108,16 +108,56 @@ describe("selectCandidates", () => {
     expect(names(selected)).toEqual(["Juicy"]);
   });
 
-  it("caps songs per artist on presets, but not on a custom artist theme", () => {
+  it("only keeps albums titled as the theme's kind of soundtrack", () => {
+    const candidates = () =>
+      fromSearch([
+        track({
+          name: "My Heart Will Go On",
+          artist: "Céline Dion",
+          album: "Titanic (Original Motion Picture Soundtrack)",
+        }),
+        track({
+          name: "La Valse d'Amélie",
+          artist: "Yann Tiersen",
+          album: "Le Fabuleux Destin d'Amélie Poulain (Bande originale du film)",
+        }),
+        track({ name: "Flowers", artist: "Miley Cyrus", album: "Endless Summer Vacation" }),
+      ]);
+
+    expect(names(selectCandidates(candidates(), theme("movies-tv")))).toEqual([
+      "My Heart Will Go On",
+      "La Valse d'Amélie",
+    ]);
+  });
+
+  it("applies a custom theme's year and genre on top of its free text", () => {
+    const selected = selectCandidates(
+      fromSearch([
+        track({ name: "Radio Ga Ga", artist: "Queen", releaseDate: "1984-01-23", genres: ["Rock"] }),
+        track({ name: "Bohemian Rhapsody", artist: "Queen", releaseDate: "1975-10-31", genres: ["Rock"] }),
+        track({ name: "Queen of Hearts", artist: "Juice Newton", releaseDate: "1981-01-01", genres: ["Country"] }),
+      ]),
+      buildCustomTheme({ text: "Queen", periodId: "80s", genreId: "rock" })
+    );
+
+    expect(names(selected)).toEqual(["Radio Ga Ga"]);
+  });
+
+  it("caps songs per artist, unless free text asked for that artist", () => {
     const tracks = ["Hello", "Skyfall", "Rolling in the Deep"].map((name) =>
       track({ name, artist: "Adele", releaseDate: "2011-01-01" })
     );
 
     expect(selectCandidates(fromSearch(tracks), theme("2010s"))).toHaveLength(2);
-    expect(selectCandidates(fromSearch(tracks), toCustomTheme("Adele"))).toHaveLength(3);
+    expect(
+      selectCandidates(fromSearch(tracks), buildCustomTheme({ periodId: "2010s" }))
+    ).toHaveLength(2);
+    expect(
+      selectCandidates(fromSearch(tracks), buildCustomTheme({ text: "Adele" }))
+    ).toHaveLength(3);
   });
 
-  it("trusts editorial tracks over the theme criteria, but still drops covers", () => {
+  it("trusts a preset's editorial tracks over its criteria, but still drops covers", () => {
     const selected = selectCandidates(
       [
         {

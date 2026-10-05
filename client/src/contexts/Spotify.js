@@ -189,35 +189,36 @@ function quoteFilterValue(value) {
 
 // Turns a theme's criteria (see pages/EverybodyPlays/themes.js) into
 // Spotify's field-filtered search syntax, so the search itself only matches
-// on the relevant field instead of titles, artists and albums alike. One
-// query per genre/keyword: Spotify ANDs every filter inside a single query.
-function themeQueries({ custom, years, genres = [], keywords = [], soundtrack, terms }) {
-  if (custom) {
-    return [terms];
+// on the relevant field instead of titles, artists and albums alike.
+// Spotify ANDs every filter inside a single query, so alternatives (several
+// genres, several album phrases) each get their own query.
+function themeQueries({ text, years, genres = [], keywords = [], albumPhrases = [], soundtrack, terms }) {
+  const yearFilter = years
+    ? `year:${years[0] === years[1] ? years[0] : `${years[0]}-${years[1]}`}`
+    : "";
+  const genreFilters = genres.length
+    ? genres.map((genre) => `genre:${quoteFilterValue(genre)}`)
+    : [""];
+
+  let subjects = [""];
+  if (text) {
+    subjects = [text];
+  } else if (albumPhrases.length > 0) {
+    subjects = albumPhrases.map((phrase) => `album:${quoteFilterValue(phrase)}`);
+  } else if (keywords.length > 0) {
+    subjects = keywords.flatMap((keyword) => [
+      `album:${quoteFilterValue(keyword)}`,
+      soundtrack ? `${keyword} soundtrack` : keyword,
+    ]);
   }
 
-  const yearFilter = years ? `year:${years[0]}-${years[1]}` : "";
+  const queries = subjects.flatMap((subject) =>
+    genreFilters.map((genreFilter) =>
+      [subject, genreFilter, yearFilter].filter(Boolean).join(" ")
+    )
+  );
 
-  if (genres.length > 0) {
-    return genres.map((genre) =>
-      `genre:${quoteFilterValue(genre)} ${yearFilter}`.trim()
-    );
-  }
-
-  if (keywords.length > 0) {
-    return [
-      ...new Set(
-        keywords.flatMap((keyword) => [
-          `album:${quoteFilterValue(keyword)} ${yearFilter}`.trim(),
-          soundtrack
-            ? `${keyword} soundtrack ${yearFilter}`.trim()
-            : `${keyword} ${yearFilter}`.trim(),
-        ])
-      ),
-    ];
-  }
-
-  return yearFilter ? [yearFilter] : [terms];
+  return queries.some(Boolean) ? [...new Set(queries)] : [terms];
 }
 
 async function getTracks() {

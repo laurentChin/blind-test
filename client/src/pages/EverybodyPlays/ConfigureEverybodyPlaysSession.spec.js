@@ -99,7 +99,8 @@ describe("<ConfigureEverybodyPlaysSession />", () => {
       offset: 0,
     });
 
-    const [{ name, color, trackUris }] = onLaunch.mock.calls[0];
+    const [{ name, color, tracks }] = onLaunch.mock.calls[0];
+    const trackUris = tracks.map(({ track }) => track.uri);
 
     // Every picked uri came from the search results, and none repeats.
     expect(trackUris).toHaveLength(10);
@@ -156,7 +157,7 @@ describe("<ConfigureEverybodyPlaysSession />", () => {
     await waitFor(() => expect(onLaunch).toHaveBeenCalled());
 
     expect(musicProvider.themeQueries).toHaveBeenCalledWith(
-      expect.objectContaining({ custom: true, terms: "Céline Dion" })
+      expect.objectContaining({ custom: true, text: "Céline Dion", terms: "Céline Dion" })
     );
     expect(musicProvider.search).toHaveBeenCalledWith("Céline Dion", {
       limit: 25,
@@ -188,8 +189,57 @@ describe("<ConfigureEverybodyPlaysSession />", () => {
       })
     );
 
-    const [{ trackUris }] = onLaunch.mock.calls[0];
-    expect(trackUris).toHaveLength(40);
+    const [{ tracks }] = onLaunch.mock.calls[0];
+    expect(tracks).toHaveLength(40);
+  });
+
+  it("should combine the decade, genre and free text of the 'your own theme' form into one theme", async () => {
+    const utils = setup({ candidateCount: 15 });
+    const { getByTestId, musicProvider, onLaunch } = utils;
+
+    fillIdentity(utils);
+    fireEvent.change(getByTestId("custom-period-select"), { target: { value: "80s" } });
+    fireEvent.change(getByTestId("custom-genre-select"), { target: { value: "rock" } });
+    fireEvent.change(getByTestId("custom-theme-input"), { target: { value: "Queen" } });
+    fireEvent.click(getByTestId("select-count-10-btn"));
+
+    fireEvent.click(getByTestId("generate-and-launch-btn"));
+
+    await waitFor(() => expect(onLaunch).toHaveBeenCalled());
+
+    expect(musicProvider.themeQueries).toHaveBeenCalledWith({
+      id: "custom",
+      custom: true,
+      text: "Queen",
+      years: [1980, 1989],
+      genres: ["rock"],
+      terms: "Queen 80s Rock",
+    });
+  });
+
+  it("should treat a single year and a decade as one criterion, and a preset as replacing the whole form", () => {
+    const utils = setup();
+    const { getByTestId } = utils;
+
+    fillIdentity(utils);
+    fireEvent.change(getByTestId("custom-period-select"), { target: { value: "80s" } });
+    fireEvent.change(getByTestId("custom-year-select"), { target: { value: "1985" } });
+
+    expect(getByTestId("custom-period-select").value).toBe("");
+    expect(getByTestId("custom-year-select").value).toBe("1985");
+
+    fireEvent.change(getByTestId("custom-period-select"), { target: { value: "90s" } });
+
+    expect(getByTestId("custom-year-select").value).toBe("");
+
+    fireEvent.click(getByTestId("select-theme-disney-btn"));
+
+    expect(getByTestId("custom-period-select").value).toBe("");
+    expect(getByTestId("select-theme-disney-btn").getAttribute("aria-pressed")).toBe("true");
+
+    fireEvent.change(getByTestId("custom-genre-select"), { target: { value: "pop" } });
+
+    expect(getByTestId("select-theme-disney-btn").getAttribute("aria-pressed")).toBe("false");
   });
 
   it("should favor the provider's editorial playlist tracks when it has some", async () => {
@@ -212,8 +262,11 @@ describe("<ConfigureEverybodyPlaysSession />", () => {
     // 20 editorial tracks already fill the 2x-count pool: no search needed.
     expect(musicProvider.search).not.toHaveBeenCalled();
 
-    const [{ trackUris }] = onLaunch.mock.calls[0];
-    trackUris.forEach((uri) => expect(uri).toMatch(/-editorial$/));
+    const [{ tracks }] = onLaunch.mock.calls[0];
+    tracks.forEach(({ track, editorial }) => {
+      expect(track.uri).toMatch(/-editorial$/);
+      expect(editorial).toBe(true);
+    });
   });
 
   it("should show an error and not launch when there aren't enough unique tracks for the requested count", async () => {

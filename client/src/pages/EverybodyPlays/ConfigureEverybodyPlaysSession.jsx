@@ -15,7 +15,14 @@ import {
   DEFAULT_ALMOST_POINTS,
   DEFAULT_FULL_POINTS,
 } from "../../components/AnswerScoreConfig/AnswerScoreConfig";
-import { THEMES, toCustomTheme } from "./themes";
+import {
+  THEMES,
+  THEME_GROUPS,
+  PERIODS,
+  GENRES,
+  YEARS,
+  buildCustomTheme,
+} from "./themes";
 import { generateThemePlaylist } from "./playlistGenerator";
 
 import "./ConfigureEverybodyPlaysSession.css";
@@ -27,6 +34,9 @@ const ConfigureEverybodyPlaysSession = ({ sessionUuid, socket, onLaunch }) => {
   const musicProvider = useMusicProvider();
   const nameInputId = useId();
   const customThemeInputId = useId();
+  const customPeriodSelectId = useId();
+  const customYearSelectId = useId();
+  const customGenreSelectId = useId();
   const customTrackCountInputId = useId();
 
   const [creatorName, setCreatorName] = useState("");
@@ -35,6 +45,9 @@ const ConfigureEverybodyPlaysSession = ({ sessionUuid, socket, onLaunch }) => {
 
   const [themeId, setThemeId] = useState("");
   const [customTheme, setCustomTheme] = useState("");
+  const [customPeriodId, setCustomPeriodId] = useState("");
+  const [customYear, setCustomYear] = useState("");
+  const [customGenreId, setCustomGenreId] = useState("");
   const [trackCount, setTrackCount] = useState(TRACK_COUNT_PRESETS[0]);
   const [isCustomCount, setIsCustomCount] = useState(false);
   const [timerSeconds, setTimerSeconds] = useState(DEFAULT_TIMER_SECONDS);
@@ -51,19 +64,42 @@ const ConfigureEverybodyPlaysSession = ({ sessionUuid, socket, onLaunch }) => {
     });
   }, [socket, sessionUuid]);
 
+  // A preset and the "your own theme" form are two ways to fill the same
+  // slot: touching one clears the other.
   const selectTheme = (id) => {
     setThemeId(id);
     setCustomTheme("");
+    setCustomPeriodId("");
+    setCustomYear("");
+    setCustomGenreId("");
   };
 
-  const changeCustomTheme = (value) => {
-    setCustomTheme(value);
+  const changeCustom = (setValue) => (value) => {
+    setValue(value);
     setThemeId("");
   };
 
+  const changeCustomTheme = changeCustom(setCustomTheme);
+  const changeCustomGenre = changeCustom(setCustomGenreId);
+  // A single year and a period are the same criterion at two granularities:
+  // picking one resets the other.
+  const changeCustomPeriod = changeCustom((value) => {
+    setCustomPeriodId(value);
+    setCustomYear("");
+  });
+  const changeCustomYear = changeCustom((value) => {
+    setCustomYear(value);
+    setCustomPeriodId("");
+  });
+
   const effectiveTheme = themeId
     ? THEMES.find((theme) => theme.id === themeId)
-    : customTheme.trim() && toCustomTheme(customTheme.trim());
+    : buildCustomTheme({
+        text: customTheme,
+        year: customYear ? Number(customYear) : undefined,
+        periodId: customPeriodId,
+        genreId: customGenreId,
+      });
 
   const isIdentityValid = creatorName.trim() !== "" && !!creatorColor;
   const isThemeValid = !!effectiveTheme;
@@ -100,7 +136,7 @@ const ConfigureEverybodyPlaysSession = ({ sessionUuid, socket, onLaunch }) => {
       onLaunch({
         name: creatorName,
         color: creatorColor,
-        trackUris: selected.map((track) => track.uri),
+        tracks: selected,
       });
     });
 
@@ -131,35 +167,97 @@ const ConfigureEverybodyPlaysSession = ({ sessionUuid, socket, onLaunch }) => {
         <p className="config-step-hint">
           The songs are picked for you — you won't see the list.
         </p>
-        <div className="panel">
-          <div className="theme-grid">
-            {THEMES.map((theme) => (
-              <button
-                key={theme.id}
-                type="button"
-                data-testid={`select-theme-${theme.id}-btn`}
-                className="btn theme-tile"
-                aria-pressed={themeId === theme.id}
-                onClick={() => selectTheme(theme.id)}
-              >
-                {theme.label}
-              </button>
-            ))}
-          </div>
+        <div className="panel theme-groups">
+          {THEME_GROUPS.map((group) => (
+            <section key={group.id} className="theme-group">
+              <h3>{group.label}</h3>
+              <div className="theme-grid">
+                {group.themes.map((theme) => (
+                  <button
+                    key={theme.id}
+                    type="button"
+                    data-testid={`select-theme-${theme.id}-btn`}
+                    className="btn theme-tile"
+                    aria-pressed={themeId === theme.id}
+                    onClick={() => selectTheme(theme.id)}
+                  >
+                    {theme.label}
+                  </button>
+                ))}
+              </div>
+            </section>
+          ))}
         </div>
         <span className="panel-separator">OR</span>
-        <div className="panel">
-          <label htmlFor={customThemeInputId}>Your own theme</label>
-          <input
-            id={customThemeInputId}
-            className="field"
-            data-testid="custom-theme-input"
-            type="text"
-            placeholder="e.g. Céline Dion, 90s rock…"
-            value={customTheme}
-            onChange={({ currentTarget }) => changeCustomTheme(currentTarget.value)}
-          />
-        </div>
+        <fieldset className="panel custom-theme">
+          <legend>Your own theme</legend>
+          <p className="config-step-hint">Combine any of these.</p>
+          <div className="custom-theme-fields">
+            <div className="custom-theme-field">
+              <label htmlFor={customPeriodSelectId}>Decade</label>
+              <select
+                id={customPeriodSelectId}
+                className="field"
+                data-testid="custom-period-select"
+                value={customPeriodId}
+                onChange={({ currentTarget }) => changeCustomPeriod(currentTarget.value)}
+              >
+                <option value="">Any</option>
+                {PERIODS.map(({ id, label }) => (
+                  <option key={id} value={id}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="custom-theme-field">
+              <label htmlFor={customYearSelectId}>Year</label>
+              <select
+                id={customYearSelectId}
+                className="field"
+                data-testid="custom-year-select"
+                value={customYear}
+                onChange={({ currentTarget }) => changeCustomYear(currentTarget.value)}
+              >
+                <option value="">Any</option>
+                {YEARS.map((year) => (
+                  <option key={year} value={year}>
+                    {year}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="custom-theme-field">
+              <label htmlFor={customGenreSelectId}>Genre</label>
+              <select
+                id={customGenreSelectId}
+                className="field"
+                data-testid="custom-genre-select"
+                value={customGenreId}
+                onChange={({ currentTarget }) => changeCustomGenre(currentTarget.value)}
+              >
+                <option value="">Any</option>
+                {GENRES.map(({ id, label }) => (
+                  <option key={id} value={id}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="custom-theme-field custom-theme-text">
+              <label htmlFor={customThemeInputId}>Free text</label>
+              <input
+                id={customThemeInputId}
+                className="field"
+                data-testid="custom-theme-input"
+                type="text"
+                placeholder="e.g. an artist: Céline Dion, Queen…"
+                value={customTheme}
+                onChange={({ currentTarget }) => changeCustomTheme(currentTarget.value)}
+              />
+            </div>
+          </div>
+        </fieldset>
       </section>
 
       <section className="config-step" inert={!isIdentityValid || !isThemeValid}>
