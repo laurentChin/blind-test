@@ -7,6 +7,7 @@ import { Player } from "../../../components/Player/Player";
 import { useMusicProvider } from "../../../contexts/MusicProvider";
 import { useAsyncAction } from "../../../hooks/useAsyncAction";
 import { useConfirmAction } from "../../../hooks/useConfirmAction";
+import { useToast } from "../../../components/Toast/Toast";
 
 import "./ManageSession.css";
 import { ChallengerList } from "../../../components/ChallengerList/ChallengerList";
@@ -14,6 +15,7 @@ import { ChallengerList } from "../../../components/ChallengerList/ChallengerLis
 const ManageSession = ({ sessionUuid, socket, ...props }) => {
   const musicProvider = useMusicProvider();
   const navigate = useNavigate();
+  const showToast = useToast();
 
   const [isPlayerReady, setPlayerReadyState] = useState(
     props.isPlayerReady || false
@@ -40,7 +42,7 @@ const ManageSession = ({ sessionUuid, socket, ...props }) => {
         cooldownSeconds: props.cooldownSeconds,
         totalTracks: tracks.length,
       });
-    });
+    }, (message) => showToast(message, { persistent: true }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

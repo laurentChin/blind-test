@@ -307,7 +307,22 @@ async function reorderTrack(fromIndex, toIndex) {
   );
 }
 
-function setupPlayer(playerReadyCb) {
+// The ways the Web Playback SDK can fail to ever report a "ready" device —
+// without these the host just waits on controls that never show up.
+const PLAYER_ERROR_MESSAGES = {
+  initialization_error: "This browser can't run the Spotify player.",
+  authentication_error:
+    "Spotify rejected the player's connection — try connecting again.",
+  account_error: "A Spotify Premium account is required to play tracks.",
+};
+const PLAYER_CONNECTION_ERROR_MESSAGE = "The Spotify player couldn't connect.";
+// The SDK can also accept the connection and then simply never report a
+// device, without any error event — so silence itself has to count as one.
+const PLAYER_READY_TIMEOUT = 15000;
+const PLAYER_TIMEOUT_MESSAGE =
+  "The Spotify player isn't responding — reload the page to try again.";
+
+function setupPlayer(playerReadyCb, playerErrorCb = () => {}) {
   window.onSpotifyWebPlaybackSDKReady = () => {
     player = new window.Spotify.Player({
       name: "Blind Test Spotify Player",
@@ -318,11 +333,32 @@ function setupPlayer(playerReadyCb) {
       playerStateChangeCb(state);
     });
 
+    const readyTimeout = setTimeout(
+      () => playerErrorCb(PLAYER_TIMEOUT_MESSAGE),
+      PLAYER_READY_TIMEOUT
+    );
+
     player.addListener("ready", ({ device_id }) => {
+      clearTimeout(readyTimeout);
       playerReadyCb(device_id);
     });
 
-    player.connect();
+    Object.entries(PLAYER_ERROR_MESSAGES).forEach(([type, userMessage]) => {
+      player.addListener(type, ({ message }) => {
+        clearTimeout(readyTimeout);
+        console.error(`Spotify player ${type}: ${message}`);
+        playerErrorCb(userMessage);
+      });
+    });
+
+    // Resolves `false` (rather than firing one of the events above) when
+    // the SDK couldn't even reach Spotify.
+    Promise.resolve(player.connect()).then((connected) => {
+      if (connected === false) {
+        clearTimeout(readyTimeout);
+        playerErrorCb(PLAYER_CONNECTION_ERROR_MESSAGE);
+      }
+    });
   };
 
   if (window.Spotify) {
@@ -333,6 +369,9 @@ function setupPlayer(playerReadyCb) {
   if (!document.querySelector(`[src="${SPOTIFY_PLAYER_SRC}"]`)) {
     const script = document.createElement("script");
     script.setAttribute("src", SPOTIFY_PLAYER_SRC);
+    script.addEventListener("error", () =>
+      playerErrorCb(PLAYER_CONNECTION_ERROR_MESSAGE)
+    );
     document.head.appendChild(script);
   }
 }

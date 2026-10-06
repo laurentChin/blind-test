@@ -273,3 +273,102 @@ describe("Spotify quota handling (July 2026 429 body)", () => {
     });
   });
 });
+
+describe("Spotify player setup", () => {
+  let listeners;
+  let connect;
+
+  beforeEach(() => {
+    sessionStorage.clear();
+    listeners = {};
+    connect = jest.fn().mockResolvedValue(true);
+    window.Spotify = {
+      Player: jest.fn(() => ({
+        addListener: (event, cb) => {
+          listeners[event] = cb;
+        },
+        connect,
+      })),
+    };
+    jest.spyOn(console, "error").mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    delete window.Spotify;
+    console.error.mockRestore();
+  });
+
+  it("reports the device once the player is ready", () => {
+    const onReady = jest.fn();
+    const onError = jest.fn();
+
+    loadSpotifyContext().setupPlayer(onReady, onError);
+    listeners.ready({ device_id: "device-1" });
+
+    expect(onReady).toHaveBeenCalledWith("device-1");
+    expect(onError).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["initialization_error", "This browser can't run the Spotify player."],
+    [
+      "authentication_error",
+      "Spotify rejected the player's connection — try connecting again.",
+    ],
+    ["account_error", "A Spotify Premium account is required to play tracks."],
+  ])("reports a %s to the caller", (type, userMessage) => {
+    const onError = jest.fn();
+
+    loadSpotifyContext().setupPlayer(jest.fn(), onError);
+    listeners[type]({ message: "raw sdk message" });
+
+    expect(onError).toHaveBeenCalledWith(userMessage);
+  });
+
+  it("reports a failed connection to the caller", async () => {
+    connect.mockResolvedValue(false);
+    const onError = jest.fn();
+
+    loadSpotifyContext().setupPlayer(jest.fn(), onError);
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(onError).toHaveBeenCalledWith(
+      "The Spotify player couldn't connect."
+    );
+  });
+
+  describe("when the player stays silent", () => {
+    beforeEach(() => jest.useFakeTimers());
+    afterEach(() => jest.useRealTimers());
+
+    it("reports a player that never becomes ready nor fails", () => {
+      const onError = jest.fn();
+
+      loadSpotifyContext().setupPlayer(jest.fn(), onError);
+      jest.advanceTimersByTime(15000);
+
+      expect(onError).toHaveBeenCalledWith(
+        "The Spotify player isn't responding — reload the page to try again."
+      );
+    });
+
+    it("doesn't report a timeout once the player is ready", () => {
+      const onError = jest.fn();
+
+      loadSpotifyContext().setupPlayer(jest.fn(), onError);
+      listeners.ready({ device_id: "device-1" });
+      jest.advanceTimersByTime(15000);
+
+      expect(onError).not.toHaveBeenCalled();
+    });
+  });
+
+  it("doesn't require an error callback", () => {
+    loadSpotifyContext().setupPlayer(jest.fn());
+
+    expect(() =>
+      listeners.account_error({ message: "raw sdk message" })
+    ).not.toThrow();
+  });
+});
