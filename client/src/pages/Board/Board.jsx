@@ -1,10 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
 
 import io from "socket.io-client";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { getGif } from "../../helpers/Giphy";
 import { ChallengerList } from "../../components/ChallengerList/ChallengerList";
 import { JoinCode } from "../../components/JoinCode/JoinCode";
+import { useToast } from "../../components/Toast/Toast";
 
 import "./Board.css";
 
@@ -28,6 +29,8 @@ socket.on("startNewChallenge", (msg) => startNewChallengeHandler(msg));
 
 const Board = () => {
   const { uuid } = useParams();
+  const navigate = useNavigate();
+  const showToast = useToast();
   const [challengers, setChallengers] = useState([]);
   const [challengerUuid, setChallengerUuid] = useState("");
   const [track, setTrack] = useState();
@@ -50,6 +53,21 @@ const Board = () => {
       }
     );
   }, [uuid]);
+
+  // Nothing left to display once the session is closed. Unsubscribed on
+  // unmount (unlike the module-level listeners above): the socket outlives
+  // this page, and a stale listener would send the user home from wherever
+  // they navigated to next.
+  useEffect(() => {
+    const onSessionClosed = () => {
+      showToast("The session has been closed.");
+      navigate("/", { replace: true });
+    };
+
+    socket.on("sessionClosedByMaster", onSessionClosed);
+
+    return () => socket.off("sessionClosedByMaster", onSessionClosed);
+  }, [navigate, showToast]);
 
   useEffect(() => {
     if (score !== undefined) {
