@@ -25,6 +25,14 @@ if (window.HTMLDialogElement) {
   }
 }
 
+// Same gap for the Popover API: the toast region only needs the call to
+// exist, tests assert on its content rather than on top-layer visibility.
+if (!window.HTMLElement.prototype.togglePopover) {
+  window.HTMLElement.prototype.togglePopover = function togglePopover(force) {
+    return force;
+  };
+}
+
 // jsdom doesn't implement <audio>/<video> playback (play()/pause() log a
 // "Not implemented" error), so stub them out as no-ops for tests.
 window.HTMLMediaElement.prototype.play = function play() {
