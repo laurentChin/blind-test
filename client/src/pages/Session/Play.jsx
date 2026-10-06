@@ -173,27 +173,43 @@ const Play = ({
     setIsTrackRevealed(true);
   });
 
-  const clearSession = () => {
+  // `reason` tells the parent why the player is out when it isn't their own
+  // choice: "closed" (by the host) or "lost" (the server doesn't know it).
+  const clearSession = (reason) => {
     sessionStorage.removeItem("player");
     sessionStorage.removeItem("sessionUuid");
-    onLeave();
+    onLeave(reason);
   }
 
-  socket.on("sessionClosedByMaster", () => {
-    if (window.Notification && window.Notification.permission === 'granted') {
-      const notification = new window.Notification('Blind test', { body: "The session has been closed.", requireInteraction: true });
-    }
-    clearSession()
+  // Unsubscribed on unmount (unlike the listeners above): the socket outlives
+  // this page, and a stale listener would send the user home from wherever
+  // they navigated to next.
+  useEffect(() => {
+    const onSessionClosed = () => {
+      if (window.Notification && window.Notification.permission === 'granted') {
+        new window.Notification('Blind test', { body: "The session has been closed.", requireInteraction: true });
+      }
+      clearSession("closed")
+    };
+
+    socket.on("sessionClosedByMaster", onSessionClosed);
+
+    return () => socket.off("sessionClosedByMaster", onSessionClosed);
   })
 
   const leave = () => {
     if (window.confirm("Are you sure want to leave the session?")) {
-      socket.emit("leave", { sessionUuid, playerUuid: player.uuid }, clearSession);
+      socket.emit("leave", { sessionUuid, playerUuid: player.uuid }, () => clearSession());
     }
   };
 
   const buzzIn = () =>
     socket.emit("challenge", { sessionUuid, playerUuid: player.uuid }, (ack) => {
+      if (ack?.error === "sessionNotFound") {
+        clearSession("lost");
+        return;
+      }
+
       if (ack?.rejected) {
         setIsExcluded(true);
       }
@@ -488,6 +504,7 @@ Play.propTypes = {
   socket: PropTypes.shape({
     emit: PropTypes.func.isRequired,
     on: PropTypes.func.isRequired,
+    off: PropTypes.func.isRequired,
   }),
   onLeave: PropTypes.func.isRequired,
   challengers: PropTypes.arrayOf(

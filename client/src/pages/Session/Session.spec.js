@@ -1,10 +1,39 @@
 import React from "react";
 import { createEvent, render, fireEvent, act } from "@testing-library/react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { Session } from "./Session";
+import { ToastProvider } from "../../components/Toast/Toast";
 
 const listeners = {};
 let joinAfterRefreshResponseOverrides = {};
+let joinWaitingRoomResponseOverrides = {};
+const navigate = jest.fn();
+
+const storePlayer = () =>
+  Object.defineProperty(window, "sessionStorage", {
+    configurable: true,
+    value: {
+      getItem: jest.fn((key) => ({
+        player: JSON.stringify({
+          uuid: "player-12345",
+          color: { background: "245, 130, 49" },
+        }),
+        sessionUuid: "session-12345",
+      }[key])),
+      removeItem: jest.fn(),
+      setItem: jest.fn(),
+    },
+  });
+
+const renderWithToasts = () =>
+  render(
+    <ToastProvider>
+      <Session />
+    </ToastProvider>
+  );
+
+const emitFromServer = (event, data) =>
+  [...(listeners[event] || [])].forEach((listener) => listener(data));
 
 jest.mock("react-router-dom");
 jest.mock("socket.io-client", () => {
@@ -18,7 +47,11 @@ jest.mock("socket.io-client", () => {
               { background: "230, 25, 75" },
               { background: "245, 130, 49" },
             ],
+            ...joinWaitingRoomResponseOverrides,
           });
+          break;
+        case "leave":
+          callback();
           break;
         case "join":
           callback({
@@ -43,17 +76,33 @@ jest.mock("socket.io-client", () => {
       }
       listeners[event].push(callback);
     },
+    off: (event, callback) => {
+      listeners[event] = (listeners[event] || []).filter(
+        (listener) => listener !== callback
+      );
+    },
   });
 });
 
 describe("<Session />", () => {
   beforeEach(() => {
     useParams.mockReturnValue({ uuid: "session-12345" });
+    useNavigate.mockReturnValue(navigate);
   });
 
   afterEach(() => {
     jest.clearAllMocks();
     joinAfterRefreshResponseOverrides = {};
+    joinWaitingRoomResponseOverrides = {};
+    Object.keys(listeners).forEach((event) => delete listeners[event]);
+    Object.defineProperty(window, "sessionStorage", {
+      configurable: true,
+      value: {
+        getItem: jest.fn(() => null),
+        removeItem: jest.fn(),
+        setItem: jest.fn(),
+      },
+    });
   });
 
   it("Should display the join session form when user is not in a session", async () => {
@@ -129,5 +178,83 @@ describe("<Session />", () => {
     expect(window.sessionStorage.removeItem).toHaveBeenCalledWith(
       "sessionUuid"
     );
+  });
+
+  describe("going back to the home page", () => {
+    it("Should redirect to home when the player leaves the session", async () => {
+      storePlayer();
+      window.confirm = () => true;
+
+      const { getByTestId, getByRole } = renderWithToasts();
+
+      fireEvent.click(getByTestId("leave-session-button"));
+
+      expect(navigate).toHaveBeenCalledWith("/", { replace: true });
+      expect(window.sessionStorage.removeItem).toHaveBeenCalledWith("player");
+      expect(window.sessionStorage.removeItem).toHaveBeenCalledWith(
+        "sessionUuid"
+      );
+      expect(getByRole("status")).toBeEmptyDOMElement();
+    });
+
+    it("Should redirect to home when the session is closed while playing", async () => {
+      storePlayer();
+      const { getByRole } = renderWithToasts();
+
+      act(() => emitFromServer("sessionClosedByMaster"));
+
+      expect(navigate).toHaveBeenCalledWith("/", { replace: true });
+      expect(window.sessionStorage.removeItem).toHaveBeenCalledWith("player");
+      expect(getByRole("status")).toHaveTextContent(
+        "The session has been closed."
+      );
+    });
+
+    it("Should redirect to home when the session is closed while on the join form", async () => {
+      const { getByRole } = renderWithToasts();
+
+      act(() => emitFromServer("sessionClosedByMaster"));
+
+      expect(navigate).toHaveBeenCalledWith("/", { replace: true });
+      expect(getByRole("status")).toHaveTextContent(
+        "The session has been closed."
+      );
+    });
+
+    it("Should redirect to home when a stored player reconnects to a session that doesn't exist anymore", async () => {
+      joinAfterRefreshResponseOverrides = {
+        challengers: undefined,
+        error: "sessionNotFound",
+      };
+      storePlayer();
+
+      const { getByRole } = renderWithToasts();
+
+      expect(navigate).toHaveBeenCalledWith("/", { replace: true });
+      expect(window.sessionStorage.removeItem).toHaveBeenCalledWith("player");
+      expect(getByRole("status")).toHaveTextContent(
+        "This session no longer exists."
+      );
+    });
+
+    it("Should redirect to home when opening the join form of a session that doesn't exist", async () => {
+      joinWaitingRoomResponseOverrides = { sessionExists: false };
+
+      const { getByRole } = renderWithToasts();
+
+      expect(navigate).toHaveBeenCalledWith("/", { replace: true });
+      expect(getByRole("status")).toHaveTextContent(
+        "This session no longer exists."
+      );
+    });
+
+    it("Should stay on the join form when the session exists", async () => {
+      joinWaitingRoomResponseOverrides = { sessionExists: true };
+
+      const { getByText } = renderWithToasts();
+
+      expect(getByText("Join")).toBeInTheDocument();
+      expect(navigate).not.toHaveBeenCalled();
+    });
   });
 });

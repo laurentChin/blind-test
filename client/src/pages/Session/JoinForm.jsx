@@ -6,7 +6,7 @@ import { ColorPicker } from "../../components/ColorPicker/ColorPicker";
 
 import "./JoinForm.css";
 
-const JoinForm = ({ socket, onJoin, sessionUuid }) => {
+const JoinForm = ({ socket, onJoin, onSessionUnavailable, sessionUuid }) => {
   const { uuid } = useParams();
   const [name, setName] = useState("");
   const [challengers, setChallengers] = useState([]);
@@ -24,10 +24,26 @@ const JoinForm = ({ socket, onJoin, sessionUuid }) => {
 
   useEffect(() => {
     socket.emit("joinWaitingRoom", uuid, (response) => {
+      if (response.sessionExists === false) {
+        onSessionUnavailable("lost");
+        return;
+      }
+
       setChallengers(response.challengers);
       setColors(response.colors);
     });
   }, [sessionUuid]);
+
+  // Unsubscribed on unmount (unlike the listeners above): the socket outlives
+  // this page, and a stale listener would send the user home from wherever
+  // they navigated to next.
+  useEffect(() => {
+    const onSessionClosed = () => onSessionUnavailable("closed");
+
+    socket.on("sessionClosedByMaster", onSessionClosed);
+
+    return () => socket.off("sessionClosedByMaster", onSessionClosed);
+  }, [socket, onSessionUnavailable]);
 
   useEffect(() => {
     if (challengers.length === 0 && joinMode === "team") {
@@ -48,6 +64,11 @@ const JoinForm = ({ socket, onJoin, sessionUuid }) => {
         },
       },
       (response) => {
+        if (response.error === "sessionNotFound") {
+          onSessionUnavailable("lost");
+          return;
+        }
+
         if (response.error) {
           setJoinError(
             "That color was just taken — please pick another one."
@@ -188,9 +209,11 @@ const JoinForm = ({ socket, onJoin, sessionUuid }) => {
 JoinForm.propTypes = {
   sessionUuid: PropTypes.string.isRequired,
   onJoin: PropTypes.func.isRequired,
+  onSessionUnavailable: PropTypes.func.isRequired,
   socket: PropTypes.shape({
     emit: PropTypes.func.isRequired,
     on: PropTypes.func.isRequired,
+    off: PropTypes.func.isRequired,
   }),
 };
 

@@ -44,6 +44,8 @@ const Board = () => {
         sessionUuid: uuid,
       },
       (response) => {
+        if (response.error) return;
+
         setChallengers(response.challengers);
       }
     );
