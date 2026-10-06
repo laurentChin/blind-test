@@ -5,6 +5,7 @@ import {
   removeChallenger,
   resolveJoinedPlayerColor,
 } from "../players/players.js";
+import { SESSION_NOT_FOUND } from "../constants.js";
 
 export function registerPlayerHandlers(io, socket, sessions, verboseOutput) {
   socket.on("join", ({ sessionUuid, player }, callback) => {
@@ -13,6 +14,15 @@ export function registerPlayerHandlers(io, socket, sessions, verboseOutput) {
     }
 
     const session = sessions.get(sessionUuid);
+
+    // The session can be closed (or lost to a server restart) while a player
+    // is still sitting on the join form — reject rather than crash the whole
+    // process on the first session access below.
+    if (!session) {
+      callback({ error: SESSION_NOT_FOUND });
+      return;
+    }
+
     const playerUuid = resolvePlayerUuid(player);
 
     if (player.name !== "") {
@@ -68,14 +78,24 @@ export function registerPlayerHandlers(io, socket, sessions, verboseOutput) {
 
     const session = sessions.get(sessionUuid);
     const removed = session && removeChallenger(session, playerUuid);
-    if (!removed) return;
 
-    io.to(sessionUuid).emit(
-      "challengersUpdate",
-      Array.from(session.challengers.values())
-    );
-    io.to(sessionUuid).emit("availableColorsUpdate", session.colors);
+    // Stop relaying this session's events to a socket that outlives the
+    // page it left from (the client navigates back home without reloading).
+    socket.leave(sessionUuid);
 
-    callback();
+    if (removed) {
+      io.to(sessionUuid).emit(
+        "challengersUpdate",
+        Array.from(session.challengers.values())
+      );
+      io.to(sessionUuid).emit("availableColorsUpdate", session.colors);
+    }
+
+    // Acked even when there was nothing left to remove (session already
+    // gone, player already removed) — the client is leaving either way and
+    // waits on this to go back home.
+    if (callback) {
+      callback();
+    }
   });
 }
