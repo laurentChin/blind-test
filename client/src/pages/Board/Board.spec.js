@@ -67,7 +67,7 @@ describe("<Board />", () => {
           uuid: "player-1",
           name: "Alice",
           score: 0,
-          color: { background: "255, 0, 0", text: "255, 255, 255" },
+          color: { background: "255, 0, 0" },
         },
       ]);
       io().emit("lockChallenge", "player-1");
@@ -123,7 +123,7 @@ describe("<Board />", () => {
           uuid: "player-1",
           name: "Alice",
           score: 0,
-          color: { background: "255, 0, 0", text: "255, 255, 255" },
+          color: { background: "255, 0, 0" },
         },
       ]);
       io().emit("lockChallenge", "player-1");
@@ -136,7 +136,7 @@ describe("<Board />", () => {
           uuid: "player-1",
           name: "Alice",
           score: 1,
-          color: { background: "255, 0, 0", text: "255, 255, 255" },
+          color: { background: "255, 0, 0" },
         },
       ]);
     });

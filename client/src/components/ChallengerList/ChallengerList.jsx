@@ -23,7 +23,6 @@ const ChallengerList = ({
             className="active-challenger"
             style={{
               "--player-color": `rgb(${currentChallenger.color.background})`,
-              "--player-color-text": `rgb(${currentChallenger.color.text})`,
             }}
           >
             {currentChallenger.name}

@@ -24,7 +24,7 @@ jest.mock("./ConfigureEverybodyPlaysSession", () => ({
       onClick={() =>
         onLaunch({
           name: "Alice",
-          color: { background: "1, 2, 3", text: "255, 255, 255" },
+          color: { background: "1, 2, 3" },
           tracks: [
             { track: { uri: "uri:track-0", name: "Take On Me" }, weight: 1, editorial: true },
             { track: { uri: "uri:track-1", name: "Africa" }, weight: 0.6 },
@@ -59,7 +59,7 @@ describe("<EverybodyPlaysHost />", () => {
     socketEmit = jest.fn((event, data, callback) => {
       if (event === "join" && callback) {
         callback({
-          player: { uuid: "player-1", color: { background: "1, 2, 3", text: "255, 255, 255" } },
+          player: { uuid: "player-1", color: { background: "1, 2, 3" } },
           challengers: [],
         });
       }
@@ -115,7 +115,7 @@ describe("<EverybodyPlaysHost />", () => {
       "join",
       {
         sessionUuid: expect.any(String),
-        player: { name: "Alice", color: { background: "1, 2, 3", text: "255, 255, 255" }, teamUuid: "" },
+        player: { name: "Alice", color: { background: "1, 2, 3" }, teamUuid: "" },
       },
       expect.any(Function)
     );
@@ -266,7 +266,7 @@ describe("<EverybodyPlaysHost />", () => {
     socketEmit = jest.fn((event, data, callback) => {
       if (event === "join" && callback) {
         callback({
-          player: { uuid: "player-1", color: { background: "1, 2, 3", text: "255, 255, 255" } },
+          player: { uuid: "player-1", color: { background: "1, 2, 3" } },
           challengers: [],
           totalTracks: 2,
           playedCount: 1,

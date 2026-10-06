@@ -9,13 +9,10 @@ const CHROMA_SCALE = 0.75;
 
 // Blends each hue's peak lightness toward a shared center so extremes (very
 // light yellows, very dark blues) are softened while the hue-to-hue
-// lightness variation — which is what makes text-color choice vary at all —
-// is preserved.
+// lightness variation — which is what makes the client's contrast-color()
+// pick vary at all — is preserved.
 const LIGHTNESS_CENTER = 0.6;
 const LIGHTNESS_BLEND = 0.3;
-
-const WHITE = new Color("white");
-const BLACK = new Color("black");
 
 // Binary search for the most saturated in-gamut OKLCH chroma at a given
 // lightness/hue: the sRGB gamut boundary is convex in chroma, so this
@@ -65,15 +62,6 @@ function toRgbTriplet(color) {
   return `${r}, ${g}, ${b}`;
 }
 
-// WCAG 2.1 contrast against both black and white is exact and cheap to
-// compute, so rather than guessing from lightness, each background just
-// picks whichever of the two actually reads better on it.
-function bestTextColor(background) {
-  const whiteContrast = Math.abs(background.contrast(WHITE, "WCAG21"));
-  const blackContrast = Math.abs(background.contrast(BLACK, "WCAG21"));
-  return whiteContrast >= blackContrast ? WHITE : BLACK;
-}
-
 function generateSessionColors(count = COUNT) {
   const colors = [];
 
@@ -89,10 +77,7 @@ function generateSessionColors(count = COUNT) {
       space: "srgb",
     });
 
-    colors.push({
-      background: toRgbTriplet(background),
-      text: toRgbTriplet(bestTextColor(background)),
-    });
+    colors.push({ background: toRgbTriplet(background) });
   }
 
   return colors;

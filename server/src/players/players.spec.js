@@ -8,10 +8,7 @@ import {
   resolveJoinedPlayerColor,
 } from "./players.js";
 
-const colorPool = [
-  { background: "1, 2, 3", text: "255, 255, 255" },
-  { background: "4, 5, 6", text: "0, 0, 0" },
-];
+const colorPool = [{ background: "1, 2, 3" }, { background: "4, 5, 6" }];
 
 test("resolvePlayerUuid reuses the team's uuid when the player is rejoining", () => {
   assert.equal(resolvePlayerUuid({ teamUuid: "team-1" }), "team-1");
@@ -26,7 +23,7 @@ test("registerChallenger claims the requested color and adds the challenger", ()
   const session = createSessionState({}, colorPool);
   const player = {
     name: "Alice",
-    color: { background: "4, 5, 6", text: "0, 0, 0" },
+    color: { background: "4, 5, 6" },
   };
 
   const challenger = registerChallenger(session, "player-1", player);

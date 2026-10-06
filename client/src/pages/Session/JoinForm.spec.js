@@ -21,12 +21,12 @@ describe("<JoinForm />", () => {
                 {
                   uuid: "qqqwqq-qeqeq-qeqw",
                   name: "bob",
-                  color: { background: "230, 25, 75", text: "255, 255, 255" },
+                  color: { background: "230, 25, 75" },
                 },
               ],
               colors: [
-                { background: "230, 25, 75", text: "255, 255, 255" },
-                { background: "245, 130, 49", text: "0, 0, 0" },
+                { background: "230, 25, 75" },
+                { background: "245, 130, 49" },
               ],
             });
             break;
@@ -34,7 +34,7 @@ describe("<JoinForm />", () => {
             callback({
               player: {
                 uuid: "player-12345",
-                color: { background: "245, 130, 49", text: "0, 0, 0" },
+                color: { background: "245, 130, 49" },
               },
               sessionUuid: "session-12345",
             });
@@ -150,15 +150,15 @@ describe("<JoinForm />", () => {
           callback({
             challengers: [],
             colors: [
-              { background: "230, 25, 75", text: "255, 255, 255" },
-              { background: "245, 130, 49", text: "0, 0, 0" },
+              { background: "230, 25, 75" },
+              { background: "245, 130, 49" },
             ],
           });
           break;
         case "join":
           callback({
             error: "colorTaken",
-            colors: [{ background: "245, 130, 49", text: "0, 0, 0" }],
+            colors: [{ background: "245, 130, 49" }],
           });
           break;
       }
@@ -224,7 +224,7 @@ describe("<JoinForm />", () => {
     fireEvent.click(getByText("Join"));
     expect(onJoin).toHaveBeenCalledWith({
       player: {
-        color: { background: "245, 130, 49", text: "0, 0, 0" },
+        color: { background: "245, 130, 49" },
         uuid: "player-12345",
       },
       sessionUuid: 'session-12345'

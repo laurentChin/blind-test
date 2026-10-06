@@ -28,7 +28,7 @@ describe("<ChallengerList />", () => {
             uuid: "qwewrw-1232553",
             name: "currentChallenger",
             score: 1,
-            color: { background: "1, 2, 3", text: "255, 255, 255" },
+            color: { background: "1, 2, 3" },
           },
           { uuid: "wuefgeew-82687234", name: "name2", score: 3 },
         ]}
@@ -63,7 +63,7 @@ describe("<ChallengerList />", () => {
             uuid: "qwewrw-1232553",
             name: "currentChallenger",
             score: 1,
-            color: { background: "1, 2, 3", text: "255, 255, 255" },
+            color: { background: "1, 2, 3" },
           },
         ]}
         challengerUuid={"qwewrw-1232553"}
@@ -82,7 +82,7 @@ describe("<ChallengerList />", () => {
             uuid: "qwewrw-1232553",
             name: "currentChallenger",
             score: 1,
-            color: { background: "1, 2, 3", text: "255, 255, 255" },
+            color: { background: "1, 2, 3" },
           },
         ]}
         challengerUuid={"qwewrw-1232553"}

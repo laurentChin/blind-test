@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { createSessionState } from "./session.js";
 
-const colorPool = [{ background: "1, 2, 3", text: "255, 255, 255" }];
+const colorPool = [{ background: "1, 2, 3" }];
 
 test("createSessionState applies the game-mode defaults", () => {
   const session = createSessionState({}, colorPool);

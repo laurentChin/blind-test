@@ -62,7 +62,8 @@
   border: none;
   border-radius: var(--radius-lg);
   background-color: var(--player-color);
-  color: var(--player-color-text);
+  color: var(--color-text);
+  text-shadow: var(--shadow-text-contrast);
   font-family: var(--font-display);
   font-weight: 800;
   font-size: var(--font-size-2xl);
@@ -72,11 +73,16 @@
   align-items: center;
   justify-content: center;
   gap: var(--space-4);
+
+  @supports (color: contrast-color(red)) {
+    color: contrast-color(var(--player-color));
+    text-shadow: none;
+  }
 }
 
 /* Purely decorative "song is playing" indicator, not synced to actual
-   playback — see isSongPlaying in Play.jsx. currentColor tracks
-   --player-color-text so it stays legible against any player color. */
+   playback — see isSongPlaying in Play.jsx. currentColor tracks the
+   button's text color so it stays legible against any player color. */
 .song-equalizer {
   display: flex;
   align-items: flex-end;
@@ -313,11 +319,17 @@
   border-radius: var(--radius-md);
   border: 1px solid var(--player-color);
   background-color: var(--player-color);
-  color: var(--player-color-text);
+  color: var(--color-text);
+  text-shadow: var(--shadow-text-contrast);
   text-align: center;
   font-family: var(--font-display);
   font-size: var(--font-size-2xl);
   font-weight: bold;
+
+  @supports (color: contrast-color(red)) {
+    color: contrast-color(var(--player-color));
+    text-shadow: none;
+  }
 }
 
 .Session-leave-button {
