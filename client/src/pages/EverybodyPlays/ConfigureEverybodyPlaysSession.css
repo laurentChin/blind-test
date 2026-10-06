@@ -11,6 +11,57 @@
   flex-direction: column;
 }
 
+.theme-groups {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.theme-group h3 {
+  margin: 0 0 var(--space-2);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  font-weight: normal;
+}
+
+/* A fieldset can't be a flex/grid container reliably across browsers, and
+   its legend sits on the border by default — the layout lives on the inner
+   .custom-theme-fields instead, which is also the container the fields
+   respond to. */
+.custom-theme {
+  margin: 0;
+  min-width: 0;
+  container-type: inline-size;
+}
+
+.custom-theme legend {
+  padding: 0 var(--space-2);
+  font-weight: bold;
+}
+
+.custom-theme-fields {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+
+.custom-theme-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+@container (width >= 28rem) {
+  .custom-theme-fields {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .custom-theme-text {
+    grid-column: 1 / -1;
+  }
+}
+
 .theme-grid {
   display: flex;
   flex-wrap: wrap;

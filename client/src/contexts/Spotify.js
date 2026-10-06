@@ -161,16 +161,18 @@ function setCurrentPlaylist(id) {
   currentPlaylist = id;
 }
 
+// Development Mode apps (February 2026 Web API changes) cap search at 10
+// results per page — exposed so callers paging through search() (e.g. the
+// everybody-plays playlist generator) can compute offsets up front.
+const SEARCH_PAGE_SIZE = 10;
+
 async function search(terms, { limit, offset } = {}) {
   const { tracks } = await (
     await fetch(
       `${
         process.env.REACT_APP_SPOTIFY_API_ENDPONT
       }/search?q=${encodeURIComponent(terms)}&type=track${
-        // Spotify's search caps limit at 50 — clamped here so callers (e.g.
-        // the everybody-plays playlist generator) can ask for a bigger page
-        // without worrying about each provider's own ceiling.
-        limit ? `&limit=${Math.min(limit, 50)}` : ""
+        limit ? `&limit=${Math.min(limit, SEARCH_PAGE_SIZE)}` : ""
       }${offset ? `&offset=${offset}` : ""}`,
       {
         headers: { ...authorizationHeader },
@@ -179,6 +181,44 @@ async function search(terms, { limit, offset } = {}) {
   ).json();
 
   return tracks;
+}
+
+function quoteFilterValue(value) {
+  return value.includes(" ") ? `"${value}"` : value;
+}
+
+// Turns a theme's criteria (see pages/EverybodyPlays/themes.js) into
+// Spotify's field-filtered search syntax, so the search itself only matches
+// on the relevant field instead of titles, artists and albums alike.
+// Spotify ANDs every filter inside a single query, so alternatives (several
+// genres, several album phrases) each get their own query.
+function themeQueries({ text, years, genres = [], keywords = [], albumPhrases = [], soundtrack, terms }) {
+  const yearFilter = years
+    ? `year:${years[0] === years[1] ? years[0] : `${years[0]}-${years[1]}`}`
+    : "";
+  const genreFilters = genres.length
+    ? genres.map((genre) => `genre:${quoteFilterValue(genre)}`)
+    : [""];
+
+  let subjects = [""];
+  if (text) {
+    subjects = [text];
+  } else if (albumPhrases.length > 0) {
+    subjects = albumPhrases.map((phrase) => `album:${quoteFilterValue(phrase)}`);
+  } else if (keywords.length > 0) {
+    subjects = keywords.flatMap((keyword) => [
+      `album:${quoteFilterValue(keyword)}`,
+      soundtrack ? `${keyword} soundtrack` : keyword,
+    ]);
+  }
+
+  const queries = subjects.flatMap((subject) =>
+    genreFilters.map((genreFilter) =>
+      [subject, genreFilter, yearFilter].filter(Boolean).join(" ")
+    )
+  );
+
+  return queries.some(Boolean) ? [...new Set(queries)] : [terms];
 }
 
 async function getTracks() {
@@ -318,6 +358,8 @@ const SpotifyContext = createContext({
   removeTrack,
   reorderTrack,
   search,
+  searchPageSize: SEARCH_PAGE_SIZE,
+  themeQueries,
   setupPlayer,
   getPlayer,
   setPlayerStateChangeCb,

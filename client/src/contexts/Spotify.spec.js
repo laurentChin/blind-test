@@ -88,3 +88,46 @@ describe("Spotify provider session validation", () => {
     expect(sessionStorage.getItem("spotifyTokenList")).toBeNull();
   });
 });
+
+describe("Spotify theme queries", () => {
+  it("turns theme criteria into Spotify's field-filtered search syntax", () => {
+    const { themeQueries } = loadSpotifyContext();
+
+    expect(themeQueries({ years: [1980, 1989], terms: "80s hits" })).toEqual([
+      "year:1980-1989",
+    ]);
+    expect(themeQueries({ years: [1985, 1985], terms: "1985 hits" })).toEqual([
+      "year:1985",
+    ]);
+    expect(themeQueries({ genres: ["hip hop", "rap"], terms: "hip hop hits" })).toEqual([
+      'genre:"hip hop"',
+      "genre:rap",
+    ]);
+    expect(
+      themeQueries({ keywords: ["disney"], soundtrack: true, terms: "disney" })
+    ).toEqual(["album:disney", "disney soundtrack"]);
+    expect(
+      themeQueries({
+        albumPhrases: ["series soundtrack", "television soundtrack"],
+        terms: "original series soundtrack",
+      })
+    ).toEqual(['album:"series soundtrack"', 'album:"television soundtrack"']);
+  });
+
+  it("narrows free text with the other criteria of a custom theme", () => {
+    const { themeQueries } = loadSpotifyContext();
+
+    expect(themeQueries({ custom: true, text: "Céline Dion", terms: "Céline Dion" })).toEqual([
+      "Céline Dion",
+    ]);
+    expect(
+      themeQueries({
+        custom: true,
+        text: "Queen",
+        years: [1980, 1989],
+        genres: ["rock"],
+        terms: "Queen 80s Rock",
+      })
+    ).toEqual(["Queen genre:rock year:1980-1989"]);
+  });
+});

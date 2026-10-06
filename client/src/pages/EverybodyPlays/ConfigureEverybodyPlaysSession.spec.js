@@ -8,15 +8,24 @@ jest.mock("../../contexts/MusicProvider", () => ({
   useMusicProvider: jest.fn(),
 }));
 
-const makeTracks = (count) =>
+// Distinct titles and artists: the generator dedupes by title and caps
+// songs per artist, so look-alike fixtures would collapse onto a couple.
+const makeTracks = (count, suffix = "") =>
   Array.from({ length: count }, (_, index) => ({
-    id: `track-${index}`,
-    uri: `uri:track-${index}`,
+    id: `track-${index}${suffix}`,
+    uri: `uri:track-${index}${suffix}`,
+    name: `Song ${index}${suffix}`,
+    artists: [{ name: `Artist ${index}${suffix}` }],
+    album: { name: `Album ${index}`, release_date: "1985-01-01" },
   }));
 
 const setup = ({ candidateCount = 15 } = {}) => {
   const musicProvider = {
-    search: jest.fn().mockResolvedValue({ items: makeTracks(candidateCount) }),
+    searchPageSize: 25,
+    themeQueries: jest.fn((theme) => [theme.terms]),
+    search: jest.fn((query, { offset }) =>
+      Promise.resolve({ items: offset === 0 ? makeTracks(candidateCount) : [] })
+    ),
   };
   useMusicProvider.mockReturnValue(musicProvider);
 
@@ -82,12 +91,16 @@ describe("<ConfigureEverybodyPlaysSession />", () => {
 
     await waitFor(() => expect(onLaunch).toHaveBeenCalled());
 
+    expect(musicProvider.themeQueries).toHaveBeenCalledWith(
+      expect.objectContaining({ id: "80s", years: [1980, 1989] })
+    );
     expect(musicProvider.search).toHaveBeenCalledWith("80s hits", {
-      limit: 50,
+      limit: 25,
       offset: 0,
     });
 
-    const [{ name, color, trackUris }] = onLaunch.mock.calls[0];
+    const [{ name, color, tracks }] = onLaunch.mock.calls[0];
+    const trackUris = tracks.map(({ track }) => track.uri);
 
     // Every picked uri came from the search results, and none repeats.
     expect(trackUris).toHaveLength(10);
@@ -143,23 +156,21 @@ describe("<ConfigureEverybodyPlaysSession />", () => {
 
     await waitFor(() => expect(onLaunch).toHaveBeenCalled());
 
+    expect(musicProvider.themeQueries).toHaveBeenCalledWith(
+      expect.objectContaining({ custom: true, text: "Céline Dion", terms: "Céline Dion" })
+    );
     expect(musicProvider.search).toHaveBeenCalledWith("Céline Dion", {
-      limit: 50,
+      limit: 25,
       offset: 0,
     });
   });
 
-  it("should paginate across multiple search pages when a provider caps its own page size (e.g. Apple Music's 25/page)", async () => {
+  it("should page through search results by the provider's own page size", async () => {
     const utils = setup();
     const { getByTestId, musicProvider, onLaunch } = utils;
 
     musicProvider.search.mockImplementation((query, { offset }) =>
-      Promise.resolve({
-        items: makeTracks(25).map((track) => ({
-          id: `${track.id}-page-${offset}`,
-          uri: `${track.uri}-page-${offset}`,
-        })),
-      })
+      Promise.resolve({ items: makeTracks(25, `-page-${offset}`) })
     );
 
     fillIdentity(utils);
@@ -170,19 +181,92 @@ describe("<ConfigureEverybodyPlaysSession />", () => {
 
     await waitFor(() => expect(onLaunch).toHaveBeenCalled());
 
-    // 25 unique candidates per page isn't enough for 40 tracks in one page —
-    // a second page, offset by however many actually came back, is needed.
-    expect(musicProvider.search).toHaveBeenNthCalledWith(1, "80s hits", {
-      limit: 50,
-      offset: 0,
-    });
-    expect(musicProvider.search).toHaveBeenNthCalledWith(2, "80s hits", {
-      limit: 50,
-      offset: 25,
-    });
+    // Offsets step by searchPageSize, so no result is skipped or repeated.
+    [0, 25, 50, 75].forEach((offset) =>
+      expect(musicProvider.search).toHaveBeenCalledWith("80s hits", {
+        limit: 25,
+        offset,
+      })
+    );
 
-    const [{ trackUris }] = onLaunch.mock.calls[0];
-    expect(trackUris).toHaveLength(40);
+    const [{ tracks }] = onLaunch.mock.calls[0];
+    expect(tracks).toHaveLength(40);
+  });
+
+  it("should combine the decade, genre and free text of the 'your own theme' form into one theme", async () => {
+    const utils = setup({ candidateCount: 15 });
+    const { getByTestId, musicProvider, onLaunch } = utils;
+
+    fillIdentity(utils);
+    fireEvent.change(getByTestId("custom-period-select"), { target: { value: "80s" } });
+    fireEvent.change(getByTestId("custom-genre-select"), { target: { value: "rock" } });
+    fireEvent.change(getByTestId("custom-theme-input"), { target: { value: "Queen" } });
+    fireEvent.click(getByTestId("select-count-10-btn"));
+
+    fireEvent.click(getByTestId("generate-and-launch-btn"));
+
+    await waitFor(() => expect(onLaunch).toHaveBeenCalled());
+
+    expect(musicProvider.themeQueries).toHaveBeenCalledWith({
+      id: "custom",
+      custom: true,
+      text: "Queen",
+      years: [1980, 1989],
+      genres: ["rock"],
+      terms: "Queen 80s Rock",
+    });
+  });
+
+  it("should treat a single year and a decade as one criterion, and a preset as replacing the whole form", () => {
+    const utils = setup();
+    const { getByTestId } = utils;
+
+    fillIdentity(utils);
+    fireEvent.change(getByTestId("custom-period-select"), { target: { value: "80s" } });
+    fireEvent.change(getByTestId("custom-year-select"), { target: { value: "1985" } });
+
+    expect(getByTestId("custom-period-select").value).toBe("");
+    expect(getByTestId("custom-year-select").value).toBe("1985");
+
+    fireEvent.change(getByTestId("custom-period-select"), { target: { value: "90s" } });
+
+    expect(getByTestId("custom-year-select").value).toBe("");
+
+    fireEvent.click(getByTestId("select-theme-disney-btn"));
+
+    expect(getByTestId("custom-period-select").value).toBe("");
+    expect(getByTestId("select-theme-disney-btn").getAttribute("aria-pressed")).toBe("true");
+
+    fireEvent.change(getByTestId("custom-genre-select"), { target: { value: "pop" } });
+
+    expect(getByTestId("select-theme-disney-btn").getAttribute("aria-pressed")).toBe("false");
+  });
+
+  it("should favor the provider's editorial playlist tracks when it has some", async () => {
+    const utils = setup({ candidateCount: 0 });
+    const { getByTestId, musicProvider, onLaunch } = utils;
+
+    musicProvider.getEditorialTracks = jest
+      .fn()
+      .mockResolvedValue(makeTracks(20, "-editorial"));
+
+    fillIdentity(utils);
+    fireEvent.click(getByTestId("select-theme-80s-btn"));
+    fireEvent.click(getByTestId("select-count-10-btn"));
+
+    fireEvent.click(getByTestId("generate-and-launch-btn"));
+
+    await waitFor(() => expect(onLaunch).toHaveBeenCalled());
+
+    expect(musicProvider.getEditorialTracks).toHaveBeenCalledWith("80s hits");
+    // 20 editorial tracks already fill the 2x-count pool: no search needed.
+    expect(musicProvider.search).not.toHaveBeenCalled();
+
+    const [{ tracks }] = onLaunch.mock.calls[0];
+    tracks.forEach(({ track, editorial }) => {
+      expect(track.uri).toMatch(/-editorial$/);
+      expect(editorial).toBe(true);
+    });
   });
 
   it("should show an error and not launch when there aren't enough unique tracks for the requested count", async () => {

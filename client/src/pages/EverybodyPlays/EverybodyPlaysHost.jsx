@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { Suspense, lazy, useEffect, useRef, useState } from "react";
 import { v4 } from "uuid";
 import io from "socket.io-client";
 import { Navigate, useNavigate } from "react-router-dom";
@@ -15,6 +15,17 @@ import { Play } from "../Session/Play";
 
 import "./EverybodyPlaysHost.css";
 
+// Rsbuild inlines NODE_ENV at build time, so in production this is a plain
+// `null` and the dynamic import below is dropped from the bundle entirely.
+const TrackListDebug =
+  process.env.NODE_ENV === "production"
+    ? null
+    : lazy(() =>
+        import("../../components/TrackListDebug/TrackListDebug").then(
+          ({ TrackListDebug }) => ({ default: TrackListDebug })
+        )
+      );
+
 const SESSION_UUID = v4();
 const HOST_CONTROLS_ID = "host-controls-panel";
 
@@ -27,7 +38,9 @@ const EverybodyPlaysHost = () => {
   const isAuthenticated = useProviderAuth(provider, musicProvider);
 
   const [identity, setIdentity] = useState(null);
-  const [trackUris, setTrackUris] = useState([]);
+  // Picked candidates from playlistGenerator ({ track, weight, editorial }),
+  // kept whole rather than as bare uris for the dev-only TrackListDebug.
+  const [selectedTracks, setSelectedTracks] = useState([]);
   const [selfPlayer, setSelfPlayer] = useState(null);
   const [challengers, setChallengers] = useState([]);
   const [challengeTimerSeconds, setChallengeTimerSeconds] = useState();
@@ -147,6 +160,7 @@ const EverybodyPlaysHost = () => {
     // whether it arrives before or after startPlayer's fetch resolves — is
     // captured instead of ignored as a pre-session stray.
     hasSessionStartRef.current = true;
+    const trackUris = selectedTracks.map(({ track }) => track.uri);
 
     return run(() =>
       musicProvider.startPlayer(deviceId, trackUris).then(() => {
@@ -175,9 +189,9 @@ const EverybodyPlaysHost = () => {
           <ConfigureEverybodyPlaysSession
             sessionUuid={SESSION_UUID}
             socket={socket}
-            onLaunch={({ name, color, trackUris }) => {
+            onLaunch={({ name, color, tracks }) => {
               setIdentity({ name, color });
-              setTrackUris(trackUris);
+              setSelectedTracks(tracks);
             }}
           />
         ) : (
@@ -266,6 +280,12 @@ const EverybodyPlaysHost = () => {
           <JoinCode joinUrl={joinUrl} variant="button" />
         </div>
       </div>
+
+      {TrackListDebug && (
+        <Suspense fallback={null}>
+          <TrackListDebug tracks={selectedTracks} />
+        </Suspense>
+      )}
 
       {selfPlayer && (
         <Play

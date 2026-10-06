@@ -25,7 +25,10 @@ jest.mock("./ConfigureEverybodyPlaysSession", () => ({
         onLaunch({
           name: "Alice",
           color: { background: "1, 2, 3", text: "255, 255, 255" },
-          trackUris: ["uri:track-0", "uri:track-1"],
+          tracks: [
+            { track: { uri: "uri:track-0", name: "Take On Me" }, weight: 1, editorial: true },
+            { track: { uri: "uri:track-1", name: "Africa" }, weight: 0.6 },
+          ],
         })
       }
     >
@@ -232,6 +235,30 @@ describe("<EverybodyPlaysHost />", () => {
     // playback start right away on both providers instead of requiring a
     // separate manual play click.
     await waitFor(() => expect(resume).toHaveBeenCalled());
+  });
+
+  it("should offer the dev-only track list debug tool outside of production", async () => {
+    getSelectedProvider.mockReturnValue("spotify");
+    useMusicProvider.mockReturnValue({
+      isAuthenticated: true,
+      login: jest.fn().mockResolvedValue(),
+      setupPlayer: jest.fn((cb) => cb("device-1")),
+      getPlayer: jest.fn().mockReturnValue({}),
+      setPlayerStateChangeCb: jest.fn(),
+      startPlayer: jest.fn().mockResolvedValue(),
+    });
+
+    const { getByTestId, findByTestId } = render(
+      <MemoryRouter initialEntries={["/create-session/everybody-plays"]}>
+        <EverybodyPlaysHost />
+      </MemoryRouter>
+    );
+
+    fireEvent.click(getByTestId("mock-launch-btn"));
+
+    const trigger = await findByTestId("track-list-debug-btn");
+    expect(trigger.textContent).toContain("2 tracks");
+    expect(getByTestId("track-list-debug-panel").textContent).toContain("Take On Me");
   });
 
   it("should hide the 'Skip' button once the last track is up, keeping the play/pause toggle", async () => {

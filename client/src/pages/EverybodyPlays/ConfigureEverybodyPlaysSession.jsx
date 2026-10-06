@@ -15,60 +15,28 @@ import {
   DEFAULT_ALMOST_POINTS,
   DEFAULT_FULL_POINTS,
 } from "../../components/AnswerScoreConfig/AnswerScoreConfig";
-import { THEMES } from "./themes";
+import {
+  THEMES,
+  THEME_GROUPS,
+  PERIODS,
+  GENRES,
+  YEARS,
+  buildCustomTheme,
+} from "./themes";
+import { generateThemePlaylist } from "./playlistGenerator";
 
 import "./ConfigureEverybodyPlaysSession.css";
 
 const MAX_TRACKS = 60;
 const TRACK_COUNT_PRESETS = [10, 20, 40];
-const SEARCH_PAGE_SIZE = 50;
-const MAX_SEARCH_PAGES = 4;
-
-// Fisher-Yates: picking N random unique tracks out of the search results
-// needs an unbiased shuffle, not just Math.random()-based sort.
-function shuffle(items) {
-  const shuffled = [...items];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
-  return shuffled;
-}
-
-// A single search page isn't always enough to hit a high track count: Apple
-// Music's catalog search caps at 25 results per page (Spotify caps at 50),
-// so this pages through search() — deduping by id as it goes — until either
-// enough unique candidates are collected or the provider runs out of results.
-async function collectCandidates(musicProvider, query, count) {
-  const candidatesById = new Map();
-  let offset = 0;
-
-  // Tracked by how many items actually came back rather than a fixed
-  // page*SEARCH_PAGE_SIZE stride: providers clamp the requested limit to
-  // their own ceiling (Apple Music caps at 25 regardless of what's asked
-  // for), so the real page size can be smaller than SEARCH_PAGE_SIZE — a
-  // fixed stride would silently skip results in that case.
-  for (let page = 0; page < MAX_SEARCH_PAGES && candidatesById.size < count; page++) {
-    const { items = [] } = await musicProvider.search(query, {
-      limit: SEARCH_PAGE_SIZE,
-      offset,
-    });
-
-    if (items.length === 0) {
-      break;
-    }
-
-    items.forEach((track) => candidatesById.set(track.id, track));
-    offset += items.length;
-  }
-
-  return Array.from(candidatesById.values());
-}
 
 const ConfigureEverybodyPlaysSession = ({ sessionUuid, socket, onLaunch }) => {
   const musicProvider = useMusicProvider();
   const nameInputId = useId();
   const customThemeInputId = useId();
+  const customPeriodSelectId = useId();
+  const customYearSelectId = useId();
+  const customGenreSelectId = useId();
   const customTrackCountInputId = useId();
 
   const [creatorName, setCreatorName] = useState("");
@@ -77,6 +45,9 @@ const ConfigureEverybodyPlaysSession = ({ sessionUuid, socket, onLaunch }) => {
 
   const [themeId, setThemeId] = useState("");
   const [customTheme, setCustomTheme] = useState("");
+  const [customPeriodId, setCustomPeriodId] = useState("");
+  const [customYear, setCustomYear] = useState("");
+  const [customGenreId, setCustomGenreId] = useState("");
   const [trackCount, setTrackCount] = useState(TRACK_COUNT_PRESETS[0]);
   const [isCustomCount, setIsCustomCount] = useState(false);
   const [timerSeconds, setTimerSeconds] = useState(DEFAULT_TIMER_SECONDS);
@@ -93,22 +64,45 @@ const ConfigureEverybodyPlaysSession = ({ sessionUuid, socket, onLaunch }) => {
     });
   }, [socket, sessionUuid]);
 
+  // A preset and the "your own theme" form are two ways to fill the same
+  // slot: touching one clears the other.
   const selectTheme = (id) => {
     setThemeId(id);
     setCustomTheme("");
+    setCustomPeriodId("");
+    setCustomYear("");
+    setCustomGenreId("");
   };
 
-  const changeCustomTheme = (value) => {
-    setCustomTheme(value);
+  const changeCustom = (setValue) => (value) => {
+    setValue(value);
     setThemeId("");
   };
 
-  const effectiveQuery = themeId
-    ? THEMES.find((theme) => theme.id === themeId)?.query
-    : customTheme.trim();
+  const changeCustomTheme = changeCustom(setCustomTheme);
+  const changeCustomGenre = changeCustom(setCustomGenreId);
+  // A single year and a period are the same criterion at two granularities:
+  // picking one resets the other.
+  const changeCustomPeriod = changeCustom((value) => {
+    setCustomPeriodId(value);
+    setCustomYear("");
+  });
+  const changeCustomYear = changeCustom((value) => {
+    setCustomYear(value);
+    setCustomPeriodId("");
+  });
+
+  const effectiveTheme = themeId
+    ? THEMES.find((theme) => theme.id === themeId)
+    : buildCustomTheme({
+        text: customTheme,
+        year: customYear ? Number(customYear) : undefined,
+        periodId: customPeriodId,
+        genreId: customGenreId,
+      });
 
   const isIdentityValid = creatorName.trim() !== "" && !!creatorColor;
-  const isThemeValid = !!effectiveQuery;
+  const isThemeValid = !!effectiveTheme;
   const isTrackCountValid = trackCount >= MIN_TRACKS && trackCount <= MAX_TRACKS;
   const isReadyToLaunch = isIdentityValid && isThemeValid && isTrackCountValid;
 
@@ -126,25 +120,23 @@ const ConfigureEverybodyPlaysSession = ({ sessionUuid, socket, onLaunch }) => {
         totalTracks: trackCount,
       });
 
-      const uniqueCandidates = await collectCandidates(
+      const selected = await generateThemePlaylist(
         musicProvider,
-        effectiveQuery,
+        effectiveTheme,
         trackCount
       );
 
-      if (uniqueCandidates.length < trackCount) {
+      if (selected.length < trackCount) {
         setError(
           "Not enough tracks found for this theme — try a broader theme or a lower track count."
         );
         return;
       }
 
-      const selected = shuffle(uniqueCandidates).slice(0, trackCount);
-
       onLaunch({
         name: creatorName,
         color: creatorColor,
-        trackUris: selected.map((track) => track.uri),
+        tracks: selected,
       });
     });
 
@@ -175,35 +167,97 @@ const ConfigureEverybodyPlaysSession = ({ sessionUuid, socket, onLaunch }) => {
         <p className="config-step-hint">
           The songs are picked for you — you won't see the list.
         </p>
-        <div className="panel">
-          <div className="theme-grid">
-            {THEMES.map((theme) => (
-              <button
-                key={theme.id}
-                type="button"
-                data-testid={`select-theme-${theme.id}-btn`}
-                className="btn theme-tile"
-                aria-pressed={themeId === theme.id}
-                onClick={() => selectTheme(theme.id)}
-              >
-                {theme.label}
-              </button>
-            ))}
-          </div>
+        <div className="panel theme-groups">
+          {THEME_GROUPS.map((group) => (
+            <section key={group.id} className="theme-group">
+              <h3>{group.label}</h3>
+              <div className="theme-grid">
+                {group.themes.map((theme) => (
+                  <button
+                    key={theme.id}
+                    type="button"
+                    data-testid={`select-theme-${theme.id}-btn`}
+                    className="btn theme-tile"
+                    aria-pressed={themeId === theme.id}
+                    onClick={() => selectTheme(theme.id)}
+                  >
+                    {theme.label}
+                  </button>
+                ))}
+              </div>
+            </section>
+          ))}
         </div>
         <span className="panel-separator">OR</span>
-        <div className="panel">
-          <label htmlFor={customThemeInputId}>Your own theme</label>
-          <input
-            id={customThemeInputId}
-            className="field"
-            data-testid="custom-theme-input"
-            type="text"
-            placeholder="e.g. Céline Dion, 90s rock…"
-            value={customTheme}
-            onChange={({ currentTarget }) => changeCustomTheme(currentTarget.value)}
-          />
-        </div>
+        <fieldset className="panel custom-theme">
+          <legend>Your own theme</legend>
+          <p className="config-step-hint">Combine any of these.</p>
+          <div className="custom-theme-fields">
+            <div className="custom-theme-field">
+              <label htmlFor={customPeriodSelectId}>Decade</label>
+              <select
+                id={customPeriodSelectId}
+                className="field"
+                data-testid="custom-period-select"
+                value={customPeriodId}
+                onChange={({ currentTarget }) => changeCustomPeriod(currentTarget.value)}
+              >
+                <option value="">Any</option>
+                {PERIODS.map(({ id, label }) => (
+                  <option key={id} value={id}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="custom-theme-field">
+              <label htmlFor={customYearSelectId}>Year</label>
+              <select
+                id={customYearSelectId}
+                className="field"
+                data-testid="custom-year-select"
+                value={customYear}
+                onChange={({ currentTarget }) => changeCustomYear(currentTarget.value)}
+              >
+                <option value="">Any</option>
+                {YEARS.map((year) => (
+                  <option key={year} value={year}>
+                    {year}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="custom-theme-field">
+              <label htmlFor={customGenreSelectId}>Genre</label>
+              <select
+                id={customGenreSelectId}
+                className="field"
+                data-testid="custom-genre-select"
+                value={customGenreId}
+                onChange={({ currentTarget }) => changeCustomGenre(currentTarget.value)}
+              >
+                <option value="">Any</option>
+                {GENRES.map(({ id, label }) => (
+                  <option key={id} value={id}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="custom-theme-field custom-theme-text">
+              <label htmlFor={customThemeInputId}>Free text</label>
+              <input
+                id={customThemeInputId}
+                className="field"
+                data-testid="custom-theme-input"
+                type="text"
+                placeholder="e.g. an artist: Céline Dion, Queen…"
+                value={customTheme}
+                onChange={({ currentTarget }) => changeCustomTheme(currentTarget.value)}
+              />
+            </div>
+          </div>
+        </fieldset>
       </section>
 
       <section className="config-step" inert={!isIdentityValid || !isThemeValid}>
