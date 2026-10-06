@@ -20,7 +20,8 @@ const Search = ({ excludedTracks, addTrackCallback }) => {
   const handleSearch = ({ currentTarget: { value } }) => {
     setSearchTerms(value);
     if (value.length < 3) return null;
-    musicProvider.search(value).then((tracks) => {
+    // Spotify's default page dropped to 5 results — ask for its max of 10.
+    musicProvider.search(value, { limit: 10 }).then((tracks) => {
       setResults([
         ...tracks.items.filter(
           (item) => !excludedTracks.find((track) => track.id === item.id)

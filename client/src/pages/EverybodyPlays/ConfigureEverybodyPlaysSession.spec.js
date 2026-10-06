@@ -269,6 +269,24 @@ describe("<ConfigureEverybodyPlaysSession />", () => {
     });
   });
 
+  it("should show a dedicated error and not launch when the provider's quota is exhausted", async () => {
+    const utils = setup({ candidateCount: 15 });
+    const { getByTestId, findByText, musicProvider, onLaunch } = utils;
+
+    musicProvider.search.mockRejectedValue(
+      Object.assign(new Error("Too many requests"), { reason: "QUOTA_EXCEEDED" })
+    );
+
+    fillIdentity(utils);
+    fireEvent.click(getByTestId("select-theme-80s-btn"));
+    fireEvent.click(getByTestId("select-count-10-btn"));
+
+    fireEvent.click(getByTestId("generate-and-launch-btn"));
+
+    await findByText(/quota is exhausted/);
+    expect(onLaunch).not.toHaveBeenCalled();
+  });
+
   it("should show an error and not launch when there aren't enough unique tracks for the requested count", async () => {
     const utils = setup({ candidateCount: 3 });
     const { getByTestId, findByText, onLaunch } = utils;

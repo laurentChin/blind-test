@@ -67,6 +67,27 @@ async function validateSession() {
   return true;
 }
 
+// Since the July 2026 Web API changes, Development Mode quotas are counted
+// per developer account and an exhausted one answers 429 with
+// `reason: "QUOTA_EXCEEDED"`. Surfaced as an error carrying that reason
+// rather than letting callers destructure an error body as if it were data.
+async function apiFetch(path, options) {
+  const response = await fetch(
+    `${process.env.REACT_APP_SPOTIFY_API_ENDPONT}${path}`,
+    options
+  );
+
+  if (response.status === 429) {
+    const { error } = await response.json().catch(() => ({}));
+    throw Object.assign(new Error(error?.message || "Too many requests"), {
+      status: 429,
+      reason: error?.reason,
+    });
+  }
+
+  return response;
+}
+
 async function getAccessToken(code) {
   const { access_token, refresh_token, expires_in } = await (
     await fetch(process.env.REACT_APP_SPOTIFY_TOKEN_ENDPOINT, {
@@ -124,7 +145,7 @@ async function login() {
 
 async function getPlaylists() {
   const { items } = await (
-    await fetch(`${process.env.REACT_APP_SPOTIFY_API_ENDPONT}/me/playlists`, {
+    await apiFetch("/me/playlists", {
       headers: {
         ...authorizationHeader,
       },
@@ -134,24 +155,15 @@ async function getPlaylists() {
 }
 
 async function createPlaylist(sessionName) {
-  const user = await (
-    await fetch(`${process.env.REACT_APP_SPOTIFY_API_ENDPONT}/me`, {
-      headers: { ...authorizationHeader },
-    })
-  ).json();
-
   const { id } = await (
-    await fetch(
-      `${process.env.REACT_APP_SPOTIFY_API_ENDPONT}/users/${user.id}/playlists`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...authorizationHeader,
-        },
-        body: JSON.stringify({ name: sessionName, public: false }),
-      }
-    )
+    await apiFetch("/me/playlists", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...authorizationHeader,
+      },
+      body: JSON.stringify({ name: sessionName, public: false }),
+    })
   ).json();
 
   return { id };
@@ -168,10 +180,8 @@ const SEARCH_PAGE_SIZE = 10;
 
 async function search(terms, { limit, offset } = {}) {
   const { tracks } = await (
-    await fetch(
-      `${
-        process.env.REACT_APP_SPOTIFY_API_ENDPONT
-      }/search?q=${encodeURIComponent(terms)}&type=track${
+    await apiFetch(
+      `/search?q=${encodeURIComponent(terms)}&type=track${
         limit ? `&limit=${Math.min(limit, SEARCH_PAGE_SIZE)}` : ""
       }${offset ? `&offset=${offset}` : ""}`,
       {
@@ -222,9 +232,9 @@ function themeQueries({ text, years, genres = [], keywords = [], albumPhrases = 
 }
 
 async function getTracks() {
-  const { tracks } = await (
-    await fetch(
-      `${process.env.REACT_APP_SPOTIFY_API_ENDPONT}/playlists/${currentPlaylist}`,
+  const { items } = await (
+    await apiFetch(
+      `/playlists/${currentPlaylist}`,
       {
         headers: { ...authorizationHeader },
       }
@@ -235,13 +245,19 @@ async function getTracks() {
   // needed by removeTrack below, since the same song can appear more than
   // once in a playlist and Spotify's delete-by-uri removes every occurrence
   // unless a specific position is also given.
-  return tracks.items.map(({ track }, rawIndex) => ({ ...track, rawIndex }));
+  //
+  // Spotify only returns `items` for playlists the user owns or collaborates
+  // on — any other playlist comes back as metadata only.
+  return (items?.items ?? []).map(({ item }, rawIndex) => ({
+    ...item,
+    rawIndex,
+  }));
 }
 
 async function addTrack(uri) {
   await (
-    await fetch(
-      `${process.env.REACT_APP_SPOTIFY_API_ENDPONT}/playlists/${currentPlaylist}/tracks`,
+    await apiFetch(
+      `/playlists/${currentPlaylist}/items`,
       {
         method: "POST",
         headers: { ...authorizationHeader },
@@ -254,26 +270,28 @@ async function addTrack(uri) {
 // Targets the specific occurrence via `positions` rather than deleting by
 // uri alone — Spotify's delete-by-uri removes every occurrence of that
 // track from the playlist, which would take out every duplicate of a
-// repeated song instead of just the one that was removed.
+// repeated song instead of just the one that was removed. `positions` isn't
+// part of the documented /items body (it wasn't documented on /tracks
+// either), but it's what keeps duplicates intact.
 async function removeTrack({ uri, rawIndex }) {
   await (
-    await fetch(
-      `${process.env.REACT_APP_SPOTIFY_API_ENDPONT}/playlists/${currentPlaylist}/tracks`,
+    await apiFetch(
+      `/playlists/${currentPlaylist}/items`,
       {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
           ...authorizationHeader,
         },
-        body: JSON.stringify({ tracks: [{ uri, positions: [rawIndex] }] }),
+        body: JSON.stringify({ items: [{ uri, positions: [rawIndex] }] }),
       }
     )
   ).json();
 }
 
 async function reorderTrack(fromIndex, toIndex) {
-  await fetch(
-    `${process.env.REACT_APP_SPOTIFY_API_ENDPONT}/playlists/${currentPlaylist}/tracks`,
+  await apiFetch(
+    `/playlists/${currentPlaylist}/items`,
     {
       method: "PUT",
       headers: {
@@ -333,8 +351,8 @@ function setPlayerStateChangeCb(cb) {
 // end-of-track auto-advance work the same either way, since both become a
 // real queue on Spotify's side.
 async function startPlayer(deviceID, trackUris) {
-  await fetch(
-    `${process.env.REACT_APP_SPOTIFY_API_ENDPONT}/me/player/play?device_id=${deviceID}`,
+  await apiFetch(
+    `/me/player/play?device_id=${deviceID}`,
     {
       method: "PUT",
       headers: { ...authorizationHeader },

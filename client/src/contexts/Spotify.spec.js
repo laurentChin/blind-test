@@ -131,3 +131,145 @@ describe("Spotify theme queries", () => {
     ).toEqual(["Queen genre:rock year:1980-1989"]);
   });
 });
+
+describe("Spotify Web API calls (February 2026 endpoints)", () => {
+  const realFetch = global.fetch;
+  const api = process.env.REACT_APP_SPOTIFY_API_ENDPONT;
+
+  function mockFetch(body = {}) {
+    global.fetch = jest.fn().mockResolvedValue({ status: 200, json: async () => body });
+    return global.fetch;
+  }
+
+  beforeEach(() => {
+    sessionStorage.clear();
+    sessionStorage.setItem(
+      "spotifyTokenList",
+      JSON.stringify({ accessToken: "token", refreshToken: "r", expiresAt: Date.now() + 3600000 })
+    );
+  });
+
+  afterEach(() => {
+    global.fetch = realFetch;
+  });
+
+  it("creates a playlist through POST /me/playlists in a single call", async () => {
+    const fetch = mockFetch({ id: "new-playlist" });
+    const spotify = loadSpotifyContext();
+
+    await expect(spotify.createPlaylist("Session")).resolves.toEqual({ id: "new-playlist" });
+
+    expect(fetch).toHaveBeenCalledTimes(1);
+    const [url, { method, body }] = fetch.mock.calls[0];
+    expect(url).toBe(`${api}/me/playlists`);
+    expect(method).toBe("POST");
+    expect(JSON.parse(body)).toEqual({ name: "Session", public: false });
+  });
+
+  it("reads playlist tracks from items.items[].item, keeping each raw position", async () => {
+    const fetch = mockFetch({
+      items: {
+        items: [
+          { item: { id: "a", uri: "spotify:track:a" } },
+          { item: { id: "b", uri: "spotify:track:b" } },
+        ],
+      },
+    });
+    const spotify = loadSpotifyContext();
+    spotify.setCurrentPlaylist("pl");
+
+    await expect(spotify.getTracks()).resolves.toEqual([
+      { id: "a", uri: "spotify:track:a", rawIndex: 0 },
+      { id: "b", uri: "spotify:track:b", rawIndex: 1 },
+    ]);
+    expect(fetch.mock.calls[0][0]).toBe(`${api}/playlists/pl`);
+  });
+
+  it("returns no tracks for a playlist Spotify only exposes metadata for", async () => {
+    mockFetch({ id: "pl", name: "Not mine" });
+    const spotify = loadSpotifyContext();
+    spotify.setCurrentPlaylist("pl");
+
+    await expect(spotify.getTracks()).resolves.toEqual([]);
+  });
+
+  it("adds, removes and reorders through /playlists/{id}/items", async () => {
+    const fetch = mockFetch();
+    const spotify = loadSpotifyContext();
+    spotify.setCurrentPlaylist("pl");
+
+    await spotify.addTrack("spotify:track:a");
+    await spotify.removeTrack({ uri: "spotify:track:a", rawIndex: 2 });
+    await spotify.reorderTrack(0, 3);
+
+    const [add, remove, reorder] = fetch.mock.calls;
+    [add, remove, reorder].forEach(([url]) => expect(url).toBe(`${api}/playlists/pl/items`));
+
+    expect(add[1].method).toBe("POST");
+    expect(JSON.parse(add[1].body)).toEqual({ uris: ["spotify:track:a"] });
+
+    expect(remove[1].method).toBe("DELETE");
+    expect(JSON.parse(remove[1].body)).toEqual({
+      items: [{ uri: "spotify:track:a", positions: [2] }],
+    });
+
+    expect(reorder[1].method).toBe("PUT");
+    expect(JSON.parse(reorder[1].body)).toEqual({
+      range_start: 0,
+      insert_before: 4,
+      range_length: 1,
+    });
+  });
+
+  it("clamps the search limit to Spotify's new maximum of 10", async () => {
+    const fetch = mockFetch({ tracks: { items: [] } });
+    const spotify = loadSpotifyContext();
+
+    await spotify.search("abba", { limit: 50, offset: 20 });
+
+    expect(fetch.mock.calls[0][0]).toBe(`${api}/search?q=abba&type=track&limit=10&offset=20`);
+  });
+});
+
+describe("Spotify quota handling (July 2026 429 body)", () => {
+  const realFetch = global.fetch;
+
+  beforeEach(() => {
+    sessionStorage.clear();
+  });
+
+  afterEach(() => {
+    global.fetch = realFetch;
+  });
+
+  it("rejects with the QUOTA_EXCEEDED reason instead of resolving with an error body", async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      status: 429,
+      json: async () => ({
+        error: { status: 429, message: "Too many requests", reason: "QUOTA_EXCEEDED" },
+      }),
+    });
+    const spotify = loadSpotifyContext();
+
+    await expect(spotify.search("abba")).rejects.toMatchObject({
+      message: "Too many requests",
+      status: 429,
+      reason: "QUOTA_EXCEEDED",
+    });
+  });
+
+  it("still rejects on a 429 without a JSON body (plain rate limit)", async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      status: 429,
+      json: async () => {
+        throw new SyntaxError("Unexpected token");
+      },
+    });
+    const spotify = loadSpotifyContext();
+
+    await expect(spotify.getPlaylists()).rejects.toMatchObject({
+      status: 429,
+      reason: undefined,
+    });
+  });
+});
