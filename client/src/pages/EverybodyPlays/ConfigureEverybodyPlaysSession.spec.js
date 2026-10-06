@@ -34,8 +34,8 @@ const setup = ({ candidateCount = 15 } = {}) => {
       if (event === "joinWaitingRoom") {
         callback({
           colors: [
-            { background: "1, 2, 3", text: "255, 255, 255" },
-            { background: "4, 5, 6", text: "0, 0, 0" },
+            { background: "1, 2, 3" },
+            { background: "4, 5, 6" },
           ],
         });
       }
@@ -108,7 +108,7 @@ describe("<ConfigureEverybodyPlaysSession />", () => {
     trackUris.forEach((uri) => expect(uri).toMatch(/^uri:track-/));
 
     expect(name).toBe("Alice");
-    expect(color).toEqual({ background: "1, 2, 3", text: "255, 255, 255" });
+    expect(color).toEqual({ background: "1, 2, 3" });
   });
 
   it("should create the session with the default timer/cooldown, or the edited values", async () => {

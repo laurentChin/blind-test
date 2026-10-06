@@ -4,8 +4,8 @@ import { render, fireEvent } from "@testing-library/react";
 import { ColorPicker } from "./ColorPicker";
 
 const COLORS = [
-  { background: "1, 2, 3", text: "255, 255, 255" },
-  { background: "4, 5, 6", text: "0, 0, 0" },
+  { background: "1, 2, 3" },
+  { background: "4, 5, 6" },
 ];
 
 describe("<ColorPicker />", () => {

@@ -223,7 +223,7 @@ describe("<ManageSession />", () => {
           uuid: "qwewrw-1232553",
           name: "name1",
           score: 1,
-          color: { background: "1, 2, 3", text: "255, 255, 255" },
+          color: { background: "1, 2, 3" },
         },
       ]);
       mockSocket.emit("lockChallenge", "qwewrw-1232553");
@@ -268,7 +268,7 @@ describe("<ManageSession />", () => {
           uuid: "qwewrw-1232553",
           name: "name1",
           score: 1,
-          color: { background: "1, 2, 3", text: "255, 255, 255" },
+          color: { background: "1, 2, 3" },
         },
       ]);
       mockSocket.emit("lockChallenge", "qwewrw-1232553");
@@ -323,7 +323,7 @@ describe("<ManageSession />", () => {
           uuid: "qwewrw-1232553",
           name: "name1",
           score: 1,
-          color: { background: "1, 2, 3", text: "255, 255, 255" },
+          color: { background: "1, 2, 3" },
         },
         { uuid: "wuefgeew-82687234", name: "name2", score: 3 },
       ]);
@@ -422,7 +422,7 @@ describe("<ManageSession />", () => {
           uuid: "qwewrw-1232553",
           name: "name1",
           score: 1,
-          color: { background: "1, 2, 3", text: "255, 255, 255" },
+          color: { background: "1, 2, 3" },
         },
       ]);
 

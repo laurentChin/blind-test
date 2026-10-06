@@ -156,7 +156,6 @@ const Board = () => {
               className="active-challenger-big"
               style={{
                 "--player-color": `rgb(${currentChallenger.color.background})`,
-                "--player-color-text": `rgb(${currentChallenger.color.text})`,
               }}
             >
               {currentChallenger.name}

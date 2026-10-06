@@ -25,7 +25,13 @@ p.active-challenger {
   font-weight: bold;
   background-color: var(--player-color);
   border: 1px solid var(--player-color);
-  color: var(--player-color-text);
+  color: var(--color-text);
+  text-shadow: var(--shadow-text-contrast);
+
+  @supports (color: contrast-color(red)) {
+    color: contrast-color(var(--player-color));
+    text-shadow: none;
+  }
 }
 
 .challenger-ranking li.first {

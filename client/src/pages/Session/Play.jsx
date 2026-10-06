@@ -344,7 +344,6 @@ const Play = ({
         <button
           style={{
             "--player-color": `rgb(${player.color.background})`,
-            "--player-color-text": `rgb(${player.color.text})`,
             "--timer-duration": `${timerSeconds}s`,
             "--cooldown-duration": `${cooldownSeconds}s`,
           }}
@@ -392,7 +391,6 @@ const Play = ({
               className="dialog-challenger-name"
               style={{
                 "--player-color": `rgb(${lockedChallenger.color.background})`,
-                "--player-color-text": `rgb(${lockedChallenger.color.text})`,
               }}
             >
               {lockedChallenger.name}

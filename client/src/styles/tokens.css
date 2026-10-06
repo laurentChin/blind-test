@@ -58,6 +58,9 @@
   --shadow-sm: 0 1px 2px color-mix(in srgb, black 25%, transparent);
   --shadow-md: 0 4px 16px color-mix(in srgb, black 30%, transparent);
   --shadow-lg: 0 12px 32px color-mix(in srgb, black 35%, transparent);
+  /* Outlines light text sitting on a player color when contrast-color() isn't
+     available to pick a readable one. */
+  --shadow-text-contrast: 0 0 2px black, 0 1px 4px black;
 
   /* Typography */
   --font-body: "Open Sans", system-ui, sans-serif;

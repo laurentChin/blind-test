@@ -23,7 +23,6 @@ const ColorPicker = ({ colors, value, onChange, legend = "Color" }) => (
 
 const colorPropType = PropTypes.shape({
   background: PropTypes.string.isRequired,
-  text: PropTypes.string.isRequired,
 });
 
 ColorPicker.propTypes = {

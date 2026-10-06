@@ -38,7 +38,7 @@ describe("<Play />", () => {
         player={{
           uuid: "player-12345",
           name: "bob",
-          color: { background: "230, 25, 75", text: "255, 255, 255" },
+          color: { background: "230, 25, 75" },
         }}
         socket={mockSocket}
         onLeave={jest.fn}
@@ -54,7 +54,7 @@ describe("<Play />", () => {
         {
           uuid: "player-12345",
           name: "bob",
-          color: { background: "230, 25, 75", text: "255, 255, 255" },
+          color: { background: "230, 25, 75" },
         },
       ]);
       mockSocket.emit("lockChallenge", "player-12345");
@@ -71,7 +71,7 @@ describe("<Play />", () => {
         player={{
           uuid: "player-12345",
           name: "bob",
-          color: { background: "230, 25, 75", text: "255, 255, 255" },
+          color: { background: "230, 25, 75" },
         }}
         socket={mockSocket}
         onLeave={jest.fn}
@@ -99,7 +99,7 @@ describe("<Play />", () => {
         player={{
           uuid: "player-12345",
           name: "bob",
-          color: { background: "230, 25, 75", text: "255, 255, 255" },
+          color: { background: "230, 25, 75" },
         }}
         socket={mockSocket}
         onLeave={jest.fn}
@@ -139,7 +139,7 @@ describe("<Play />", () => {
         player={{
           uuid: "player-12345",
           name: "bob",
-          color: { background: "230, 25, 75", text: "255, 255, 255" },
+          color: { background: "230, 25, 75" },
         }}
         socket={mockSocket}
         onLeave={jest.fn}
@@ -174,7 +174,7 @@ describe("<Play />", () => {
         player={{
           uuid: "player-12345",
           name: "bob",
-          color: { background: "255, 255, 255", text: "0, 0, 0" },
+          color: { background: "255, 255, 255" },
         }}
         challengers={[]}
       />
@@ -200,7 +200,7 @@ describe("<Play />", () => {
         player={{
           uuid: "player-12345",
           name: "bob",
-          color: { background: "255, 255, 255", text: "0, 0, 0" },
+          color: { background: "255, 255, 255" },
         }}
         challengers={[]}
       />
@@ -224,7 +224,7 @@ describe("<Play />", () => {
         player={{
           uuid: "player-12345",
           name: "bob",
-          color: { background: "255, 255, 255", text: "0, 0, 0" },
+          color: { background: "255, 255, 255" },
         }}
         challengers={[]}
       />
@@ -239,7 +239,7 @@ describe("<Play />", () => {
     const player = {
       uuid: "player-12345",
       name: "bob",
-      color: { background: "230, 25, 75", text: "255, 255, 255" },
+      color: { background: "230, 25, 75" },
     };
 
     it("should show a non-interactive answering timer instead of the buzzer once this player is locked in, then auto-reveal the score buttons once the timer times out", async () => {
@@ -302,7 +302,7 @@ describe("<Play />", () => {
           {
             uuid: "other-player",
             name: "alice",
-            color: { background: "1, 2, 3", text: "255, 255, 255" },
+            color: { background: "1, 2, 3" },
           },
         ]);
         mockSocket.emit("lockChallenge", "other-player");
@@ -402,7 +402,7 @@ describe("<Play />", () => {
       const bystander = {
         uuid: "player-bystander",
         name: "alice",
-        color: { background: "1, 2, 3", text: "255, 255, 255" },
+        color: { background: "1, 2, 3" },
       };
       const { getByTestId, queryByTestId } = render(
         <Play
@@ -590,7 +590,7 @@ describe("<Play />", () => {
       const bystander = {
         uuid: "player-bystander",
         name: "alice",
-        color: { background: "1, 2, 3", text: "255, 255, 255" },
+        color: { background: "1, 2, 3" },
       };
       const { getByTestId } = render(
         <Play
