@@ -120,11 +120,26 @@ const ConfigureEverybodyPlaysSession = ({ sessionUuid, socket, onLaunch }) => {
         totalTracks: trackCount,
       });
 
-      const selected = await generateThemePlaylist(
-        musicProvider,
-        effectiveTheme,
-        trackCount
-      );
+      let selected;
+      try {
+        selected = await generateThemePlaylist(
+          musicProvider,
+          effectiveTheme,
+          trackCount
+        );
+      } catch (generationError) {
+        // Spotify's Development Mode quota (see contexts/Spotify.js) — the
+        // only failure worth a dedicated message: retrying right away can't
+        // work, unlike a theme that's simply too narrow.
+        if (generationError.reason !== "QUOTA_EXCEEDED") {
+          throw generationError;
+        }
+
+        setError(
+          "The music provider's request quota is exhausted — wait a moment before trying again."
+        );
+        return;
+      }
 
       if (selected.length < trackCount) {
         setError(

@@ -230,3 +230,46 @@ describe("Spotify Web API calls (February 2026 endpoints)", () => {
     expect(fetch.mock.calls[0][0]).toBe(`${api}/search?q=abba&type=track&limit=10&offset=20`);
   });
 });
+
+describe("Spotify quota handling (July 2026 429 body)", () => {
+  const realFetch = global.fetch;
+
+  beforeEach(() => {
+    sessionStorage.clear();
+  });
+
+  afterEach(() => {
+    global.fetch = realFetch;
+  });
+
+  it("rejects with the QUOTA_EXCEEDED reason instead of resolving with an error body", async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      status: 429,
+      json: async () => ({
+        error: { status: 429, message: "Too many requests", reason: "QUOTA_EXCEEDED" },
+      }),
+    });
+    const spotify = loadSpotifyContext();
+
+    await expect(spotify.search("abba")).rejects.toMatchObject({
+      message: "Too many requests",
+      status: 429,
+      reason: "QUOTA_EXCEEDED",
+    });
+  });
+
+  it("still rejects on a 429 without a JSON body (plain rate limit)", async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      status: 429,
+      json: async () => {
+        throw new SyntaxError("Unexpected token");
+      },
+    });
+    const spotify = loadSpotifyContext();
+
+    await expect(spotify.getPlaylists()).rejects.toMatchObject({
+      status: 429,
+      reason: undefined,
+    });
+  });
+});
