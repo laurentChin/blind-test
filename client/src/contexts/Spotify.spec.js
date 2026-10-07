@@ -89,6 +89,37 @@ describe("Spotify provider session validation", () => {
   });
 });
 
+describe("Spotify OAuth redirect", () => {
+  const realFetch = global.fetch;
+
+  beforeEach(() => sessionStorage.clear());
+
+  afterEach(() => {
+    global.fetch = realFetch;
+    window.history.pushState({}, "", "/");
+  });
+
+  // Spotify only accepts the redirect URIs registered on its dashboard —
+  // the app's root — so a page first loaded on a deep link must not send
+  // its own path.
+  it("uses the app root as redirect URI when loaded on a deep link", async () => {
+    window.history.pushState({}, "", "/create-session/everybody-plays?code=abc");
+    global.fetch = jest.fn().mockResolvedValue({
+      status: 200,
+      json: async () => ({ access_token: "token", expires_in: 3600 }),
+    });
+
+    await loadSpotifyContext().login();
+
+    const [, { body }] = global.fetch.mock.calls[0];
+    expect(JSON.parse(body)).toMatchObject({
+      code: "abc",
+      redirectUri: encodeURIComponent(`${window.location.origin}/`),
+    });
+    expect(window.location.pathname + window.location.search).toBe("/");
+  });
+});
+
 describe("Spotify theme queries", () => {
   it("turns theme criteria into Spotify's field-filtered search syntax", () => {
     const { themeQueries } = loadSpotifyContext();

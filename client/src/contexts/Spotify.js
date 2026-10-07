@@ -3,7 +3,10 @@ import { createContext } from "react";
 const SPOTIFY_CODE_PARAM = /\?code=(.+)/;
 const SPOTIFY_PLAYER_SRC = "https://sdk.scdn.co/spotify-player.js";
 
-const redirectUri = `${window.location.origin}${window.location.pathname}`;
+// Always the app's root, whatever path the page was loaded on: Spotify only
+// accepts the exact redirect URIs registered on its dashboard (see README),
+// and the root is the one registered.
+const redirectUri = `${window.location.origin}/`;
 
 const scopes = [
   "user-modify-playback-state",
