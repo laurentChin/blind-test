@@ -23,7 +23,7 @@ import {
   YEARS,
   buildCustomTheme,
 } from "./themes";
-import { generateThemePlaylist } from "./playlistGenerator";
+import { generateThemesPlaylist } from "./playlistGenerator";
 
 import "./ConfigureEverybodyPlaysSession.css";
 
@@ -43,7 +43,7 @@ const ConfigureEverybodyPlaysSession = ({ sessionUuid, socket, onLaunch }) => {
   const [creatorColor, setCreatorColor] = useState(null);
   const [colors, setColors] = useState([]);
 
-  const [themeId, setThemeId] = useState("");
+  const [themeIds, setThemeIds] = useState([]);
   const [customTheme, setCustomTheme] = useState("");
   const [customPeriodId, setCustomPeriodId] = useState("");
   const [customYear, setCustomYear] = useState("");
@@ -64,10 +64,12 @@ const ConfigureEverybodyPlaysSession = ({ sessionUuid, socket, onLaunch }) => {
     });
   }, [socket, sessionUuid]);
 
-  // A preset and the "your own theme" form are two ways to fill the same
-  // slot: touching one clears the other.
-  const selectTheme = (id) => {
-    setThemeId(id);
+  // Presets can be combined, but a preset and the "your own theme" form are
+  // two ways to fill the same slot: touching one clears the other.
+  const toggleTheme = (id) => {
+    setThemeIds((ids) =>
+      ids.includes(id) ? ids.filter((themeId) => themeId !== id) : [...ids, id]
+    );
     setCustomTheme("");
     setCustomPeriodId("");
     setCustomYear("");
@@ -76,7 +78,7 @@ const ConfigureEverybodyPlaysSession = ({ sessionUuid, socket, onLaunch }) => {
 
   const changeCustom = (setValue) => (value) => {
     setValue(value);
-    setThemeId("");
+    setThemeIds([]);
   };
 
   const changeCustomTheme = changeCustom(setCustomTheme);
@@ -92,17 +94,20 @@ const ConfigureEverybodyPlaysSession = ({ sessionUuid, socket, onLaunch }) => {
     setCustomPeriodId("");
   });
 
-  const effectiveTheme = themeId
-    ? THEMES.find((theme) => theme.id === themeId)
-    : buildCustomTheme({
-        text: customTheme,
-        year: customYear ? Number(customYear) : undefined,
-        periodId: customPeriodId,
-        genreId: customGenreId,
-      });
+  const effectiveThemes =
+    themeIds.length > 0
+      ? THEMES.filter((theme) => themeIds.includes(theme.id))
+      : [
+          buildCustomTheme({
+            text: customTheme,
+            year: customYear ? Number(customYear) : undefined,
+            periodId: customPeriodId,
+            genreId: customGenreId,
+          }),
+        ].filter(Boolean);
 
   const isIdentityValid = creatorName.trim() !== "" && !!creatorColor;
-  const isThemeValid = !!effectiveTheme;
+  const isThemeValid = effectiveThemes.length > 0;
   const isTrackCountValid = trackCount >= MIN_TRACKS && trackCount <= MAX_TRACKS;
   const isReadyToLaunch = isIdentityValid && isThemeValid && isTrackCountValid;
 
@@ -122,9 +127,9 @@ const ConfigureEverybodyPlaysSession = ({ sessionUuid, socket, onLaunch }) => {
 
       let selected;
       try {
-        selected = await generateThemePlaylist(
+        selected = await generateThemesPlaylist(
           musicProvider,
-          effectiveTheme,
+          effectiveThemes,
           trackCount
         );
       } catch (generationError) {
@@ -143,7 +148,7 @@ const ConfigureEverybodyPlaysSession = ({ sessionUuid, socket, onLaunch }) => {
 
       if (selected.length < trackCount) {
         setError(
-          "Not enough tracks found for this theme — try a broader theme or a lower track count."
+          "Not enough tracks found for these themes — try broader themes or a lower track count."
         );
         return;
       }
@@ -178,7 +183,7 @@ const ConfigureEverybodyPlaysSession = ({ sessionUuid, socket, onLaunch }) => {
       </section>
 
       <section className="config-step" inert={!isIdentityValid}>
-        <h2>2. Choose a theme</h2>
+        <h2>2. Choose one or more themes</h2>
         <p className="config-step-hint">
           The songs are picked for you — you won't see the list.
         </p>
@@ -193,8 +198,8 @@ const ConfigureEverybodyPlaysSession = ({ sessionUuid, socket, onLaunch }) => {
                     type="button"
                     data-testid={`select-theme-${theme.id}-btn`}
                     className="btn theme-tile"
-                    aria-pressed={themeId === theme.id}
-                    onClick={() => selectTheme(theme.id)}
+                    aria-pressed={themeIds.includes(theme.id)}
+                    onClick={() => toggleTheme(theme.id)}
                   >
                     {theme.label}
                   </button>

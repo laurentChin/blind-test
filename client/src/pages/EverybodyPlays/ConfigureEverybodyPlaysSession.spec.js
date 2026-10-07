@@ -242,6 +242,48 @@ describe("<ConfigureEverybodyPlaysSession />", () => {
     expect(getByTestId("select-theme-disney-btn").getAttribute("aria-pressed")).toBe("false");
   });
 
+  it("should mix several selected themes, splitting the track count between them", async () => {
+    const utils = setup();
+    const { getByTestId, musicProvider, onLaunch } = utils;
+
+    musicProvider.search.mockImplementation((query, { offset }) =>
+      Promise.resolve({
+        items: offset === 0 ? makeTracks(15, `-${query.split(" ")[0]}`) : [],
+      })
+    );
+
+    fillIdentity(utils);
+    fireEvent.click(getByTestId("select-theme-80s-btn"));
+    fireEvent.click(getByTestId("select-theme-pop-btn"));
+
+    expect(getByTestId("select-theme-80s-btn").getAttribute("aria-pressed")).toBe("true");
+    expect(getByTestId("select-theme-pop-btn").getAttribute("aria-pressed")).toBe("true");
+
+    fireEvent.click(getByTestId("select-count-10-btn"));
+    fireEvent.click(getByTestId("generate-and-launch-btn"));
+
+    await waitFor(() => expect(onLaunch).toHaveBeenCalled());
+
+    const [{ tracks }] = onLaunch.mock.calls[0];
+    const uris = tracks.map(({ track }) => track.uri);
+
+    expect(uris).toHaveLength(10);
+    expect(new Set(uris).size).toBe(10);
+    expect(uris.filter((uri) => uri.endsWith("-80s"))).toHaveLength(5);
+    expect(uris.filter((uri) => uri.endsWith("-pop"))).toHaveLength(5);
+  });
+
+  it("should unselect a preset theme when clicked again", () => {
+    const utils = setup();
+    const { getByTestId } = utils;
+
+    fillIdentity(utils);
+    fireEvent.click(getByTestId("select-theme-80s-btn"));
+    fireEvent.click(getByTestId("select-theme-80s-btn"));
+
+    expect(getByTestId("select-theme-80s-btn").getAttribute("aria-pressed")).toBe("false");
+  });
+
   it("should favor the provider's editorial playlist tracks when it has some", async () => {
     const utils = setup({ candidateCount: 0 });
     const { getByTestId, musicProvider, onLaunch } = utils;
