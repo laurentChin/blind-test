@@ -89,6 +89,170 @@ describe("Spotify provider session validation", () => {
   });
 });
 
+describe("Spotify OAuth redirect", () => {
+  const realFetch = global.fetch;
+
+  beforeEach(() => sessionStorage.clear());
+
+  afterEach(() => {
+    global.fetch = realFetch;
+    window.history.pushState({}, "", "/");
+  });
+
+  // Spotify only accepts the redirect URIs registered on its dashboard —
+  // the app's root — so a page first loaded on a deep link must not send
+  // its own path.
+  it("uses the app root as redirect URI when loaded on a deep link", async () => {
+    window.history.pushState({}, "", "/create-session/everybody-plays?code=abc");
+    global.fetch = jest.fn().mockResolvedValue({
+      status: 200,
+      json: async () => ({ access_token: "token", expires_in: 3600 }),
+    });
+
+    await loadSpotifyContext().login();
+
+    const [, { body }] = global.fetch.mock.calls[0];
+    expect(JSON.parse(body)).toMatchObject({
+      code: "abc",
+      redirectUri: encodeURIComponent(`${window.location.origin}/`),
+    });
+    expect(window.location.pathname + window.location.search).toBe("/");
+  });
+});
+
+describe("Spotify token refresh", () => {
+  const realFetch = global.fetch;
+  const realEnv = { ...process.env };
+  const api = "https://api.test";
+  const tokenEndpoint = "https://server.test/spotify/access-token";
+
+  function storeToken(expiresIn) {
+    sessionStorage.setItem(
+      "spotifyTokenList",
+      JSON.stringify({
+        accessToken: "old-token",
+        refreshToken: "refresh",
+        expiresAt: Date.now() + expiresIn,
+      })
+    );
+  }
+
+  // Answers the token endpoint with a new token, and the Web API with 401
+  // for a missing token or any token listed in `rejected`.
+  function mockFetch({ rejected = [], refreshed = { access_token: "new-token", expires_in: 3600 } } = {}) {
+    global.fetch = jest.fn(async (url, { headers } = {}) => {
+      if (url === tokenEndpoint) {
+        return { status: 200, json: async () => refreshed };
+      }
+
+      const token = headers.Authorization?.replace("Bearer ", "");
+      return !token || rejected.includes(token)
+        ? { status: 401, json: async () => ({}) }
+        : { status: 200, json: async () => ({ items: [] }) };
+    });
+    return global.fetch;
+  }
+
+  const callsTo = (fetch, url) => fetch.mock.calls.filter(([called]) => called === url);
+
+  beforeEach(() => {
+    sessionStorage.clear();
+    process.env.REACT_APP_SPOTIFY_API_ENDPONT = api;
+    process.env.REACT_APP_SPOTIFY_TOKEN_ENDPOINT = tokenEndpoint;
+  });
+
+  afterEach(() => {
+    global.fetch = realFetch;
+    process.env = { ...realEnv };
+    delete window.Spotify;
+  });
+
+  it("leaves a token that is still good alone", async () => {
+    storeToken(3600000);
+    const fetch = mockFetch();
+
+    await loadSpotifyContext().getPlaylists();
+
+    expect(callsTo(fetch, tokenEndpoint)).toHaveLength(0);
+    expect(fetch.mock.calls[0][1].headers.Authorization).toBe("Bearer old-token");
+  });
+
+  it("swaps a token about to expire before calling the API", async () => {
+    storeToken(30000);
+    const fetch = mockFetch();
+
+    await loadSpotifyContext().getPlaylists();
+
+    const [[, { body }]] = callsTo(fetch, tokenEndpoint);
+    expect(JSON.parse(body)).toMatchObject({ refreshToken: "refresh" });
+    const [[, { headers }]] = callsTo(fetch, `${api}/me/playlists`);
+    expect(headers.Authorization).toBe("Bearer new-token");
+    expect(JSON.parse(sessionStorage.getItem("spotifyTokenList"))).toMatchObject({
+      accessToken: "new-token",
+      refreshToken: "refresh",
+    });
+  });
+
+  it("refreshes once for calls made at the same time", async () => {
+    storeToken(-1000);
+    const fetch = mockFetch();
+    const spotify = loadSpotifyContext();
+
+    await Promise.all([spotify.getPlaylists(), spotify.search("abba")]);
+
+    expect(callsTo(fetch, tokenEndpoint)).toHaveLength(1);
+  });
+
+  it("refreshes and retries when Spotify rejects a token early", async () => {
+    storeToken(3600000);
+    const fetch = mockFetch({ rejected: ["old-token"] });
+
+    await expect(loadSpotifyContext().getPlaylists()).resolves.toEqual([]);
+
+    expect(callsTo(fetch, tokenEndpoint)).toHaveLength(1);
+    expect(callsTo(fetch, `${api}/me/playlists`)).toHaveLength(2);
+  });
+
+  it("keeps an expired session logged in when it can be refreshed", async () => {
+    storeToken(-1000);
+    mockFetch({ rejected: ["old-token"] });
+
+    await expect(loadSpotifyContext().login()).resolves.toBe(true);
+  });
+
+  it("gives up once the refresh token is dead too", async () => {
+    storeToken(-1000);
+    const fetch = mockFetch({ rejected: ["old-token"], refreshed: { error: "invalid_grant" } });
+    jest.spyOn(console, "error").mockImplementation(() => {});
+
+    loadSpotifyContext().login();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(callsTo(fetch, tokenEndpoint)).toHaveLength(1);
+    expect(sessionStorage.getItem("spotifyTokenList")).toBeNull();
+    console.error.mockRestore();
+  });
+
+  it("hands the player a fresh token", async () => {
+    storeToken(-1000);
+    mockFetch();
+    let playerOptions;
+    window.Spotify = {
+      Player: jest.fn((options) => {
+        playerOptions = options;
+        return { addListener: jest.fn(), connect: jest.fn() };
+      }),
+    };
+    const onToken = jest.fn();
+
+    loadSpotifyContext().setupPlayer(jest.fn());
+    playerOptions.getOAuthToken(onToken);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(onToken).toHaveBeenCalledWith("new-token");
+  });
+});
+
 describe("Spotify theme queries", () => {
   it("turns theme criteria into Spotify's field-filtered search syntax", () => {
     const { themeQueries } = loadSpotifyContext();

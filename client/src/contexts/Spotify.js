@@ -3,7 +3,10 @@ import { createContext } from "react";
 const SPOTIFY_CODE_PARAM = /\?code=(.+)/;
 const SPOTIFY_PLAYER_SRC = "https://sdk.scdn.co/spotify-player.js";
 
-const redirectUri = `${window.location.origin}${window.location.pathname}`;
+// Always the app's root, whatever path the page was loaded on: Spotify only
+// accepts the exact redirect URIs registered on its dashboard (see README),
+// and the root is the one registered.
+const redirectUri = `${window.location.origin}/`;
 
 const scopes = [
   "user-modify-playback-state",
@@ -48,16 +51,63 @@ function clearSession() {
   sessionStorage.removeItem("spotifyTokenList");
 }
 
+// Spotify access tokens only live an hour — shorter than a game can last. So
+// every request first swaps a token about to expire for a new one, using the
+// refresh token, instead of letting the session die mid-game.
+const TOKEN_REFRESH_MARGIN = 60000;
+let tokenRefresh = null;
+
+// Shared by concurrent callers: Spotify may rotate the refresh token, so two
+// refreshes racing with the same one could leave the loser logged out.
+function refreshAccessToken() {
+  if (!tokenRefresh) {
+    tokenRefresh = getAccessToken().finally(() => {
+      tokenRefresh = null;
+    });
+  }
+
+  return tokenRefresh;
+}
+
+async function getFreshAccessToken() {
+  const { refreshToken, expiresAt } = authTokenList;
+
+  if (refreshToken && expiresAt - Date.now() < TOKEN_REFRESH_MARGIN) {
+    // A refresh that couldn't reach the server leaves the current token in
+    // place: it may still be good for the request at hand.
+    await refreshAccessToken().catch(() => {});
+  }
+
+  return authTokenList.accessToken;
+}
+
+// A 401 despite the check above means the token died early (revoked, clock
+// drift): refreshed once more before giving up.
+async function authorizedFetch(path, options = {}) {
+  const request = () =>
+    fetch(`${process.env.REACT_APP_SPOTIFY_API_ENDPONT}${path}`, {
+      ...options,
+      headers: { ...options.headers, ...authorizationHeader },
+    });
+
+  await getFreshAccessToken();
+  const response = await request();
+
+  if (response.status !== 401 || !authTokenList.refreshToken) {
+    return response;
+  }
+
+  await refreshAccessToken().catch(() => {});
+  return isAuthenticated ? request() : response;
+}
+
 // The only reliable way to know a token still works: ask Spotify. A locally
 // tracked expiry can't catch a token revoked early or a failed refresh that
 // still got treated as a success (see getAccessToken below) — either would
 // otherwise sail through as "authenticated" until the first real API call
 // 401s deep inside some other screen.
 async function validateSession() {
-  const response = await fetch(
-    `${process.env.REACT_APP_SPOTIFY_API_ENDPONT}/me`,
-    { headers: { ...authorizationHeader } }
-  );
+  const response = await authorizedFetch("/me");
 
   if (response.status === 401) {
     clearSession();
@@ -72,10 +122,7 @@ async function validateSession() {
 // `reason: "QUOTA_EXCEEDED"`. Surfaced as an error carrying that reason
 // rather than letting callers destructure an error body as if it were data.
 async function apiFetch(path, options) {
-  const response = await fetch(
-    `${process.env.REACT_APP_SPOTIFY_API_ENDPONT}${path}`,
-    options
-  );
+  const response = await authorizedFetch(path, options);
 
   if (response.status === 429) {
     const { error } = await response.json().catch(() => ({}));
@@ -145,11 +192,7 @@ async function login() {
 
 async function getPlaylists() {
   const { items } = await (
-    await apiFetch("/me/playlists", {
-      headers: {
-        ...authorizationHeader,
-      },
-    })
+    await apiFetch("/me/playlists")
   ).json();
   return items;
 }
@@ -160,7 +203,6 @@ async function createPlaylist(sessionName) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        ...authorizationHeader,
       },
       body: JSON.stringify({ name: sessionName, public: false }),
     })
@@ -183,10 +225,7 @@ async function search(terms, { limit, offset } = {}) {
     await apiFetch(
       `/search?q=${encodeURIComponent(terms)}&type=track${
         limit ? `&limit=${Math.min(limit, SEARCH_PAGE_SIZE)}` : ""
-      }${offset ? `&offset=${offset}` : ""}`,
-      {
-        headers: { ...authorizationHeader },
-      }
+      }${offset ? `&offset=${offset}` : ""}`
     )
   ).json();
 
@@ -234,10 +273,7 @@ function themeQueries({ text, years, genres = [], keywords = [], albumPhrases = 
 async function getTracks() {
   const { items } = await (
     await apiFetch(
-      `/playlists/${currentPlaylist}`,
-      {
-        headers: { ...authorizationHeader },
-      }
+      `/playlists/${currentPlaylist}`
     )
   ).json();
 
@@ -260,7 +296,6 @@ async function addTrack(uri) {
       `/playlists/${currentPlaylist}/items`,
       {
         method: "POST",
-        headers: { ...authorizationHeader },
         body: JSON.stringify({ uris: [uri] }),
       }
     )
@@ -281,7 +316,6 @@ async function removeTrack({ uri, rawIndex }) {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
-          ...authorizationHeader,
         },
         body: JSON.stringify({ items: [{ uri, positions: [rawIndex] }] }),
       }
@@ -296,7 +330,6 @@ async function reorderTrack(fromIndex, toIndex) {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
-        ...authorizationHeader,
       },
       body: JSON.stringify({
         range_start: fromIndex,
@@ -329,7 +362,7 @@ let playerReadyTimeout;
 function createPlayer() {
   player = new window.Spotify.Player({
     name: "Blind Test Spotify Player",
-    getOAuthToken: (cb) => cb(authTokenList.accessToken),
+    getOAuthToken: (cb) => getFreshAccessToken().then(cb),
   });
 
   player.addListener("player_state_changed", (state) => {
@@ -416,7 +449,6 @@ async function startPlayer(deviceID, trackUris) {
     `/me/player/play?device_id=${deviceID}`,
     {
       method: "PUT",
-      headers: { ...authorizationHeader },
       body: JSON.stringify(
         trackUris?.length
           ? { uris: trackUris }
