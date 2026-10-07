@@ -266,11 +266,39 @@ function shuffle(items) {
 // editorial }) in play order — fewer means the theme didn't have enough
 // matching songs, which the caller reports. Weight and source are kept
 // alongside each track for the dev-only track list (TrackListDebug).
-async function generateThemePlaylist(musicProvider, theme, count) {
+// `excluded` holds candidates already picked for another theme, so a song
+// belonging to several themes isn't drawn twice.
+async function generateThemePlaylist(musicProvider, theme, count, excluded = []) {
+  const takenIds = new Set(excluded.map(({ track }) => track.id));
+  const takenTitles = new Set(excluded.map(({ track }) => titleKey(track.name)));
   const candidates = await collectCandidates(musicProvider, theme, count);
-  const pool = selectCandidates(candidates, theme);
+  const pool = selectCandidates(candidates, theme).filter(
+    ({ track }) => !takenIds.has(track.id) && !takenTitles.has(titleKey(track.name))
+  );
 
   return shuffle(weightedSample(pool, count));
 }
 
-export { generateThemePlaylist, selectCandidates, titleKey };
+// Mixes several themes: `count` is split as evenly as possible between them
+// (the first ones take the remainder). Themes are queried one after the
+// other rather than in parallel, to stay gentle with the provider's quota.
+async function generateThemesPlaylist(musicProvider, themes, count) {
+  const share = Math.floor(count / themes.length);
+  const remainder = count % themes.length;
+  const picked = [];
+
+  for (const [index, theme] of themes.entries()) {
+    picked.push(
+      ...(await generateThemePlaylist(
+        musicProvider,
+        theme,
+        share + (index < remainder ? 1 : 0),
+        picked
+      ))
+    );
+  }
+
+  return shuffle(picked);
+}
+
+export { generateThemePlaylist, generateThemesPlaylist, selectCandidates, titleKey };
