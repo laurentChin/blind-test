@@ -6,6 +6,7 @@ import {
   DEFAULT_CHALLENGE_COOLDOWN_SECONDS,
   DEFAULT_ALMOST_POINTS,
   DEFAULT_FULL_POINTS,
+  SESSION_NOT_FOUND,
 } from "../constants.js";
 
 export function registerSessionHandlers(
@@ -53,6 +54,10 @@ export function registerSessionHandlers(
     socket.join(sessionUuid);
     const session = sessions.get(sessionUuid);
     ack({
+      // Lets a player's join screen tell "no one joined yet" apart from "this
+      // session is gone" — the host's own config screen also calls this
+      // before createSession, so a missing session can't be an error here.
+      sessionExists: !!session,
       challengers: session ? Array.from(session.challengers.values()) : [],
       colors: [
         ...(session && session.colors.length > 0 ? session.colors : colors),
@@ -75,30 +80,38 @@ export function registerSessionHandlers(
     }
 
     const session = sessions.get(sessionUuid);
-    if (session) {
-      socket.join(sessionUuid);
+    if (!session) {
+      // Closed while the client was away, or lost to a server restart —
+      // answered explicitly so the client can send the user back home
+      // instead of waiting forever on a session that will never respond.
       if (callback) {
-        callback({
-          challengers: Array.from(session.challengers.values()),
-          mode: session.mode,
-          challengeTimerSeconds: session.challengeTimerSeconds,
-          challengeCooldownSeconds: session.challengeCooldownSeconds,
-          almostPoints: session.almostPoints,
-          fullPoints: session.fullPoints,
-          // The round in progress (if any) — without this, a client that
-          // reconnects mid-round has no way to know a challenge is locked,
-          // that it already tried and failed this track, or what the
-          // current track even is, and ends up permanently out of step
-          // with the game until the next track starts.
-          currentChallenger: session.currentChallenger,
-          isExcluded: session.excludedPlayers.has(playerUuid),
-          currentTrack: session.currentTrack,
-          roundRevealed: session.roundRevealed,
-          isPlaying: session.isPlaying,
-          totalTracks: session.totalTracks,
-          playedCount: session.playedCount,
-        });
+        callback({ error: SESSION_NOT_FOUND });
       }
+      return;
+    }
+
+    socket.join(sessionUuid);
+    if (callback) {
+      callback({
+        challengers: Array.from(session.challengers.values()),
+        mode: session.mode,
+        challengeTimerSeconds: session.challengeTimerSeconds,
+        challengeCooldownSeconds: session.challengeCooldownSeconds,
+        almostPoints: session.almostPoints,
+        fullPoints: session.fullPoints,
+        // The round in progress (if any) — without this, a client that
+        // reconnects mid-round has no way to know a challenge is locked,
+        // that it already tried and failed this track, or what the
+        // current track even is, and ends up permanently out of step
+        // with the game until the next track starts.
+        currentChallenger: session.currentChallenger,
+        isExcluded: session.excludedPlayers.has(playerUuid),
+        currentTrack: session.currentTrack,
+        roundRevealed: session.roundRevealed,
+        isPlaying: session.isPlaying,
+        totalTracks: session.totalTracks,
+        playedCount: session.playedCount,
+      });
     }
   });
 

@@ -1,0 +1,56 @@
+/* Top-centered stack. The UA popover styles (centered in the viewport, with
+   a border and a canvas background) are reset so only the toasts show. */
+.Toast-region {
+  inset: var(--space-4) 0 auto;
+  margin: 0 auto;
+  padding: 0;
+  border: none;
+  background: transparent;
+  overflow: visible;
+  width: fit-content;
+  max-width: min(calc(100vw - 2 * var(--space-4)), 32rem);
+}
+
+.Toast-region:popover-open {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.Toast {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-surface-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-canvas-deep);
+  color: var(--color-text);
+  box-shadow: var(--shadow-lg);
+  transition:
+    opacity var(--duration-base) var(--ease-standard),
+    translate var(--duration-base) var(--ease-standard);
+
+  @starting-style {
+    opacity: 0;
+    translate: 0 calc(-1 * var(--space-4));
+  }
+}
+
+.Toast-dismiss {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  padding: var(--space-1);
+  border: none;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-lg);
+  cursor: pointer;
+}
+
+.Toast-dismiss:hover,
+.Toast-dismiss:focus-visible {
+  color: var(--color-text);
+  background-color: var(--color-surface);
+}

@@ -8,6 +8,7 @@ import {
   clearChallenge as clearSessionChallenge,
   startNewChallenge as startSessionNewChallenge,
 } from "../challenges/challenge.js";
+import { SESSION_NOT_FOUND } from "../constants.js";
 
 export function registerChallengeHandlers(io, socket, sessions, verboseOutput) {
   socket.on("challenge", ({ sessionUuid, playerUuid }, callback) => {
@@ -22,7 +23,14 @@ export function registerChallengeHandlers(io, socket, sessions, verboseOutput) {
     // The session can be gone from memory (e.g. a server restart) while a
     // client still holds a stale sessionUuid from before it — reject rather
     // than crash the whole process on the next line.
-    if (!session || !canChallenge(session, playerUuid)) {
+    if (!session) {
+      if (callback) {
+        callback({ rejected: true, error: SESSION_NOT_FOUND });
+      }
+      return;
+    }
+
+    if (!canChallenge(session, playerUuid)) {
       if (callback) {
         callback({ rejected: true });
       }

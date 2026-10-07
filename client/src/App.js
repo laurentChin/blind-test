@@ -8,31 +8,34 @@ import { EverybodyPlaysHost } from "./pages/EverybodyPlays/EverybodyPlaysHost";
 import "./App.css";
 import { Session } from "./pages/Session/Session";
 import { Board } from "./pages/Board/Board";
+import { ToastProvider } from "./components/Toast/Toast";
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <a className="App-brand" href="/">
-          Blind test
-        </a>
-      </header>
-      <main>
-        <Router>
-          <Routes>
-            <Route path="/" exact element={<CreateSession />} />
-            <Route path="/create-session/classic" exact element={<Master />} />
-            <Route
-              path="/create-session/everybody-plays"
-              exact
-              element={<EverybodyPlaysHost />}
-            />
-            <Route path="/session/:uuid" exact element={<Session />} />
-            <Route path="/board/:uuid" exact element={<Board />} />
-          </Routes>
-        </Router>
-      </main>
-    </div>
+    <ToastProvider>
+      <div className="App">
+        <header className="App-header">
+          <a className="App-brand" href="/">
+            Blind test
+          </a>
+        </header>
+        <main>
+          <Router>
+            <Routes>
+              <Route path="/" exact element={<CreateSession />} />
+              <Route path="/create-session/classic" exact element={<Master />} />
+              <Route
+                path="/create-session/everybody-plays"
+                exact
+                element={<EverybodyPlaysHost />}
+              />
+              <Route path="/session/:uuid" exact element={<Session />} />
+              <Route path="/board/:uuid" exact element={<Board />} />
+            </Routes>
+          </Router>
+        </main>
+      </div>
+    </ToastProvider>
   );
 }
 

@@ -5,7 +5,12 @@
 import React from "react";
 import { render, act, fireEvent } from "@testing-library/react";
 import io from "socket.io-client";
-import { BrowserRouter as Router } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  MemoryRouter,
+  Route,
+  Routes,
+} from "react-router-dom";
 
 jest.mock("qrcode");
 jest.mock("../../helpers/Giphy", () => ({
@@ -16,6 +21,7 @@ jest.mock("../../helpers/Giphy", () => ({
 }));
 
 import { Board } from "./Board";
+import { ToastProvider } from "../../components/Toast/Toast";
 
 describe("<Board />", () => {
   it("should display the QR code without the join url next to it", () => {
@@ -189,5 +195,28 @@ describe("<Board />", () => {
 
     expect(queryByText("Hallelujah")).toBeFalsy();
     expect(queryByText("Jeff Buckley")).toBeFalsy();
+  });
+
+  it("should go back to the home page with a toast when the session is closed", () => {
+    const { getByText, getByRole, container } = render(
+      <ToastProvider>
+        <MemoryRouter initialEntries={["/board/session-12345"]}>
+          <Routes>
+            <Route path="/" element={<p>Home page</p>} />
+            <Route path="/board/:uuid" element={<Board />} />
+          </Routes>
+        </MemoryRouter>
+      </ToastProvider>
+    );
+
+    expect(container.querySelector(".Board")).toBeTruthy();
+
+    act(() => io().emit("sessionClosedByMaster"));
+
+    expect(getByText("Home page")).toBeInTheDocument();
+    expect(container.querySelector(".Board")).toBeFalsy();
+    expect(getByRole("status")).toHaveTextContent(
+      "The session has been closed."
+    );
   });
 });

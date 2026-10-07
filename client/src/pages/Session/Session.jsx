@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import React, { useCallback, useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import io from "socket.io-client";
 
 import "./Session.css";
 import { JoinForm } from "./JoinForm";
 import { Play } from "./Play";
+import { useToast } from "../../components/Toast/Toast";
 
 const socket = io(process.env.REACT_APP_SOCKET_URI);
 
@@ -59,8 +60,27 @@ const getStoredFullPoints = (uuid) => {
   return parseFloat(sessionStorage.getItem("fullPoints")) || 1;
 };
 
+const clearStoredSession = () => {
+  sessionStorage.removeItem("player");
+  sessionStorage.removeItem("sessionUuid");
+  sessionStorage.removeItem("mode");
+  sessionStorage.removeItem("timerSeconds");
+  sessionStorage.removeItem("cooldownSeconds");
+  sessionStorage.removeItem("almostPoints");
+  sessionStorage.removeItem("fullPoints");
+};
+
+// Why the player is sent back home, when it isn't their own doing — leaving
+// on purpose needs no explanation.
+const SESSION_END_MESSAGES = {
+  closed: "The session has been closed.",
+  lost: "This session no longer exists.",
+};
+
 const Session = () => {
   const { uuid } = useParams();
+  const navigate = useNavigate();
+  const showToast = useToast();
   const [player, setPlayer] = useState(() => getStoredPlayer(uuid));
   const [mode, setMode] = useState(() => getStoredMode(uuid));
   const [timerSeconds, setTimerSeconds] = useState(() => getStoredTimerSeconds(uuid));
@@ -79,17 +99,26 @@ const Session = () => {
 
   useEffect(() => {
     if (sessionStorage.getItem("sessionUuid") !== uuid) {
-      sessionStorage.removeItem("player");
-      sessionStorage.removeItem("sessionUuid");
-      sessionStorage.removeItem("mode");
-      sessionStorage.removeItem("timerSeconds");
-      sessionStorage.removeItem("cooldownSeconds");
-      sessionStorage.removeItem("almostPoints");
-      sessionStorage.removeItem("fullPoints");
+      clearStoredSession();
       setPlayer({});
       setInSession(false);
     }
   }, [uuid]);
+
+  // Wherever the player stood (join form or game), there is nothing left to
+  // do on this page once they left the session, it got closed, or it turns
+  // out not to exist anymore. Replaces the history entry so "back" doesn't
+  // land on the dead session again.
+  const goHome = useCallback(
+    (reason) => {
+      clearStoredSession();
+      if (SESSION_END_MESSAGES[reason]) {
+        showToast(SESSION_END_MESSAGES[reason]);
+      }
+      navigate("/", { replace: true });
+    },
+    [navigate, showToast]
+  );
 
   useEffect(() => {
     if (player.uuid && !inSession) {
@@ -97,6 +126,11 @@ const Session = () => {
         "joinAfterRefresh",
         { sessionUuid: uuid, playerUuid: player.uuid },
         (response) => {
+          if (response.error) {
+            goHome("lost");
+            return;
+          }
+
           setChallengers(response.challengers);
           if (response.mode) {
             setMode(response.mode);
@@ -131,7 +165,7 @@ const Session = () => {
       );
       setInSession(true);
     }
-  }, [player, inSession, uuid]);
+  }, [player, inSession, uuid, goHome]);
 
   return (
     <div className="Session">
@@ -152,6 +186,7 @@ const Session = () => {
               setInSession(true);
               setChallengers(response.challengers);
             }}
+            onSessionUnavailable={goHome}
             socket={socket}
           />
         </>
@@ -170,10 +205,7 @@ const Session = () => {
           cooldownSeconds={cooldownSeconds}
           almostPoints={almostPoints}
           fullPoints={fullPoints}
-          onLeave={() => {
-            setPlayer({});
-            setInSession(false);
-          }}
+          onLeave={goHome}
         />
       )}
     </div>

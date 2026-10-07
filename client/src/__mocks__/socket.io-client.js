@@ -13,8 +13,17 @@ function emit(name, data) {
   listeners.get(name).forEach((listener) => listener(data));
 }
 
+function off(name, cb) {
+  if (!listeners.has(name)) return;
+  listeners.set(
+    name,
+    listeners.get(name).filter((listener) => listener !== cb)
+  );
+}
+
 const _ioMethods = {
   on,
+  off,
   emit,
 };
 

@@ -12,6 +12,7 @@ import { useConfirmAction } from "../../hooks/useConfirmAction";
 import { ConfigureEverybodyPlaysSession } from "./ConfigureEverybodyPlaysSession";
 import { JoinCode } from "../../components/JoinCode/JoinCode";
 import { Play } from "../Session/Play";
+import { useToast } from "../../components/Toast/Toast";
 
 import "./EverybodyPlaysHost.css";
 
@@ -35,6 +36,7 @@ const EverybodyPlaysHost = () => {
   const navigate = useNavigate();
   const provider = getSelectedProvider();
   const musicProvider = useMusicProvider();
+  const showToast = useToast();
   const isAuthenticated = useProviderAuth(provider, musicProvider);
 
   const [identity, setIdentity] = useState(null);
@@ -67,7 +69,10 @@ const EverybodyPlaysHost = () => {
   useEffect(() => {
     if (!identity) return;
 
-    musicProvider.setupPlayer((readyDeviceId) => setDeviceId(readyDeviceId));
+    musicProvider.setupPlayer(
+      (readyDeviceId) => setDeviceId(readyDeviceId),
+      (message) => showToast(message, { persistent: true })
+    );
 
     socket.emit(
       "join",

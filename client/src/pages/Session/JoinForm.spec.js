@@ -42,6 +42,7 @@ describe("<JoinForm />", () => {
         }
       }),
       on: jest.fn(),
+      off: jest.fn(),
     };
   });
 
@@ -56,6 +57,7 @@ describe("<JoinForm />", () => {
       <JoinForm
         socket={mockSocket}
         onJoin={onJoin}
+        onSessionUnavailable={jest.fn()}
         sessionUuid="525452ee-5863-412f-b6e2-0cf9385c09e6"
       />
     );
@@ -90,6 +92,7 @@ describe("<JoinForm />", () => {
       <JoinForm
         socket={mockSocket}
         onJoin={jest.fn()}
+        onSessionUnavailable={jest.fn()}
         sessionUuid="525452ee-5863-412f-b6e2-0cf9385c09e6"
       />
     );
@@ -106,6 +109,7 @@ describe("<JoinForm />", () => {
         <JoinForm
           socket={mockSocket}
           onJoin={onJoin}
+          onSessionUnavailable={jest.fn()}
           sessionUuid="525452ee-5863-412f-b6e2-0cf9385c09e6"
         />
       );
@@ -136,6 +140,7 @@ describe("<JoinForm />", () => {
       <JoinForm
         socket={mockSocket}
         onJoin={jest.fn()}
+        onSessionUnavailable={jest.fn()}
         sessionUuid="525452ee-5863-412f-b6e2-0cf9385c09e6"
       />
     );
@@ -169,6 +174,7 @@ describe("<JoinForm />", () => {
       <JoinForm
         socket={mockSocket}
         onJoin={onJoin}
+        onSessionUnavailable={jest.fn()}
         sessionUuid="525452ee-5863-412f-b6e2-0cf9385c09e6"
       />
     );
@@ -202,6 +208,7 @@ describe("<JoinForm />", () => {
       <JoinForm
         socket={mockSocket}
         onJoin={onJoin}
+        onSessionUnavailable={jest.fn()}
         sessionUuid="525452ee-5863-412f-b6e2-0cf9385c09e6"
       />
     );
@@ -229,5 +236,38 @@ describe("<JoinForm />", () => {
       },
       sessionUuid: 'session-12345'
     });
+  });
+
+  it("Should call the onSessionUnavailable props when the session is gone by the time the player joins", async () => {
+    const onJoin = jest.fn();
+    const onSessionUnavailable = jest.fn();
+    const emit = mockSocket.emit.getMockImplementation();
+    mockSocket.emit = jest.fn((event, data, callback) =>
+      event === "join"
+        ? callback({ error: "sessionNotFound" })
+        : emit(event, data, callback)
+    );
+
+    const { getByText, container } = render(
+      <JoinForm
+        socket={mockSocket}
+        onJoin={onJoin}
+        onSessionUnavailable={onSessionUnavailable}
+        sessionUuid="525452ee-5863-412f-b6e2-0cf9385c09e6"
+      />
+    );
+
+    await act(async () => {
+      fireEvent.change(
+        container.querySelector("[data-testid='player-name-input']"),
+        { target: { value: "James" } }
+      );
+      fireEvent.click(container.querySelector(".color-button"));
+    });
+
+    fireEvent.click(getByText("Join"));
+
+    expect(onSessionUnavailable).toHaveBeenCalledWith("lost");
+    expect(onJoin).not.toHaveBeenCalled();
   });
 });

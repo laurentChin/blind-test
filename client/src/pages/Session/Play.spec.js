@@ -22,6 +22,11 @@ describe("<Play />", () => {
         }
         mockListeners[event].push(callback);
       }),
+      off: jest.fn((event, callback) => {
+        mockListeners[event] = (mockListeners[event] || []).filter(
+          (listener) => listener !== callback
+        );
+      }),
     };
   });
 
@@ -184,7 +189,7 @@ describe("<Play />", () => {
 
     fireEvent.click(getByTestId('leave-session-button'))
 
-    expect(onLeaveCb).toHaveBeenCalled();
+    expect(onLeaveCb).toHaveBeenCalledWith(undefined);
   });
 
   it("should not call onLeave callback when user does not confirm leaving", () => {
@@ -232,7 +237,57 @@ describe("<Play />", () => {
 
     mockSocket.emit('sessionClosedByMaster', jest.fn)
 
-    expect(onLeaveCb).toHaveBeenCalled();
+    expect(onLeaveCb).toHaveBeenCalledWith("closed");
+  });
+
+  it("should stop listening for the session being closed once unmounted", () => {
+    const onLeaveCb = jest.fn();
+
+    const { unmount } = render(
+      <Play
+        sessionUuid="session-12345"
+        onLeave={onLeaveCb}
+        socket={mockSocket}
+        player={{
+          uuid: "player-12345",
+          name: "bob",
+          color: { background: "255, 255, 255" },
+        }}
+        challengers={[]}
+      />
+    );
+
+    unmount();
+    mockSocket.emit('sessionClosedByMaster')
+
+    expect(onLeaveCb).not.toHaveBeenCalled();
+  });
+
+  it("should call onLeave callback when a challenge reveals the session does not exist anymore", () => {
+    const onLeaveCb = jest.fn();
+    mockSocket.emit = jest.fn((event, data, callback) => {
+      if (event === "challenge") {
+        callback({ rejected: true, error: "sessionNotFound" });
+      }
+    });
+
+    const { getByTestId } = render(
+      <Play
+        sessionUuid="session-12345"
+        onLeave={onLeaveCb}
+        socket={mockSocket}
+        player={{
+          uuid: "player-12345",
+          name: "bob",
+          color: { background: "255, 255, 255" },
+        }}
+        challengers={[]}
+      />
+    );
+
+    fireEvent.click(getByTestId('challenge-button'))
+
+    expect(onLeaveCb).toHaveBeenCalledWith("lost");
   });
 
   describe("mode='everybodyPlays'", () => {
