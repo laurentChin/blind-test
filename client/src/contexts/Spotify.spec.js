@@ -277,17 +277,20 @@ describe("Spotify quota handling (July 2026 429 body)", () => {
 describe("Spotify player setup", () => {
   let listeners;
   let connect;
+  let disconnect;
 
   beforeEach(() => {
     sessionStorage.clear();
     listeners = {};
     connect = jest.fn().mockResolvedValue(true);
+    disconnect = jest.fn();
     window.Spotify = {
       Player: jest.fn(() => ({
         addListener: (event, cb) => {
           listeners[event] = cb;
         },
         connect,
+        disconnect,
       })),
     };
     jest.spyOn(console, "error").mockImplementation(() => {});
@@ -307,6 +310,25 @@ describe("Spotify player setup", () => {
 
     expect(onReady).toHaveBeenCalledWith("device-1");
     expect(onError).not.toHaveBeenCalled();
+  });
+
+  // The SDK never reports a device to a second Spotify.Player of the same
+  // page, so a host screen mounted again has to go through the first one.
+  it("reconnects the same player when set up again", () => {
+    const spotify = loadSpotifyContext();
+    const onFirstReady = jest.fn();
+    const onSecondReady = jest.fn();
+
+    spotify.setupPlayer(onFirstReady);
+    listeners.ready({ device_id: "device-1" });
+    spotify.setupPlayer(onSecondReady);
+    listeners.ready({ device_id: "device-1" });
+
+    expect(window.Spotify.Player).toHaveBeenCalledTimes(1);
+    expect(disconnect).toHaveBeenCalledTimes(1);
+    expect(connect).toHaveBeenCalledTimes(2);
+    expect(onFirstReady).toHaveBeenCalledTimes(1);
+    expect(onSecondReady).toHaveBeenCalledWith("device-1");
   });
 
   it.each([
