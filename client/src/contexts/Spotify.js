@@ -322,40 +322,62 @@ const PLAYER_READY_TIMEOUT = 15000;
 const PLAYER_TIMEOUT_MESSAGE =
   "The Spotify player isn't responding — reload the page to try again.";
 
-function setupPlayer(playerReadyCb, playerErrorCb = () => {}) {
+let playerReadyCb = () => {};
+let playerErrorCb = () => {};
+let playerReadyTimeout;
+
+function createPlayer() {
+  player = new window.Spotify.Player({
+    name: "Blind Test Spotify Player",
+    getOAuthToken: (cb) => cb(authTokenList.accessToken),
+  });
+
+  player.addListener("player_state_changed", (state) => {
+    playerStateChangeCb(state);
+  });
+
+  player.addListener("ready", ({ device_id }) => {
+    clearTimeout(playerReadyTimeout);
+    playerReadyCb(device_id);
+  });
+
+  Object.entries(PLAYER_ERROR_MESSAGES).forEach(([type, userMessage]) => {
+    player.addListener(type, ({ message }) => {
+      clearTimeout(playerReadyTimeout);
+      console.error(`Spotify player ${type}: ${message}`);
+      playerErrorCb(userMessage);
+    });
+  });
+}
+
+// Every Spotify.Player of a page talks to the single iframe the SDK loaded,
+// and that iframe only reports a device to the first one: a second instance
+// connects fine but never gets "ready" (nor any error). So the page keeps one
+// player for its whole life, and a host screen mounted again (a new session
+// after going back home, without a reload) drops and reopens its connection
+// instead — which makes the SDK report the device again.
+function setupPlayer(readyCb, errorCb = () => {}) {
+  playerReadyCb = readyCb;
+  playerErrorCb = errorCb;
+
   window.onSpotifyWebPlaybackSDKReady = () => {
-    player = new window.Spotify.Player({
-      name: "Blind Test Spotify Player",
-      getOAuthToken: (cb) => cb(authTokenList.accessToken),
-    });
+    if (player.connect) {
+      player.disconnect();
+    } else {
+      createPlayer();
+    }
 
-    player.addListener("player_state_changed", (state) => {
-      playerStateChangeCb(state);
-    });
-
-    const readyTimeout = setTimeout(
+    clearTimeout(playerReadyTimeout);
+    playerReadyTimeout = setTimeout(
       () => playerErrorCb(PLAYER_TIMEOUT_MESSAGE),
       PLAYER_READY_TIMEOUT
     );
-
-    player.addListener("ready", ({ device_id }) => {
-      clearTimeout(readyTimeout);
-      playerReadyCb(device_id);
-    });
-
-    Object.entries(PLAYER_ERROR_MESSAGES).forEach(([type, userMessage]) => {
-      player.addListener(type, ({ message }) => {
-        clearTimeout(readyTimeout);
-        console.error(`Spotify player ${type}: ${message}`);
-        playerErrorCb(userMessage);
-      });
-    });
 
     // Resolves `false` (rather than firing one of the events above) when
     // the SDK couldn't even reach Spotify.
     Promise.resolve(player.connect()).then((connected) => {
       if (connected === false) {
-        clearTimeout(readyTimeout);
+        clearTimeout(playerReadyTimeout);
         playerErrorCb(PLAYER_CONNECTION_ERROR_MESSAGE);
       }
     });
