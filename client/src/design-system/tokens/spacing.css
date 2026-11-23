@@ -20,34 +20,50 @@
 /* Semantic — padding, inside a container. */
 
 :root {
-  --padding-2xs: var(--space-4); /* hover/focus ring of the buttons, switch */
-  --padding-xs: var(--space-8); /* top bar vertical, field error message */
-  --padding-sm: var(--space-12); /* fields (4 sides), horizontal Card/Theme selection */
-  --padding-md: var(--space-16); /* cards (default), player row (top / bottom) */
-  --padding-lg: var(--space-24); /* surfaces: white card, footer, panel, popover, top bar sides */
+  /* Hover/focus ring of the buttons, switch. */
+  --padding-2xs: var(--space-4);
+  /* Top bar vertical, field error message. */
+  --padding-xs: var(--space-8);
+  /* Fields (4 sides), horizontal Card/Theme selection. */
+  --padding-sm: var(--space-12);
+  /* Cards (default), player row (top / bottom). */
+  --padding-md: var(--space-16);
+  /* Surfaces: white card, footer, panel, popover, top bar sides. */
+  --padding-lg: var(--space-24);
 }
 
 /* Semantic — gap, between children. */
 
 :root {
-  --gap-2xs: var(--space-4); /* tightly bound elements */
-  --gap-xs: var(--space-8); /* label to field, icon to text, avatar to name */
-  --gap-sm: var(--space-12); /* within a block, lists, player row, popover, avatar grid */
-  --gap-md: var(--space-16); /* image to text in a card, action area */
-  --gap-lg: var(--space-24); /* elements of a white card, footer buttons */
-  --gap-xl: var(--space-32); /* between blocks of a screen */
-  --gap-2xl: var(--space-48); /* large separations (centered screens) */
+  /* Tightly bound elements. */
+  --gap-2xs: var(--space-4);
+  /* Label to field, icon to text, avatar to name. */
+  --gap-xs: var(--space-8);
+  /* Within a block, lists, player row, popover, avatar grid. */
+  --gap-sm: var(--space-12);
+  /* Image to text in a card, action area. */
+  --gap-md: var(--space-16);
+  /* Elements of a white card, footer buttons. */
+  --gap-lg: var(--space-24);
+  /* Between blocks of a screen. */
+  --gap-xl: var(--space-32);
+  /* Large separations (centered screens). */
+  --gap-2xl: var(--space-48);
 }
 
 /* Screen level — the component picks the one matching the breakpoint; these
    are the only spacing tokens that depend on it. */
 
 :root {
-  --padding-screen-x-mobile: var(--space-24); /* side margins */
+  /* Side margins. */
+  --padding-screen-x-mobile: var(--space-24);
   --padding-screen-x-desktop: var(--space-32);
-  --padding-screen-y-mobile: var(--space-32); /* top / bottom of the content */
+  /* Top / bottom of the content. */
+  --padding-screen-y-mobile: var(--space-32);
   --padding-screen-y-desktop: var(--space-48);
-  --padding-screen-centered: var(--space-48); /* top of centered screens with no top bar */
-  --gap-grid-mobile: var(--space-12); /* card grids (sources, themes) */
+  /* Top of centered screens with no top bar. */
+  --padding-screen-centered: var(--space-48);
+  /* Card grids (sources, themes). */
+  --gap-grid-mobile: var(--space-12);
   --gap-grid-desktop: var(--space-16);
 }

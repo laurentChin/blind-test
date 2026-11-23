@@ -16,11 +16,11 @@ design-system/
   README.md
   tokens/           the design tokens, one file per category
   Button/
-    Button.jsx        markup, props and interactivity
-    Button.css        positioning and visuals
-    Button.spec.js    tests
-    Button.stories.jsx Storybook stories, one per variant / state
-    Button.figma.tsx  Code Connect mapping to the Figma component
+    Button.jsx          markup, props and interactivity
+    Button.css          positioning and visuals
+    Button.spec.js      tests
+    Button.stories.jsx  Storybook stories, one per variant / state
+    Button.figma.tsx    Code Connect mapping to the Figma component
 ```
 
 Grouped Figma families (`Icon/*`, `Logo/*`, `Card/*`…) keep the family as a prefix in the folder
@@ -31,16 +31,16 @@ name — `IconClose`, `CardMusicSelection` — so the file tree stays flat and g
 [`tokens/`](tokens) holds the design tokens, one file per category. Figma is the source of truth:
 no value changes here without changing it there.
 
-| File | Holds |
-| --- | --- |
-| [`colors.css`](tokens/colors.css) | the palette primitives, then brand, backgrounds, actions, text, borders, feedback |
-| [`typography.css`](tokens/typography.css) | families, weights and sizes, then one whole style per Figma text style |
-| [`spacing.css`](tokens/spacing.css) | the 4/8 scale, then `padding-*`, `gap-*` and the screen-level steps |
-| [`radius.css`](tokens/radius.css) | the raw radii, then `radius-sm` / `md` / `full` |
-| [`shadows.css`](tokens/shadows.css) | card halos and the button shadow |
-| [`gradients.css`](tokens/gradients.css) | the two brand gradients |
-| [`sizes.css`](tokens/sizes.css) | content width and avatar sizes |
-| [`index.css`](tokens/index.css) | imports them all, in dependency order |
+| File                                      | Holds                                                                             |
+| ----------------------------------------- | --------------------------------------------------------------------------------- |
+| [`colors.css`](tokens/colors.css)         | the palette primitives, then brand, backgrounds, actions, text, borders, feedback |
+| [`typography.css`](tokens/typography.css) | families, weights and sizes, then one whole style per Figma text style            |
+| [`spacing.css`](tokens/spacing.css)       | the 4/8 scale, then `padding-*`, `gap-*` and the screen-level steps               |
+| [`radius.css`](tokens/radius.css)         | the raw radii, then `radius-sm` / `md` / `full`                                   |
+| [`shadows.css`](tokens/shadows.css)       | card halos and the button shadow                                                  |
+| [`gradients.css`](tokens/gradients.css)   | the two brand gradients                                                           |
+| [`sizes.css`](tokens/sizes.css)           | content width and avatar sizes                                                    |
+| [`index.css`](tokens/index.css)           | imports them all, in dependency order                                             |
 
 Four rules hold the system together:
 
@@ -126,13 +126,13 @@ returns it too, which keeps generated code aligned with this folder.
 
 ```tsx
 // Button/Button.figma.tsx
-import figma from '@figma/code-connect';
-import Button from './Button';
+import figma from "@figma/code-connect";
+import Button from "./Button";
 
-figma.connect(Button, '<url of the Figma node>', {
+figma.connect(Button, "<url of the Figma node>", {
   props: {
     // map Figma variants and layers onto the component props
-    label: figma.string('Label'),
+    label: figma.string("Label"),
   },
   example: (props) => <Button>{props.label}</Button>,
 });
@@ -153,99 +153,99 @@ every interactive component and are handled in CSS through the matching pseudo-c
 
 ### Buttons
 
-| Component | Figma name | Variants / states | Status |
-| --- | --- | --- | --- |
-| Button | `Button` | 3 styles × 2 sizes (large, medium) | ⬜ |
-| ButtonIconAdd | `Button/Icon/Add` | — | ⬜ |
-| ButtonIconGameControl | `Button/Icon/GameControl` | — | ⬜ |
+| Component             | Figma name                | Variants / states                  | Status |
+| --------------------- | ------------------------- | ---------------------------------- | ------ |
+| Button                | `Button`                  | 3 styles × 2 sizes (large, medium) | ⬜     |
+| ButtonIconAdd         | `Button/Icon/Add`         | —                                  | ⬜     |
+| ButtonIconGameControl | `Button/Icon/GameControl` | —                                  | ⬜     |
 
 ### Icons
 
-| Component | Figma name | Variants / states | Status |
-| --- | --- | --- | --- |
-| IconAdd | `Icon/Add` | — | ⬜ |
-| IconCheck | `Icon/Check` | — | ⬜ |
-| IconChevronLeft | `Icon/Chevron left` | — | ⬜ |
-| IconChevronRight | `Icon/Chevron right` | — | ⬜ |
-| IconClose | `Icon/Close` | — | ⬜ |
-| IconPause | `Icon/Pause` | — | ⬜ |
-| IconPlay | `Icon/Play` | — | ⬜ |
-| IconSearch | `Icon/Search` | — | ⬜ |
-| IconSettings | `Icon/Settings` | — | ⬜ |
-| IconShare | `Icon/Share` | — | ⬜ |
-| IconSkip | `Icon/Skip` | — | ⬜ |
-| IconWarning | `Icon/Warning` | — | ⬜ |
+| Component        | Figma name           | Variants / states | Status |
+| ---------------- | -------------------- | ----------------- | ------ |
+| IconAdd          | `Icon/Add`           | —                 | ⬜     |
+| IconCheck        | `Icon/Check`         | —                 | ⬜     |
+| IconChevronLeft  | `Icon/Chevron left`  | —                 | ⬜     |
+| IconChevronRight | `Icon/Chevron right` | —                 | ⬜     |
+| IconClose        | `Icon/Close`         | —                 | ⬜     |
+| IconPause        | `Icon/Pause`         | —                 | ⬜     |
+| IconPlay         | `Icon/Play`          | —                 | ⬜     |
+| IconSearch       | `Icon/Search`        | —                 | ⬜     |
+| IconSettings     | `Icon/Settings`      | —                 | ⬜     |
+| IconShare        | `Icon/Share`         | —                 | ⬜     |
+| IconSkip         | `Icon/Skip`          | —                 | ⬜     |
+| IconWarning      | `Icon/Warning`       | —                 | ⬜     |
 
 ### Forms
 
-| Component | Figma name | Variants / states | Status |
-| --- | --- | --- | --- |
-| FormTextField | `Form/Text field` | — | ⬜ |
-| FormField | `Form/Form field` | error × filled, empty | ⬜ |
-| FormSwitch | `Form/Switch` | selected true, false | ⬜ |
+| Component     | Figma name        | Variants / states     | Status |
+| ------------- | ----------------- | --------------------- | ------ |
+| FormTextField | `Form/Text field` | —                     | ⬜     |
+| FormField     | `Form/Form field` | error × filled, empty | ⬜     |
+| FormSwitch    | `Form/Switch`     | selected true, false  | ⬜     |
 
 ### Cards
 
-| Component | Figma name | Variants / states | Status |
-| --- | --- | --- | --- |
-| CardLogoContainer | `Card/Logo container` | — | ⬜ |
-| CardTextContent | `Card/Text content` | — | ⬜ |
-| CardMusicSelection | `Card/Music selection` | selected | ⬜ |
-| CardMusicSelectionLabel | `Card/Music selection/Label` | — | ⬜ |
-| CardGameSelection | `Card/Game selection` | selected | ⬜ |
-| CardThemeSelection | `Card/Theme selection` | vertical, horizontal × selected | ⬜ |
-| CardThemeSelectionSeeMore | `Card/Theme selection see more` | selected | ⬜ |
+| Component                 | Figma name                      | Variants / states               | Status |
+| ------------------------- | ------------------------------- | ------------------------------- | ------ |
+| CardLogoContainer         | `Card/Logo container`           | —                               | ⬜     |
+| CardTextContent           | `Card/Text content`             | —                               | ⬜     |
+| CardMusicSelection        | `Card/Music selection`          | selected                        | ⬜     |
+| CardMusicSelectionLabel   | `Card/Music selection/Label`    | —                               | ⬜     |
+| CardGameSelection         | `Card/Game selection`           | selected                        | ⬜     |
+| CardThemeSelection        | `Card/Theme selection`          | vertical, horizontal × selected | ⬜     |
+| CardThemeSelectionSeeMore | `Card/Theme selection see more` | selected                        | ⬜     |
 
 ### Navigation
 
-| Component | Figma name | Variants / states | Status |
-| --- | --- | --- | --- |
-| NavigationTopBar | `Navigation/Top bar` | default, music connected | ⬜ |
-| NavigationFooter | `Navigation/Footer` | light, dark | ⬜ |
+| Component        | Figma name           | Variants / states        | Status |
+| ---------------- | -------------------- | ------------------------ | ------ |
+| NavigationTopBar | `Navigation/Top bar` | default, music connected | ⬜     |
+| NavigationFooter | `Navigation/Footer`  | light, dark              | ⬜     |
 
 ### Overlays
 
-| Component | Figma name | Variants / states | Status |
-| --- | --- | --- | --- |
-| OverlayPopover | `Overlay/Popover` | left, middle, right | ⬜ |
-| OverlayScrim | `Overlay/Scrim` | — | ⬜ |
+| Component      | Figma name        | Variants / states   | Status |
+| -------------- | ----------------- | ------------------- | ------ |
+| OverlayPopover | `Overlay/Popover` | left, middle, right | ⬜     |
+| OverlayScrim   | `Overlay/Scrim`   | —                   | ⬜     |
 
 ### Avatars and players
 
-| Component | Figma name | Variants / states | Status |
-| --- | --- | --- | --- |
-| AvatarImage | `Avatar/Image` | — | ⬜ |
-| AvatarSelectable | `Avatar/Selectable` | selected | ⬜ |
-| AvatarGrid | `Avatar/Grid` | — | ⬜ |
-| ListPlayerItem | `List/Player item` | — | ⬜ |
+| Component        | Figma name          | Variants / states | Status |
+| ---------------- | ------------------- | ----------------- | ------ |
+| AvatarImage      | `Avatar/Image`      | —                 | ⬜     |
+| AvatarSelectable | `Avatar/Selectable` | selected          | ⬜     |
+| AvatarGrid       | `Avatar/Grid`       | —                 | ⬜     |
+| ListPlayerItem   | `List/Player item`  | —                 | ⬜     |
 
 ### Game
 
-| Component | Figma name | Variants / states | Status |
-| --- | --- | --- | --- |
-| GameInfosManche | `Game/Infos manche` | — | ⬜ |
-| GameControl | `Game/Game control` | playing, paused | ⬜ |
-| Vinyle | `Vinyle` | — | ⬜ |
+| Component       | Figma name          | Variants / states | Status |
+| --------------- | ------------------- | ----------------- | ------ |
+| GameInfosManche | `Game/Infos manche` | —                 | ⬜     |
+| GameControl     | `Game/Game control` | playing, paused   | ⬜     |
+| Vinyle          | `Vinyle`            | —                 | ⬜     |
 
 ### Images
 
-| Component | Figma name | Variants / states | Status |
-| --- | --- | --- | --- |
-| ImagePlayer | `Image/Player` | — | ⬜ |
-| ImageHost | `Image/Host` | — | ⬜ |
-| ImageTheme | `Image/Theme` | 12 themes (default, Disney, disco, 80/90s, TV series, film music, French variety, rap, electro, rock, summer hit, reggae) | ⬜ |
-| ImageQrCode | `Image/QR code` | — | ⬜ |
+| Component   | Figma name      | Variants / states                                                                                                         | Status |
+| ----------- | --------------- | ------------------------------------------------------------------------------------------------------------------------- | ------ |
+| ImagePlayer | `Image/Player`  | —                                                                                                                         | ⬜     |
+| ImageHost   | `Image/Host`    | —                                                                                                                         | ⬜     |
+| ImageTheme  | `Image/Theme`   | 12 themes (default, Disney, disco, 80/90s, TV series, film music, French variety, rap, electro, rock, summer hit, reggae) | ⬜     |
+| ImageQrCode | `Image/QR code` | —                                                                                                                         | ⬜     |
 
 ### Logos
 
-| Component | Figma name | Variants / states | Status |
-| --- | --- | --- | --- |
-| LogoApp | `Logo/App` | — | ⬜ |
-| LogoAppLockup | `Logo/App lockup` | — | ⬜ |
-| LogoSpotify | `Logo/Spotify` | — | ⬜ |
-| LogoDeezer | `Logo/Deezer` | — | ⬜ |
-| LogoAppleMusic | `Logo/Apple Music` | — | ⬜ |
-| LogoYouTube | `Logo/YouTube` | — | ⬜ |
+| Component      | Figma name         | Variants / states | Status |
+| -------------- | ------------------ | ----------------- | ------ |
+| LogoApp        | `Logo/App`         | —                 | ⬜     |
+| LogoAppLockup  | `Logo/App lockup`  | —                 | ⬜     |
+| LogoSpotify    | `Logo/Spotify`     | —                 | ⬜     |
+| LogoDeezer     | `Logo/Deezer`      | —                 | ⬜     |
+| LogoAppleMusic | `Logo/Apple Music` | —                 | ⬜     |
+| LogoYouTube    | `Logo/YouTube`     | —                 | ⬜     |
 
 ### Templates
 
@@ -253,11 +253,11 @@ Page-level layouts in Figma, not design-system components. They are assembled in
 [`client/src/pages`](../pages) from the components above; listed here only to keep the mapping with
 Figma complete.
 
-| Template | Figma name | Breakpoints | Status |
-| --- | --- | --- | --- |
-| Screen 1 | `Template/Screen 1` | mobile, desktop | ⬜ |
-| Screen 2 | `Template/Screen 2` | mobile, desktop | ⬜ |
-| Panel | `Template/Panel` | mobile, desktop | ⬜ |
+| Template | Figma name          | Breakpoints     | Status |
+| -------- | ------------------- | --------------- | ------ |
+| Screen 1 | `Template/Screen 1` | mobile, desktop | ⬜     |
+| Screen 2 | `Template/Screen 2` | mobile, desktop | ⬜     |
+| Panel    | `Template/Panel`    | mobile, desktop | ⬜     |
 
 ## Adding a component
 

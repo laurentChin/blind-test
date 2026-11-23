@@ -56,18 +56,18 @@
 /* Whole styles, one per Figma text style. Usage: font: var(--font-heading-md); */
 
 :root {
-  --font-heading-xl-mobile: var(--font-weight-bold) var(--heading-xl-mobile-size) / 1.2
-    var(--font-family-display);
-  --font-heading-xl-desktop: var(--font-weight-bold) var(--heading-xl-desktop-size) / 1.2
-    var(--font-family-display);
-  --font-heading-lg-mobile: var(--font-weight-bold) var(--heading-lg-mobile-size) / 1.2
-    var(--font-family-display);
-  --font-heading-lg-desktop: var(--font-weight-bold) var(--heading-lg-desktop-size) / 1.2
-    var(--font-family-display);
-  --font-tagline-mobile: var(--font-weight-semibold) var(--tagline-mobile-size) / 1.2
-    var(--font-family-display);
-  --font-tagline-desktop: var(--font-weight-semibold) var(--tagline-desktop-size) / 1.2
-    var(--font-family-display);
+  --font-heading-xl-mobile: var(--font-weight-bold)
+    var(--heading-xl-mobile-size) / 1.2 var(--font-family-display);
+  --font-heading-xl-desktop: var(--font-weight-bold)
+    var(--heading-xl-desktop-size) / 1.2 var(--font-family-display);
+  --font-heading-lg-mobile: var(--font-weight-bold)
+    var(--heading-lg-mobile-size) / 1.2 var(--font-family-display);
+  --font-heading-lg-desktop: var(--font-weight-bold)
+    var(--heading-lg-desktop-size) / 1.2 var(--font-family-display);
+  --font-tagline-mobile: var(--font-weight-semibold)
+    var(--tagline-mobile-size) / 1.2 var(--font-family-display);
+  --font-tagline-desktop: var(--font-weight-semibold)
+    var(--tagline-desktop-size) / 1.2 var(--font-family-display);
 
   --font-heading-md: var(--font-weight-bold) var(--heading-md-size) / 1.4
     var(--font-family-display);
