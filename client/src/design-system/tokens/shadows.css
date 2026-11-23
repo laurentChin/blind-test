@@ -1,0 +1,19 @@
+/* Shadows (Figma effect styles) — composed from the color primitives, never
+   from raw values. Requires colors.css.
+
+   The source writes these as rgb() literals; here the tint goes through
+   color-mix() on a primitive so no color is written twice. */
+
+:root {
+  /* Halo of the cards on the dark background. */
+  --shadow-card-default: 0 0 50px 1px
+    color-mix(in srgb, var(--primitive-white) 45%, transparent);
+
+  /* Stronger halo on hover (desktop). */
+  --shadow-card-hover: 0 0 50px 1px
+    color-mix(in srgb, var(--primitive-white) 80%, transparent);
+
+  --shadow-button:
+    0 1px 3px 0 color-mix(in srgb, var(--primitive-black) 30%, transparent),
+    0 4px 8px 3px color-mix(in srgb, var(--primitive-black) 15%, transparent);
+}

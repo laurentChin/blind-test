@@ -1,0 +1,41 @@
+/* Color.
+
+   Primitives — raw values, never used in a component. */
+
+:root {
+  --primitive-pink-500: #e519ab;
+  --primitive-cyan-400: #04cfdc;
+  --primitive-indigo-600: #4348ed;
+  --primitive-neutral-950: #070928;
+  --primitive-neutral-600: #606477;
+  --primitive-neutral-200: #d2d5de;
+  --primitive-neutral-50: #f4f6fe;
+  --primitive-white: #ffffff;
+  --primitive-black: #000000; /* shadows only, see shadows.css */
+  --primitive-red-600: #d7064f;
+}
+
+/* Semantic — what components use. */
+
+:root {
+  --color-brand-primary: var(--primitive-pink-500);
+  --color-brand-secondary: var(--primitive-cyan-400);
+  --color-brand-tertiary: var(--primitive-indigo-600);
+
+  --color-background-default: var(--primitive-neutral-950);
+  --color-background-surface: var(--primitive-white);
+  --color-background-surface-pressed: var(--primitive-neutral-50);
+  --color-background-disabled: var(--primitive-neutral-600);
+
+  --color-action-primary: var(--primitive-neutral-950);
+  --color-action-secondary: var(--primitive-white);
+  --color-action-destructive: var(--primitive-red-600);
+
+  --color-text-on-light: var(--primitive-neutral-950);
+  --color-text-on-dark: var(--primitive-white);
+  --color-text-muted: var(--primitive-neutral-600); /* light background only */
+
+  --color-border-default: var(--primitive-neutral-200);
+
+  --color-feedback-error: var(--primitive-red-600); /* light background only */
+}

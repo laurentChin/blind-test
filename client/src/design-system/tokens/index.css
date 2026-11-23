@@ -1,0 +1,16 @@
+/* Every token of the design system, in dependency order: colors first, since
+   gradients and shadows are composed from them.
+
+   Two layers in each file: primitives (--primitive-*, --font-*, --space-*,
+   --radius-4/12/9999) hold the raw values and are never used in a component;
+   the semantic tokens below them are what components use.
+
+   Import this file once, above the components. */
+
+@import "./colors.css";
+@import "./typography.css";
+@import "./spacing.css";
+@import "./radius.css";
+@import "./shadows.css";
+@import "./gradients.css";
+@import "./sizes.css";

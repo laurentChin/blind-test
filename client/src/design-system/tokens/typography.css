@@ -1,0 +1,92 @@
+/* Typography.
+
+   A component applies a whole style — font: var(--font-heading-md) — never a
+   size or a weight on its own.
+
+   Primitives — raw values, never used in a component. */
+
+:root {
+  --font-family-display: "Montserrat Alternates", sans-serif;
+  --font-family-text: "Montserrat", sans-serif;
+
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  --font-size-14: 14px;
+  --font-size-16: 16px;
+  --font-size-18: 18px;
+  --font-size-20: 20px;
+  --font-size-22: 22px;
+  --font-size-24: 24px;
+  --font-size-26: 26px;
+  --font-size-34: 34px;
+  --font-size-40: 40px;
+  --font-size-60: 60px;
+}
+
+/* Sizes per style. Screen level — the component picks the one matching the
+   breakpoint. */
+
+:root {
+  --heading-xl-mobile-size: var(--font-size-34);
+  --heading-xl-desktop-size: var(--font-size-40);
+  --heading-lg-mobile-size: var(--font-size-26);
+  --heading-lg-desktop-size: var(--font-size-34);
+  --tagline-mobile-size: var(--font-size-20);
+  --tagline-desktop-size: var(--font-size-24);
+}
+
+/* Sizes per style. Component level — same on mobile and desktop. */
+
+:root {
+  --heading-md-size: var(--font-size-20);
+  --heading-sm-size: var(--font-size-18);
+  --button-lg-size: var(--font-size-20);
+  --button-md-size: var(--font-size-18);
+  --label-lg-size: var(--font-size-20);
+  --label-md-size: var(--font-size-18);
+  --body-lg-size: var(--font-size-18);
+  --body-md-size: var(--font-size-16);
+  --caption-size: var(--font-size-14);
+  --timer-size: var(--font-size-60);
+}
+
+/* Whole styles, one per Figma text style. Usage: font: var(--font-heading-md); */
+
+:root {
+  --font-heading-xl-mobile: var(--font-weight-bold) var(--heading-xl-mobile-size) / 1.2
+    var(--font-family-display);
+  --font-heading-xl-desktop: var(--font-weight-bold) var(--heading-xl-desktop-size) / 1.2
+    var(--font-family-display);
+  --font-heading-lg-mobile: var(--font-weight-bold) var(--heading-lg-mobile-size) / 1.2
+    var(--font-family-display);
+  --font-heading-lg-desktop: var(--font-weight-bold) var(--heading-lg-desktop-size) / 1.2
+    var(--font-family-display);
+  --font-tagline-mobile: var(--font-weight-semibold) var(--tagline-mobile-size) / 1.2
+    var(--font-family-display);
+  --font-tagline-desktop: var(--font-weight-semibold) var(--tagline-desktop-size) / 1.2
+    var(--font-family-display);
+
+  --font-heading-md: var(--font-weight-bold) var(--heading-md-size) / 1.4
+    var(--font-family-display);
+  --font-heading-sm: var(--font-weight-medium) var(--heading-sm-size) / 1.2
+    var(--font-family-display);
+  --font-button-lg: var(--font-weight-bold) var(--button-lg-size) / 1.4
+    var(--font-family-display);
+  --font-button-md: var(--font-weight-bold) var(--button-md-size) / 1.4
+    var(--font-family-display);
+  --font-label-lg: var(--font-weight-semibold) var(--label-lg-size) / 1.4
+    var(--font-family-text);
+  --font-label-md: var(--font-weight-semibold) var(--label-md-size) / 1.4
+    var(--font-family-text);
+  --font-body-lg: var(--font-weight-regular) var(--body-lg-size) / 1.4
+    var(--font-family-text);
+  --font-body-md: var(--font-weight-medium) var(--body-md-size) / 1.4
+    var(--font-family-text);
+  --font-caption: var(--font-weight-medium) var(--caption-size) / 1.4
+    var(--font-family-text);
+  --font-timer: var(--font-weight-semibold) var(--timer-size) / 1.2
+    var(--font-family-display);
+}

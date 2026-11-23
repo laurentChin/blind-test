@@ -1,0 +1,53 @@
+/* Spacing.
+
+   padding = space inside a container, gap = space between its children.
+   There is no margin token on purpose: the parent owns the space, with gap.
+
+   Primitives — base 4/8, the only values allowed. Never used in a component. */
+
+:root {
+  --space-0: 0px;
+  --space-4: 4px;
+  --space-8: 8px;
+  --space-12: 12px;
+  --space-16: 16px;
+  --space-24: 24px;
+  --space-32: 32px;
+  --space-48: 48px;
+  --space-64: 64px;
+}
+
+/* Semantic — padding, inside a container. */
+
+:root {
+  --padding-2xs: var(--space-4); /* hover/focus ring of the buttons, switch */
+  --padding-xs: var(--space-8); /* top bar vertical, field error message */
+  --padding-sm: var(--space-12); /* fields (4 sides), horizontal Card/Theme selection */
+  --padding-md: var(--space-16); /* cards (default), player row (top / bottom) */
+  --padding-lg: var(--space-24); /* surfaces: white card, footer, panel, popover, top bar sides */
+}
+
+/* Semantic — gap, between children. */
+
+:root {
+  --gap-2xs: var(--space-4); /* tightly bound elements */
+  --gap-xs: var(--space-8); /* label to field, icon to text, avatar to name */
+  --gap-sm: var(--space-12); /* within a block, lists, player row, popover, avatar grid */
+  --gap-md: var(--space-16); /* image to text in a card, action area */
+  --gap-lg: var(--space-24); /* elements of a white card, footer buttons */
+  --gap-xl: var(--space-32); /* between blocks of a screen */
+  --gap-2xl: var(--space-48); /* large separations (centered screens) */
+}
+
+/* Screen level — the component picks the one matching the breakpoint; these
+   are the only spacing tokens that depend on it. */
+
+:root {
+  --padding-screen-x-mobile: var(--space-24); /* side margins */
+  --padding-screen-x-desktop: var(--space-32);
+  --padding-screen-y-mobile: var(--space-32); /* top / bottom of the content */
+  --padding-screen-y-desktop: var(--space-48);
+  --padding-screen-centered: var(--space-48); /* top of centered screens with no top bar */
+  --gap-grid-mobile: var(--space-12); /* card grids (sources, themes) */
+  --gap-grid-desktop: var(--space-16);
+}

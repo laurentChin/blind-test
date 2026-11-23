@@ -14,6 +14,7 @@ One folder per component, named after it in PascalCase:
 ```
 design-system/
   README.md
+  tokens/           the design tokens, one file per category
   Button/
     Button.jsx        markup, props and interactivity
     Button.css        positioning and visuals
@@ -25,15 +26,78 @@ design-system/
 Grouped Figma families (`Icon/*`, `Logo/*`, `Card/*`…) keep the family as a prefix in the folder
 name — `IconClose`, `CardMusicSelection` — so the file tree stays flat and greppable.
 
+## Tokens
+
+[`tokens/`](tokens) holds the design tokens, one file per category. Figma is the source of truth:
+no value changes here without changing it there.
+
+| File | Holds |
+| --- | --- |
+| [`colors.css`](tokens/colors.css) | the palette primitives, then brand, backgrounds, actions, text, borders, feedback |
+| [`typography.css`](tokens/typography.css) | families, weights and sizes, then one whole style per Figma text style |
+| [`spacing.css`](tokens/spacing.css) | the 4/8 scale, then `padding-*`, `gap-*` and the screen-level steps |
+| [`radius.css`](tokens/radius.css) | the raw radii, then `radius-sm` / `md` / `full` |
+| [`shadows.css`](tokens/shadows.css) | card halos and the button shadow |
+| [`gradients.css`](tokens/gradients.css) | the two brand gradients |
+| [`sizes.css`](tokens/sizes.css) | content width and avatar sizes |
+| [`index.css`](tokens/index.css) | imports them all, in dependency order |
+
+Four rules hold the system together:
+
+- **Two layers.** Primitives (`--primitive-*`, `--font-family-*`, `--font-weight-*`, `--font-size-*`,
+  `--space-*`, `--radius-4/12/9999`) are raw values and are never used in a component; a primitive
+  never changes value, a new value means a new primitive. The semantic tokens below them
+  (`--color-*`, `--padding-*`, `--gap-*`, `--radius-sm…`, `--font-<style>`, `--shadow-*`,
+  `--gradient-*`) carry the decision and are what components use.
+- **Colors are the only raw values.** Gradients and shadows are composed from them with `var()` and
+  `color-mix()`, so changing a color reaches them. Keep it that way.
+- **A whole text style at a time** — `font: var(--font-heading-md)` — never a size or a weight on
+  its own.
+- **`padding` inside, `gap` between.** There is no margin token: the parent owns the space.
+
+A component has one version, the same on mobile and desktop; a bigger one is a size of its own
+(`--avatar-size-md` / `--avatar-size-lg`), not a breakpoint. Only the tokens suffixed `-mobile` /
+`-desktop` depend on the screen, and the component picks between them in its own media query — the
+token files hold no media query at all:
+
+```css
+.screen {
+  max-width: var(--layout-max-width);
+  padding: var(--padding-screen-y-mobile) var(--padding-screen-x-mobile);
+  gap: var(--gap-xl);
+}
+.screen-title {
+  font: var(--font-heading-xl-mobile);
+}
+
+@media (width >= 1024px) {
+  .screen {
+    padding: var(--padding-screen-y-desktop) var(--padding-screen-x-desktop);
+  }
+  .screen-title {
+    font: var(--font-heading-xl-desktop);
+  }
+}
+```
+
+Three things are still open on the token source, to settle with the first coded screens: the desktop
+breakpoint (1024px proposed, mockups are 393 / 1280), the unit (`px` as in Figma, or `rem`), and
+whether very large screens get their own `-wide` tokens.
+
+The tokens are not imported by the app yet: `--color-text-muted` and `--radius-full` also exist in
+the current [`styles/tokens.css`](../styles/tokens.css) with different values, so loading both would
+change screens already in production. Wire `tokens/index.css` in when the first design-system
+component ships, and retire the old file as the pages migrate.
+
 ## Rules
 
 Everything in [`CLAUDE.md`](../../../CLAUDE.md) applies; the points that matter most here:
 
 - **HTML** carries the semantics. Native elements first (`<button>`, `<dialog>`, `<input>`, the
   Popover API) before any custom markup; a component is only accessible if its DOM says what it is.
-- **CSS** owns positioning and visuals. Every value comes from the tokens in
-  [`styles/tokens.css`](../styles/tokens.css) — no raw colors, spacings or durations in a component
-  file. Responsive behaviour goes through media queries and container queries.
+- **CSS** owns positioning and visuals. Every value comes from the tokens in [`tokens/`](tokens)
+  — no raw colors, spacings or radii in a component file. Responsive behaviour goes through media
+  queries and container queries.
 - **JS** handles interactivity and data. Visual changes it triggers are passed down as CSS custom
   properties rather than ad-hoc inline styles, and native browser APIs come before any library.
 - Variants and states from Figma map to **props → data attributes or classes**, not to separate
@@ -200,7 +264,7 @@ Figma complete.
 1. Open its node in Figma and read its variants and states.
 2. Create `design-system/<Name>/` with `<Name>.jsx`, `<Name>.css`, `<Name>.spec.js`,
    `<Name>.stories.jsx` and `<Name>.figma.tsx`.
-3. Map every variant to a prop, every token to a custom property from `styles/tokens.css`; add a new
+3. Map every variant to a prop, every token to a custom property from `tokens/`; add a new
    token there rather than hardcoding a value.
 4. Point `<Name>.figma.tsx` at the node URL and map its variants to the props.
 5. Check keyboard navigation, focus visibility and contrast.
