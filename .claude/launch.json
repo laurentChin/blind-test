@@ -9,6 +9,13 @@
       "autoPort": false
     },
     {
+      "name": "storybook",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "storybook", "--prefix", "client", "--", "--no-open"],
+      "port": 6006,
+      "autoPort": false
+    },
+    {
       "name": "server",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["start", "--prefix", "server"],
