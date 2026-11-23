@@ -18,6 +18,7 @@ design-system/
     Button.jsx        markup, props and interactivity
     Button.css        positioning and visuals
     Button.spec.js    tests
+    Button.stories.jsx Storybook stories, one per variant / state
     Button.figma.tsx  Code Connect mapping to the Figma component
 ```
 
@@ -40,6 +41,18 @@ Everything in [`CLAUDE.md`](../../../CLAUDE.md) applies; the points that matter 
 - Each component ships with a `.spec.js` covering its states and its accessible API.
 - Each component ships with a `.figma.tsx` so Figma links the design node to the real code (see
   below).
+
+## Storybook
+
+Components are showcased in [Storybook](https://storybook.js.org) (`.storybook/`), which loads every
+`design-system/**/*.stories.jsx` and the app's global stylesheet (fonts, tokens, base styles).
+
+```bash
+yarn storybook        # dev server on http://localhost:6006
+yarn build-storybook  # static build in storybook-static/
+```
+
+Docs pages are generated from the stories (`autodocs`) and the a11y addon audits each one.
 
 ## Figma Code Connect
 
@@ -185,8 +198,8 @@ Figma complete.
 ## Adding a component
 
 1. Open its node in Figma and read its variants and states.
-2. Create `design-system/<Name>/` with `<Name>.jsx`, `<Name>.css`, `<Name>.spec.js` and
-   `<Name>.figma.tsx`.
+2. Create `design-system/<Name>/` with `<Name>.jsx`, `<Name>.css`, `<Name>.spec.js`,
+   `<Name>.stories.jsx` and `<Name>.figma.tsx`.
 3. Map every variant to a prop, every token to a custom property from `styles/tokens.css`; add a new
    token there rather than hardcoding a value.
 4. Point `<Name>.figma.tsx` at the node URL and map its variants to the props.

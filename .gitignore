@@ -4,6 +4,7 @@ node_modules
 client/.env
 client/node_modules
 client/build
+client/storybook-static
 client/.certs
 
 # Server

@@ -3,7 +3,7 @@ import prettierConfig from "eslint-config-prettier";
 import globals from "globals";
 
 export default [
-  { ignores: ["build/**", "eslint.config.mjs"] },
+  { ignores: ["build/**", "storybook-static/**", "eslint.config.mjs"] },
   react.configs.flat.recommended,
   prettierConfig,
   {
