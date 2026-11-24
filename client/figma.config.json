@@ -1,0 +1,6 @@
+{
+  "codeConnect": {
+    "include": ["src/design-system/**/*.figma.tsx"],
+    "parser": "react"
+  }
+}

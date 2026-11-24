@@ -11,6 +11,8 @@ export default {
         },
       },
     ],
+    "^.+\\.(png|jpe?g|gif|svg|webp|avif)$":
+      "<rootDir>/config/jest/fileTransform.cjs",
   },
   moduleNameMapper: {
     "\\.css$": "identity-obj-proxy",

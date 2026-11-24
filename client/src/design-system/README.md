@@ -84,10 +84,16 @@ Three things are still open on the token source, to settle with the first coded 
 breakpoint (1024px proposed, mockups are 393 / 1280), the unit (`px` as in Figma, or `rem`), and
 whether very large screens get their own `-wide` tokens.
 
-The tokens are not imported by the app yet: `--color-text-muted` and `--radius-full` also exist in
-the current [`styles/tokens.css`](../styles/tokens.css) with different values, so loading both would
-change screens already in production. Wire `tokens/index.css` in when the first design-system
-component ships, and retire the old file as the pages migrate.
+Every component here takes all of its values from these tokens — no exception, and no raw value in
+a component file. A value the tokens don't carry yet is added to `tokens/` first.
+
+[`.storybook/preview.js`](../../.storybook/preview.js) imports `tokens/index.css` last, so the
+stories render with them. The app doesn't import them yet, and does not need to while no screen
+consumes a design-system component: the current [`styles/tokens.css`](../styles/tokens.css) holds
+several of the same names with different values (`--space-4` is `4px` here and `1rem` there, plus
+`--radius-sm/md`, `--font-size-*`, `--color-text-muted`, `--radius-full`), so both files loaded at
+once would restyle screens already in production. Retire the old file as the pages migrate, then
+wire `tokens/index.css` in above the components.
 
 ## Rules
 
@@ -139,9 +145,10 @@ figma.connect(Button, "<url of the Figma node>", {
 ```
 
 The file is `.tsx` because Code Connect only parses that extension; it is read by the Figma CLI and
-never bundled into the app, so it brings no TypeScript into the build. The file is skipped by Jest
-and ESLint if their config does not pick it up — wire that up when the first mapping lands, along
-with the `figma.config.json` holding the file key.
+never bundled into the app, so it brings no TypeScript into the build. Jest only matches `.js` /
+`.jsx` and ESLint only lints `.js` / `.mjs` / `.cjs`, so neither picks these files up.
+[`figma.config.json`](../../figma.config.json) tells the CLI where they are; publishing a mapping
+also needs `@figma/code-connect`, which is not installed yet.
 
 ## Component tracking
 
@@ -238,14 +245,11 @@ every interactive component and are handled in CSS through the matching pseudo-c
 
 ### Logos
 
-| Component      | Figma name         | Variants / states | Status |
-| -------------- | ------------------ | ----------------- | ------ |
-| LogoApp        | `Logo/App`         | —                 | ⬜     |
-| LogoAppLockup  | `Logo/App lockup`  | —                 | ⬜     |
-| LogoSpotify    | `Logo/Spotify`     | —                 | ⬜     |
-| LogoDeezer     | `Logo/Deezer`      | —                 | ⬜     |
-| LogoAppleMusic | `Logo/Apple Music` | —                 | ⬜     |
-| LogoYouTube    | `Logo/YouTube`     | —                 | ⬜     |
+| Component         | Figma name            | Variants / states                                         | Status |
+| ----------------- | --------------------- | --------------------------------------------------------- | ------ |
+| LogoApp           | `Logo/App`            | —                                                         | ⬜     |
+| LogoAppLockup     | `Logo/App lockup`     | —                                                         | ⬜     |
+| LogoMusicProvider | `Logo/Music provider` | 4 providers (Spotify, Deezer, Apple Music, YouTube Music) | ✅     |
 
 ### Templates
 
