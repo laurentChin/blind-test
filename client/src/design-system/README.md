@@ -21,7 +21,11 @@ design-system/
     Button.spec.js      tests
     Button.stories.jsx  Storybook stories, one per variant / state
     Button.figma.tsx    Code Connect mapping to the Figma component
+    assets/             the images it imports, when it has any
 ```
+
+A component's images go in its own `assets/` folder, all in the same format and all at the same
+size — twice the size the component renders them at, so they stay sharp on a dense screen.
 
 Grouped Figma families (`Icon/*`, `Logo/*`, `Card/*`…) keep the family as a prefix in the folder
 name — `IconClose`, `CardMusicSelection` — so the file tree stays flat and greppable.
@@ -39,7 +43,7 @@ no value changes here without changing it there.
 | [`radius.css`](tokens/radius.css)         | the raw radii, then `radius-sm` / `md` / `full`                                   |
 | [`shadows.css`](tokens/shadows.css)       | card halos and the button shadow                                                  |
 | [`gradients.css`](tokens/gradients.css)   | the two brand gradients                                                           |
-| [`sizes.css`](tokens/sizes.css)           | content width and avatar sizes                                                    |
+| [`sizes.css`](tokens/sizes.css)           | content width, and the sizes shared by avatars and logos                          |
 | [`index.css`](tokens/index.css)           | imports them all, in dependency order                                             |
 
 Four rules hold the system together:

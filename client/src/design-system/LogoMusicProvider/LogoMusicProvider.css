@@ -1,12 +1,13 @@
 /* Logo/Music provider.
 
    Each provider's shape, colors and corner radius are baked into its asset:
-   the component only gives them the one size of the Figma component set. */
+   the component only gives them the size the Figma node binds, the shared
+   size L. The assets are twice that, so they stay sharp on a dense screen. */
 
 .logo-music-provider {
   display: block;
-  inline-size: var(--logo-music-provider-size);
-  block-size: var(--logo-music-provider-size);
+  inline-size: var(--avatar-size-lg);
+  block-size: var(--avatar-size-lg);
   /* The assets are square, like the box: contain only guards against a future
      one that isn't, which would be cropped by the default fill. */
   object-fit: contain;

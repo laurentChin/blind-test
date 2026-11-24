@@ -1,9 +1,9 @@
 import PropTypes from "prop-types";
 
-import appleMusicLogo from "./apple-music.png";
-import deezerLogo from "./deezer.svg";
-import spotifyLogo from "./spotify.png";
-import youtubeMusicLogo from "./youtube-music.png";
+import appleMusicLogo from "./assets/apple-music.png";
+import deezerLogo from "./assets/deezer.png";
+import spotifyLogo from "./assets/spotify.png";
+import youtubeMusicLogo from "./assets/youtube-music.png";
 
 import "./LogoMusicProvider.css";
 

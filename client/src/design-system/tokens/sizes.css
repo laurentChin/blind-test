@@ -3,8 +3,7 @@
 
 :root {
   --avatar-size-md: 64px; /* avatar, size M */
-  --avatar-size-lg: 90px; /* avatar, size L */
+  --avatar-size-lg: 90px; /* size L: avatar, music provider logo */
   --avatar-list-size: 48px; /* avatar in a player row */
-  --logo-music-provider-size: 88px; /* Logo/Music provider */
   --layout-max-width: 900px; /* max width of the screen content */
 }
