@@ -13,8 +13,8 @@ export default {
         component:
           "Logo of a music provider (Figma: `Logo/Music provider`). Used in " +
           "`Card/Music selection` through `Card/Logo container`. The accessible " +
-          'name defaults to the provider name; pass `alt=""` when the name is ' +
-          "already written next to the logo.",
+          'name defaults to "Logo <provider>"; pass `alt=""` when the provider ' +
+          "is already written next to the logo.",
       },
     },
   },
@@ -36,26 +36,6 @@ export const AllProviders = {
       {MUSIC_PROVIDER_IDS.map((provider) => (
         <LogoMusicProvider key={provider} provider={provider} />
       ))}
-    </div>
-  ),
-};
-
-// How the logo is used inside a card: the provider name carries the meaning,
-// so the logo itself is decorative and takes an empty alt.
-export const Decorative = {
-  args: { provider: "spotify", alt: "" },
-  render: (args) => (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "var(--gap-xs)",
-        color: "var(--color-text-on-dark)",
-        font: "var(--font-label-md)",
-      }}
-    >
-      <LogoMusicProvider {...args} />
-      <span>Spotify</span>
     </div>
   ),
 };

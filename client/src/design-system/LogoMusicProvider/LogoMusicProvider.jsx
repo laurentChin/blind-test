@@ -7,9 +7,9 @@ import youtubeMusicLogo from "./assets/youtube-music.png";
 
 import "./LogoMusicProvider.css";
 
-// One entry per `Provider` variant of the Figma component set. `name` is the
-// logo's default accessible name; the brand shape, its colors and its corner
-// radius all live inside the asset, so the component only has to size it.
+// One entry per `Provider` variant of the Figma component set. The brand
+// shape, its colors and its corner radius all live inside the asset, so the
+// component only has to size it.
 const PROVIDERS = {
   spotify: { name: "Spotify", src: spotifyLogo },
   deezer: { name: "Deezer", src: deezerLogo },
@@ -24,8 +24,8 @@ const MUSIC_PROVIDER_IDS = Object.keys(PROVIDERS);
 /**
  * The logo of a music provider, at the single size of the Figma component.
  *
- * `alt` defaults to the provider name. Pass `alt=""` where the name is already
- * written next to the logo, so a screen reader doesn't announce it twice.
+ * `alt` defaults to "Logo <provider>". Pass `alt=""` where the provider is
+ * already written next to the logo, so a screen reader doesn't say it twice.
  */
 const LogoMusicProvider = ({ provider, alt }) => {
   const { name, src } = PROVIDERS[provider];
@@ -35,7 +35,7 @@ const LogoMusicProvider = ({ provider, alt }) => {
       className="logo-music-provider"
       data-provider={provider}
       src={src}
-      alt={alt ?? name}
+      alt={alt ?? `Logo ${name}`}
     />
   );
 };

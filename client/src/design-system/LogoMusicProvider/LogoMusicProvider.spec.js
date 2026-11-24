@@ -14,10 +14,10 @@ describe("LogoMusicProvider", () => {
   });
 
   it.each([
-    ["spotify", "Spotify"],
-    ["deezer", "Deezer"],
-    ["appleMusic", "Apple Music"],
-    ["youtubeMusic", "YouTube Music"],
+    ["spotify", "Logo Spotify"],
+    ["deezer", "Logo Deezer"],
+    ["appleMusic", "Logo Apple Music"],
+    ["youtubeMusic", "Logo YouTube Music"],
   ])("names the %s logo after its provider", (provider, name) => {
     render(<LogoMusicProvider provider={provider} />);
 
