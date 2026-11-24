@@ -1,5 +1,8 @@
 node_modules
 
+# macOS
+.DS_Store
+
 # Client
 client/.env
 client/node_modules

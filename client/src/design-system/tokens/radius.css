@@ -1,0 +1,17 @@
+/* Corner radii.
+
+   Primitives — raw values, never used in a component. */
+
+:root {
+  --radius-4: 4px;
+  --radius-12: 12px;
+  --radius-9999: 9999px;
+}
+
+/* Semantic — what components use. */
+
+:root {
+  --radius-sm: var(--radius-4); /* cards, fields, desktop panel */
+  --radius-md: var(--radius-12); /* buttons */
+  --radius-full: var(--radius-9999); /* avatars, switch, pills: always round */
+}

@@ -1,0 +1,17 @@
+/* Gradients (Figma paint styles) — composed from the color tokens, never from
+   raw values, so a palette change reaches them. Requires colors.css. */
+
+:root {
+  --gradient-brand-1: linear-gradient(
+    215deg,
+    var(--color-brand-tertiary) 0%,
+    var(--color-brand-primary) 100%
+  );
+
+  --gradient-brand-2: linear-gradient(
+    213deg,
+    var(--color-background-default) 0%,
+    var(--color-brand-primary) 54%,
+    var(--color-brand-secondary) 100%
+  );
+}
