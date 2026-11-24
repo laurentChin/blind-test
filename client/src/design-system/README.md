@@ -121,6 +121,9 @@ Everything in [`CLAUDE.md`](../../../CLAUDE.md) applies; the points that matter 
 
 Components are showcased in [Storybook](https://storybook.js.org) (`.storybook/`), which loads every
 `design-system/**/*.stories.jsx` and the app's global stylesheet (fonts, tokens, base styles).
+It also loads [`.storybook/fonts.css`](../../.storybook/fonts.css), the Montserrat and Montserrat
+Alternates the typography tokens name: the app still serves the legacy families, so without that
+file the components here render in a fallback. Drop it once the app serves them.
 
 ```bash
 yarn storybook        # dev server on http://localhost:6006
@@ -202,7 +205,7 @@ every interactive component and are handled in CSS through the matching pseudo-c
 | ------------------------- | ------------------------------- | ------------------------------- | ------ |
 | CardLogoContainer         | `Card/Logo container`           | —                               | ⬜     |
 | CardTextContent           | `Card/Text content`             | —                               | ⬜     |
-| CardMusicSelection        | `Card/Music selection`          | selected                        | ⬜     |
+| CardMusicSelection        | `Card/Music selection`          | selected                        | ✅     |
 | CardMusicSelectionLabel   | `Card/Music selection/Label`    | —                               | ⬜     |
 | CardGameSelection         | `Card/Game selection`           | selected                        | ⬜     |
 | CardThemeSelection        | `Card/Theme selection`          | vertical, horizontal × selected | ⬜     |

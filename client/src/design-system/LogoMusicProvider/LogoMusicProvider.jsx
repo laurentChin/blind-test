@@ -21,6 +21,12 @@ const PROVIDERS = {
 // component accepts. Ids match `MUSIC_PROVIDERS` in contexts/MusicProvider.
 const MUSIC_PROVIDER_IDS = Object.keys(PROVIDERS);
 
+// The brand names, for the components that write a provider next to its logo
+// — `Card/Music selection` — so the spelling lives in one place.
+const MUSIC_PROVIDER_NAMES = Object.fromEntries(
+  MUSIC_PROVIDER_IDS.map((id) => [id, PROVIDERS[id].name]),
+);
+
 /**
  * The logo of a music provider, at the single size of the Figma component.
  *
@@ -46,4 +52,4 @@ LogoMusicProvider.propTypes = {
 };
 
 export default LogoMusicProvider;
-export { MUSIC_PROVIDER_IDS };
+export { MUSIC_PROVIDER_IDS, MUSIC_PROVIDER_NAMES };
