@@ -41,6 +41,7 @@ no value changes here without changing it there.
 | [`typography.css`](tokens/typography.css) | families, weights and sizes, then one whole style per Figma text style            |
 | [`spacing.css`](tokens/spacing.css)       | the 4/8 scale, then `padding-*`, `gap-*` and the screen-level steps               |
 | [`radius.css`](tokens/radius.css)         | the raw radii, then `radius-sm` / `md` / `full`                                   |
+| [`borders.css`](tokens/borders.css)       | the raw widths, then `border-width-default` / `-selected` / `-focus`              |
 | [`shadows.css`](tokens/shadows.css)       | card halos and the button shadow                                                  |
 | [`gradients.css`](tokens/gradients.css)   | the two brand gradients                                                           |
 | [`sizes.css`](tokens/sizes.css)           | the one image scale — icons, avatars, logos — and the content width               |
@@ -49,10 +50,10 @@ no value changes here without changing it there.
 Four rules hold the system together:
 
 - **Two layers.** Primitives (`--primitive-*`, `--font-family-*`, `--font-weight-*`, `--font-size-*`,
-  `--space-*`, `--radius-4/12/9999`) are raw values and are never used in a component; a primitive
-  never changes value, a new value means a new primitive. The semantic tokens below them
-  (`--color-*`, `--padding-*`, `--gap-*`, `--radius-sm…`, `--font-<style>`, `--shadow-*`,
-  `--gradient-*`) carry the decision and are what components use.
+  `--space-*`, `--radius-4/12/9999`, `--border-width-1/3`) are raw values and are never used in a
+  component; a primitive never changes value, a new value means a new primitive. The semantic tokens
+  below them (`--color-*`, `--padding-*`, `--gap-*`, `--radius-sm…`, `--border-width-default…`,
+  `--font-<style>`, `--shadow-*`, `--gradient-*`) carry the decision and are what components use.
 - **Colors are the only raw values.** Gradients and shadows are composed from them with `var()` and
   `color-mix()`, so changing a color reaches them. Keep it that way.
 - **A whole text style at a time** — `font: var(--font-heading-md)` — never a size or a weight on
