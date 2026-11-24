@@ -6,7 +6,7 @@ version: 1.0.0
 
 # Build Design System Component
 
-Generates or update a design system component defined in [https://www.figma.com/design/z0sCkoEDmOO1z28BBJqNNl/App-blind-test--PLAYGROUND?node-id=1-2](https://www.figma.com/design/z0sCkoEDmOO1z28BBJqNNl/App-blind-test--PLAYGROUND?node-id=1-2).
+Generates or update a design system component defined in [https://www.figma.com/design/xMZfJlAcIUSF0m3glBlrG3/App-blind-test-Final?node-id=228-24238](https://www.figma.com/design/xMZfJlAcIUSF0m3glBlrG3/App-blind-test-Final?node-id=228-24238).
 
 ## Structure
 
@@ -18,6 +18,9 @@ Every design system component have to be defined in a folder named after the com
       |_ MyComponent.stories.jsx
       |_ MyComponent.test.jsx
       |_ MyComponent.jsx
+      |_ assets/
+        |_ my-component.svg
+        |_ my-component.png
 ```
 
 ## Building rules
