@@ -43,7 +43,7 @@ no value changes here without changing it there.
 | [`radius.css`](tokens/radius.css)         | the raw radii, then `radius-sm` / `md` / `full`                                   |
 | [`shadows.css`](tokens/shadows.css)       | card halos and the button shadow                                                  |
 | [`gradients.css`](tokens/gradients.css)   | the two brand gradients                                                           |
-| [`sizes.css`](tokens/sizes.css)           | content width, and the sizes shared by avatars and logos                          |
+| [`sizes.css`](tokens/sizes.css)           | the one image scale — icons, avatars, logos — and the content width               |
 | [`index.css`](tokens/index.css)           | imports them all, in dependency order                                             |
 
 Four rules hold the system together:
@@ -60,7 +60,7 @@ Four rules hold the system together:
 - **`padding` inside, `gap` between.** There is no margin token: the parent owns the space.
 
 A component has one version, the same on mobile and desktop; a bigger one is a size of its own
-(`--avatar-size-md` / `--avatar-size-lg`), not a breakpoint. Only the tokens suffixed `-mobile` /
+(`--image-size-md` / `--image-size-lg`), not a breakpoint. Only the tokens suffixed `-mobile` /
 `-desktop` depend on the screen, and the component picks between them in its own media query — the
 token files hold no media query at all:
 

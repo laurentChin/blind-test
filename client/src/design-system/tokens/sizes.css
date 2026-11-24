@@ -1,9 +1,19 @@
-/* Sizes. A component does not change with the screen: a bigger one is a size
-   of its own (avatar md / lg), not a breakpoint. */
+/* Sizes.
+
+   One scale for every square or round image, icons included: the name carries the size,
+   not the object — each line below says which component takes which step. An image
+   binds both inline and block size, or it distorts.
+
+   A component does not change with the screen: a bigger one is a size of its own
+   (avatar M / L, picked through the component's own prop), not a breakpoint. */
 
 :root {
-  --avatar-size-md: 64px; /* avatar, size M */
-  --avatar-size-lg: 90px; /* size L: avatar, music provider logo */
-  --avatar-list-size: 48px; /* avatar in a player row */
+  --image-size-2xs: 20px; /* small icon beside a caption: the caption's line height */
+  --image-size-xs: 30px; /* icons, provider logo in the top bar */
+  --image-size-sm: 48px; /* avatar in a player row */
+  --image-size-md: 64px; /* avatars size M, grid "+" button, horizontal theme card image */
+  --image-size-lg: 90px; /* avatars size L, grid "+" button, music provider logos */
+  --image-size-xl: 130px; /* role card images, theme grid image */
+  --image-size-2xl: 180px; /* large theme image: waiting room, desktop settings */
   --layout-max-width: 900px; /* max width of the screen content */
 }
