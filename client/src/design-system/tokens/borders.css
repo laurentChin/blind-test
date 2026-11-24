@@ -1,0 +1,24 @@
+/* Border widths.
+
+   Buttons are out of scope: their rings are gradients and get their own tokens
+   once they are designed.
+
+   Primitives — raw values, never used in a component. */
+
+:root {
+  --border-width-1: 1px;
+  --border-width-3: 3px;
+}
+
+/* Semantic — what components use. */
+
+:root {
+  /* Fields, theme cards at rest, footer, separators. */
+  --border-width-default: var(--border-width-1);
+
+  /* Selected card, ring of the selected avatar. */
+  --border-width-selected: var(--border-width-3);
+
+  /* Keyboard focus of the fields. */
+  --border-width-focus: var(--border-width-3);
+}

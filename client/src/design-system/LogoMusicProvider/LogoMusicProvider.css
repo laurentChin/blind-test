@@ -6,8 +6,8 @@
 
 .logo-music-provider {
   display: block;
-  inline-size: var(--avatar-size-lg);
-  block-size: var(--avatar-size-lg);
+  inline-size: var(--image-size-lg);
+  block-size: var(--image-size-lg);
   /* The assets are square, like the box: contain only guards against a future
      one that isn't, which would be cropped by the default fill. */
   object-fit: contain;
