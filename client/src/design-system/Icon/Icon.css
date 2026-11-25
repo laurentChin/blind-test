@@ -1,0 +1,24 @@
+/* Icon.
+
+   The shape carries `fill="currentColor"`, so the icon needs no color of its
+   own: it inherits the text color of the component that hosts it. The only
+   thing this file decides is how much room it takes. */
+
+.icon {
+  --icon-size: var(--image-size-xs);
+
+  /* Both axes, or the shape distorts — the assets are square, like the box. */
+  inline-size: var(--icon-size);
+  block-size: var(--icon-size);
+  /* An inline SVG sits on the text baseline and leaves a gap below it; the
+     parent owns the spacing around the icon, through `gap`. */
+  display: block;
+  /* In a flex row — a button, a card header — the icon keeps its size while
+     the label takes the remaining space. */
+  flex: none;
+}
+
+/* Beside a `caption` text: the line height of that text, so the two align. */
+.icon[data-size="2xs"] {
+  --icon-size: var(--image-size-2xs);
+}
