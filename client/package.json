@@ -44,6 +44,7 @@
     "@rsbuild/core": "^2.1.13",
     "@rsbuild/plugin-basic-ssl": "^1.2.3",
     "@rsbuild/plugin-react": "^2.1.0",
+    "@rsbuild/plugin-svgr": "^2.0.5",
     "@storybook/addon-a11y": "^10.6.8",
     "@storybook/addon-docs": "^10.6.8",
     "@swc/core": "^1.16.0",

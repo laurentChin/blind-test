@@ -176,20 +176,14 @@ every interactive component and are handled in CSS through the matching pseudo-c
 
 ### Icons
 
-| Component        | Figma name           | Variants / states | Status |
-| ---------------- | -------------------- | ----------------- | ------ |
-| IconAdd          | `Icon/Add`           | —                 | ⬜     |
-| IconCheck        | `Icon/Check`         | —                 | ⬜     |
-| IconChevronLeft  | `Icon/Chevron left`  | —                 | ⬜     |
-| IconChevronRight | `Icon/Chevron right` | —                 | ⬜     |
-| IconClose        | `Icon/Close`         | —                 | ⬜     |
-| IconPause        | `Icon/Pause`         | —                 | ⬜     |
-| IconPlay         | `Icon/Play`          | —                 | ⬜     |
-| IconSearch       | `Icon/Search`        | —                 | ⬜     |
-| IconSettings     | `Icon/Settings`      | —                 | ⬜     |
-| IconShare        | `Icon/Share`         | —                 | ⬜     |
-| IconSkip         | `Icon/Skip`          | —                 | ⬜     |
-| IconWarning      | `Icon/Warning`       | —                 | ⬜     |
+Figma has one component per icon; the code has one component for all of them, the icon being a
+value rather than a component of its own — `<Icon name="chevron-left" />`, never `IconChevronLeft`.
+`name` is the Figma name without its `Icon/` prefix, lowercased and hyphenated, and is also the name
+of the asset in [`Icon/assets`](Icon/assets).
+
+| Component | Figma name                                                                                                                                                                              | Variants / states                                    | Status |
+| --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- | ------ |
+| Icon      | `Icon/Add`, `Icon/Check`, `Icon/Chevron left`, `Icon/Chevron right`, `Icon/Close`, `Icon/Pause`, `Icon/Play`, `Icon/Search`, `Icon/Settings`, `Icon/Share`, `Icon/Skip`, `Icon/Warning` | 12 icons × 2 sizes (`xs` 30, `2xs` beside a caption) | ✅     |
 
 ### Forms
 
