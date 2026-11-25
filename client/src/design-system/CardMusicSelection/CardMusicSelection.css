@@ -1,0 +1,87 @@
+/* Card/Music selection.
+
+   A logo on a white surface over a dark label band. Figma draws the node
+   160 × 227 with a 160 × 170 logo area; here the parent — a grid of sources —
+   gives the card its width, and the square logo area holds the proportion at
+   whatever width that is.
+
+   Hover, pressed and focus are states of the button, so they live here as
+   pseudo-classes; `selected` arrives as aria-pressed. */
+
+.card-music-selection {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  inline-size: 100%;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background-color: var(--color-background-surface);
+  /* The halo the cards wear on the dark background. */
+  box-shadow: var(--shadow-card-default);
+  /* Squares off what the label band would otherwise push past the radius. */
+  overflow: clip;
+  cursor: pointer;
+}
+
+.card-music-selection:hover {
+  box-shadow: var(--shadow-card-hover);
+}
+
+.card-music-selection:active {
+  background-color: var(--color-background-surface-pressed);
+}
+
+/* The cyan ring takes the halo's place. It is drawn on an overlay rather than
+   on the card itself: an inset shadow would pass under the label band, and a
+   border on this state only would resize what the card holds. */
+.card-music-selection[aria-pressed="true"] {
+  box-shadow: none;
+}
+
+.card-music-selection[aria-pressed="true"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 var(--border-width-selected)
+    var(--color-brand-secondary);
+  pointer-events: none;
+}
+
+/* A selected card keeps an answer to the pointer, which the node doesn't
+   draw: the halo comes back under the ring. */
+.card-music-selection[aria-pressed="true"]:hover {
+  box-shadow: var(--shadow-card-hover);
+}
+
+.card-music-selection:focus-visible {
+  /* The node draws no focus state; the ring borrows the width the tokens give
+     a focused element, and the gap spacing.css notes for the buttons. */
+  outline: var(--border-width-focus) solid var(--color-brand-secondary);
+  outline-offset: var(--padding-2xs);
+}
+
+.card-music-selection-logo {
+  display: grid;
+  place-items: center;
+  /* Square: at the 160px the node is drawn at, that is the 170px of its logo
+     area, and the whole card lands on its 227px. */
+  aspect-ratio: 1;
+  /* A grid gives every card of a row the height of the tallest, the one whose
+     name wraps; the logo area takes that extra height so the label band stays
+     against the bottom edge. */
+  flex-grow: 1;
+}
+
+.card-music-selection-label {
+  /* The node pads the band top and bottom only, so a name as long as
+     "Apple Music" stays on one line across the card's width. */
+  padding-block: var(--padding-md);
+  background-color: var(--color-action-primary);
+  color: var(--color-text-on-dark);
+  font: var(--font-heading-md);
+  text-align: center;
+  /* A name longer than the card wraps rather than widening it. */
+  overflow-wrap: anywhere;
+}

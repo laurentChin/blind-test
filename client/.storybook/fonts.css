@@ -1,0 +1,7 @@
+/* The two families the typography tokens name. The app's own stylesheet
+   loads the fonts of the screens in production, which are still the legacy
+   ones, so Storybook loads these itself: without them the design-system
+   components render in a fallback and no longer match Figma. Drop this file
+   once the app serves them. */
+
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Montserrat+Alternates:wght@500;600;700&display=swap");
