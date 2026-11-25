@@ -6,10 +6,10 @@ import {
   fireEvent,
   screen,
 } from "@testing-library/react";
-import { CreateOrSelectPlaylist } from "./CreateOrSelectPlaylist";
-import { useMusicProvider } from "../../../contexts/MusicProvider";
+import { CreateOrSelectPlaylist } from "@pages/Master/steps/CreateOrSelectPlaylist";
+import { useMusicProvider } from "@contexts/MusicProvider";
 
-jest.mock("../../../contexts/MusicProvider");
+jest.mock("@contexts/MusicProvider");
 
 describe("<CreateOrSelectPlaylist />", () => {
   afterEach(() => {

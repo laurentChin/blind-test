@@ -3,14 +3,14 @@ import PropTypes from "prop-types";
 import { useNavigate } from "react-router-dom";
 import { MdOpenInNew } from "react-icons/md";
 
-import { Player } from "../../../components/Player/Player";
-import { useMusicProvider } from "../../../contexts/MusicProvider";
-import { useAsyncAction } from "../../../hooks/useAsyncAction";
-import { useConfirmAction } from "../../../hooks/useConfirmAction";
-import { useToast } from "../../../components/Toast/Toast";
+import { Player } from "@components/Player/Player";
+import { useMusicProvider } from "@contexts/MusicProvider";
+import { useAsyncAction } from "@/hooks/useAsyncAction";
+import { useConfirmAction } from "@/hooks/useConfirmAction";
+import { useToast } from "@components/Toast/Toast";
 
-import "./ManageSession.css";
-import { ChallengerList } from "../../../components/ChallengerList/ChallengerList";
+import "@pages/Master/steps/ManageSession.css";
+import { ChallengerList } from "@components/ChallengerList/ChallengerList";
 
 const ManageSession = ({ sessionUuid, socket, ...props }) => {
   const musicProvider = useMusicProvider();

@@ -5,16 +5,16 @@ import { Navigate, useNavigate } from "react-router-dom";
 import { FaPlay, FaPause } from "react-icons/fa";
 import { MdSkipNext, MdSettings, MdExpandMore, MdExpandLess } from "react-icons/md";
 
-import { getSelectedProvider, useMusicProvider } from "../../contexts/MusicProvider";
-import { useProviderAuth } from "../../hooks/useProviderAuth";
-import { useAsyncAction } from "../../hooks/useAsyncAction";
-import { useConfirmAction } from "../../hooks/useConfirmAction";
-import { ConfigureEverybodyPlaysSession } from "./ConfigureEverybodyPlaysSession";
-import { JoinCode } from "../../components/JoinCode/JoinCode";
-import { Play } from "../Session/Play";
-import { useToast } from "../../components/Toast/Toast";
+import { getSelectedProvider, useMusicProvider } from "@contexts/MusicProvider";
+import { useProviderAuth } from "@/hooks/useProviderAuth";
+import { useAsyncAction } from "@/hooks/useAsyncAction";
+import { useConfirmAction } from "@/hooks/useConfirmAction";
+import { ConfigureEverybodyPlaysSession } from "@pages/EverybodyPlays/ConfigureEverybodyPlaysSession";
+import { JoinCode } from "@components/JoinCode/JoinCode";
+import { Play } from "@pages/Session/Play";
+import { useToast } from "@components/Toast/Toast";
 
-import "./EverybodyPlaysHost.css";
+import "@pages/EverybodyPlays/EverybodyPlaysHost.css";
 
 // Rsbuild inlines NODE_ENV at build time, so in production this is a plain
 // `null` and the dynamic import below is dropped from the bundle entirely.
@@ -22,7 +22,7 @@ const TrackListDebug =
   process.env.NODE_ENV === "production"
     ? null
     : lazy(() =>
-        import("../../components/TrackListDebug/TrackListDebug").then(
+        import("@components/TrackListDebug/TrackListDebug").then(
           ({ TrackListDebug }) => ({ default: TrackListDebug })
         )
       );

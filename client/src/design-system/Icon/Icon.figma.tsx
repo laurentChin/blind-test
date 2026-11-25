@@ -1,5 +1,5 @@
 import figma from "@figma/code-connect";
-import Icon from "./Icon";
+import Icon from "@design-systems/Icon/Icon";
 
 // Figma has one component per icon; the code has one component for all of them,
 // the icon being the `name` prop. So every icon node maps onto the same

@@ -1,9 +1,9 @@
 import React from "react";
 import { render, fireEvent, createEvent, act } from "@testing-library/react";
-import { Search } from "./Search";
-import { useMusicProvider } from "../../contexts/MusicProvider";
+import { Search } from "@components/Search/Search";
+import { useMusicProvider } from "@contexts/MusicProvider";
 
-jest.mock("../../contexts/MusicProvider");
+jest.mock("@contexts/MusicProvider");
 
 describe("<Search />", () => {
   afterEach(() => {

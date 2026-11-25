@@ -1,9 +1,9 @@
 import React, { useEffect, useRef } from "react";
 import PropTypes from "prop-types";
 
-import "./Result.css";
-import { useMusicProvider } from "../../contexts/MusicProvider";
-import { useAsyncAction } from "../../hooks/useAsyncAction";
+import "@components/Result/Result.css";
+import { useMusicProvider } from "@contexts/MusicProvider";
+import { useAsyncAction } from "@/hooks/useAsyncAction";
 import { FaRegPlayCircle, FaRegPauseCircle } from "react-icons/fa";
 
 const Result = ({

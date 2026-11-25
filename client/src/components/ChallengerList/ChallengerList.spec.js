@@ -1,6 +1,6 @@
 import React from "react";
 import { act, render, fireEvent } from "@testing-library/react";
-import { ChallengerList } from "./ChallengerList";
+import { ChallengerList } from "@components/ChallengerList/ChallengerList";
 
 describe("<ChallengerList />", () => {
   it("should display the list of challengers with theirs name and score sorted by score", async () => {

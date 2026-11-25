@@ -7,11 +7,11 @@
 
    Import this file once, above the components. */
 
-@import "./colors.css";
-@import "./typography.css";
-@import "./spacing.css";
-@import "./radius.css";
-@import "./borders.css";
-@import "./shadows.css";
-@import "./gradients.css";
-@import "./sizes.css";
+@import "@design-systems/tokens/colors.css";
+@import "@design-systems/tokens/typography.css";
+@import "@design-systems/tokens/spacing.css";
+@import "@design-systems/tokens/radius.css";
+@import "@design-systems/tokens/borders.css";
+@import "@design-systems/tokens/shadows.css";
+@import "@design-systems/tokens/gradients.css";
+@import "@design-systems/tokens/sizes.css";

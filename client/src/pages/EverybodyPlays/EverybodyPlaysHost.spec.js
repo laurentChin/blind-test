@@ -2,8 +2,8 @@ import React from "react";
 import { render, fireEvent, waitFor, act } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 
-import { EverybodyPlaysHost } from "./EverybodyPlaysHost";
-import { getSelectedProvider, useMusicProvider } from "../../contexts/MusicProvider";
+import { EverybodyPlaysHost } from "@pages/EverybodyPlays/EverybodyPlaysHost";
+import { getSelectedProvider, useMusicProvider } from "@contexts/MusicProvider";
 
 // uuid ships ESM-only in node_modules, which Jest's default transform
 // ignores — EverybodyPlaysHost only uses v4() to mint a session id, which
@@ -11,12 +11,12 @@ import { getSelectedProvider, useMusicProvider } from "../../contexts/MusicProvi
 jest.mock("uuid", () => ({ v4: () => "session-uuid-test" }));
 jest.mock("qrcode");
 
-jest.mock("../../contexts/MusicProvider", () => ({
+jest.mock("@contexts/MusicProvider", () => ({
   getSelectedProvider: jest.fn(),
   useMusicProvider: jest.fn(),
 }));
 
-jest.mock("./ConfigureEverybodyPlaysSession", () => ({
+jest.mock("@pages/EverybodyPlays/ConfigureEverybodyPlaysSession", () => ({
   // eslint-disable-next-line react/prop-types
   ConfigureEverybodyPlaysSession: ({ onLaunch }) => (
     <button
@@ -37,7 +37,7 @@ jest.mock("./ConfigureEverybodyPlaysSession", () => ({
   ),
 }));
 
-jest.mock("../Session/Play", () => ({
+jest.mock("@pages/Session/Play", () => ({
   // eslint-disable-next-line react/prop-types
   Play: ({ player }) => <div data-testid="mock-play">{player.uuid}</div>,
 }));

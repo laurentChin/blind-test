@@ -1,7 +1,7 @@
 import React, { useEffect, useId, useState } from "react";
 import PropTypes from "prop-types";
 
-import "./AnswerScoreConfig.css";
+import "@components/AnswerScoreConfig/AnswerScoreConfig.css";
 
 const DEFAULT_ALMOST_POINTS = 0.5;
 const DEFAULT_FULL_POINTS = 1;

@@ -1,11 +1,11 @@
 import PropTypes from "prop-types";
 
-import appleMusicLogo from "./assets/apple-music.png";
-import deezerLogo from "./assets/deezer.png";
-import spotifyLogo from "./assets/spotify.png";
-import youtubeMusicLogo from "./assets/youtube-music.png";
+import appleMusicLogo from "@design-systems/LogoMusicProvider/assets/apple-music.png";
+import deezerLogo from "@design-systems/LogoMusicProvider/assets/deezer.png";
+import spotifyLogo from "@design-systems/LogoMusicProvider/assets/spotify.png";
+import youtubeMusicLogo from "@design-systems/LogoMusicProvider/assets/youtube-music.png";
 
-import "./LogoMusicProvider.css";
+import "@design-systems/LogoMusicProvider/LogoMusicProvider.css";
 
 // One entry per `Provider` variant of the Figma component set. The brand
 // shape, its colors and its corner radius all live inside the asset, so the

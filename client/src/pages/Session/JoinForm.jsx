@@ -2,9 +2,9 @@ import React, { useEffect, useId, useState, useRef } from "react";
 import { useParams } from "react-router-dom";
 import PropTypes from "prop-types";
 
-import { ColorPicker } from "../../components/ColorPicker/ColorPicker";
+import { ColorPicker } from "@components/ColorPicker/ColorPicker";
 
-import "./JoinForm.css";
+import "@pages/Session/JoinForm.css";
 
 const JoinForm = ({ socket, onJoin, onSessionUnavailable, sessionUuid }) => {
   const { uuid } = useParams();

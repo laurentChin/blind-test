@@ -2,10 +2,10 @@ import React, { useEffect } from "react";
 import PropTypes from "prop-types";
 import { SiSpotify, SiApplemusic } from "react-icons/si";
 
-import { MUSIC_PROVIDERS, setSelectedProvider } from "../../contexts/MusicProvider";
-import { preload as preloadAppleMusic } from "../../contexts/AppleMusic";
+import { MUSIC_PROVIDERS, setSelectedProvider } from "@contexts/MusicProvider";
+import { preload as preloadAppleMusic } from "@contexts/AppleMusic";
 
-import "./ProviderSelect.css";
+import "@components/ProviderSelect/ProviderSelect.css";
 
 const PROVIDERS = [
   {

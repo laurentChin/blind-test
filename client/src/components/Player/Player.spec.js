@@ -1,11 +1,11 @@
 import React from "react";
 
 import { render, fireEvent } from "@testing-library/react";
-import { Player } from "./Player";
+import { Player } from "@components/Player/Player";
 
-import { useMusicProvider } from "../../contexts/MusicProvider";
+import { useMusicProvider } from "@contexts/MusicProvider";
 
-jest.mock("../../contexts/MusicProvider");
+jest.mock("@contexts/MusicProvider");
 
 describe("<Player />", () => {
   afterEach(() => {

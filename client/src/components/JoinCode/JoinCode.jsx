@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from "react";
 import PropTypes from "prop-types";
 import QRCodeGenerator from "qrcode";
 
-import "./JoinCode.css";
+import "@components/JoinCode/JoinCode.css";
 
 const JoinCode = ({ joinUrl, variant = "thumbnail" }) => {
   const qrCode = useRef();

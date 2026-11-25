@@ -6,7 +6,7 @@ import {
   act,
   prettyDOM,
 } from "@testing-library/react";
-import { JoinForm } from "./JoinForm";
+import { JoinForm } from "@pages/Session/JoinForm";
 
 let mockSocket;
 

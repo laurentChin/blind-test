@@ -2,7 +2,7 @@ import React from "react";
 import PropTypes from "prop-types";
 import { AiFillCrown } from "react-icons/ai";
 
-import "./ChallengeList.css";
+import "@components/ChallengerList/ChallengeList.css";
 
 const ChallengerList = ({
   challengers,

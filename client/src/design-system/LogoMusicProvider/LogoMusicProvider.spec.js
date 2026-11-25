@@ -1,7 +1,7 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
 
-import LogoMusicProvider, { MUSIC_PROVIDER_IDS } from "./LogoMusicProvider";
+import LogoMusicProvider, { MUSIC_PROVIDER_IDS } from "@design-systems/LogoMusicProvider/LogoMusicProvider";
 
 describe("LogoMusicProvider", () => {
   it("exposes the four providers of the Figma component set", () => {

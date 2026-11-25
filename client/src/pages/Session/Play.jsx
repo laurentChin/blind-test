@@ -2,9 +2,9 @@ import React, { useEffect, useRef, useState } from "react";
 import PropTypes from "prop-types";
 import { MdExpandMore, MdExpandLess } from "react-icons/md";
 
-import { colorPropType } from "../../components/ColorPicker/ColorPicker";
+import { colorPropType } from "@components/ColorPicker/ColorPicker";
 
-import "./Play.css";
+import "@pages/Session/Play.css";
 
 if (window.Notification && window.Notification.permission !== 'granted') {
   window.Notification.requestPermission();

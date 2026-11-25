@@ -1,9 +1,9 @@
 import React from "react";
 import { render, fireEvent } from "@testing-library/react";
 
-import { ConfigureSession } from "./ConfigureSession";
+import { ConfigureSession } from "@pages/Master/ConfigureSession";
 
-jest.mock("./steps/CreateOrSelectPlaylist", () => ({
+jest.mock("@pages/Master/steps/CreateOrSelectPlaylist", () => ({
   // eslint-disable-next-line react/prop-types
   CreateOrSelectPlaylist: ({ onSelectPlaylist }) => (
     <>
@@ -17,7 +17,7 @@ jest.mock("./steps/CreateOrSelectPlaylist", () => ({
   ),
 }));
 
-jest.mock("./steps/ManageTracks", () => ({
+jest.mock("@pages/Master/steps/ManageTracks", () => ({
   // eslint-disable-next-line react/prop-types
   ManageTracks: ({ onTracksChange, onLoadingChange }) => (
     <>

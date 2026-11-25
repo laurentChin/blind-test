@@ -1,19 +1,19 @@
 import PropTypes from "prop-types";
 
-import AddShape from "./assets/add.svg?react";
-import CheckShape from "./assets/check.svg?react";
-import ChevronLeftShape from "./assets/chevron-left.svg?react";
-import ChevronRightShape from "./assets/chevron-right.svg?react";
-import CloseShape from "./assets/close.svg?react";
-import PauseShape from "./assets/pause.svg?react";
-import PlayShape from "./assets/play.svg?react";
-import SearchShape from "./assets/search.svg?react";
-import SettingsShape from "./assets/settings.svg?react";
-import ShareShape from "./assets/share.svg?react";
-import SkipShape from "./assets/skip.svg?react";
-import WarningShape from "./assets/warning.svg?react";
+import AddShape from "@design-systems/Icon/assets/add.svg?react";
+import CheckShape from "@design-systems/Icon/assets/check.svg?react";
+import ChevronLeftShape from "@design-systems/Icon/assets/chevron-left.svg?react";
+import ChevronRightShape from "@design-systems/Icon/assets/chevron-right.svg?react";
+import CloseShape from "@design-systems/Icon/assets/close.svg?react";
+import PauseShape from "@design-systems/Icon/assets/pause.svg?react";
+import PlayShape from "@design-systems/Icon/assets/play.svg?react";
+import SearchShape from "@design-systems/Icon/assets/search.svg?react";
+import SettingsShape from "@design-systems/Icon/assets/settings.svg?react";
+import ShareShape from "@design-systems/Icon/assets/share.svg?react";
+import SkipShape from "@design-systems/Icon/assets/skip.svg?react";
+import WarningShape from "@design-systems/Icon/assets/warning.svg?react";
 
-import "./Icon.css";
+import "@design-systems/Icon/Icon.css";
 
 // One entry per `Icon/*` component of the Figma file — the design system has a
 // single component for all of them, the icon being a value rather than a

@@ -141,7 +141,7 @@ returns it too, which keeps generated code aligned with this folder.
 ```tsx
 // Button/Button.figma.tsx
 import figma from "@figma/code-connect";
-import Button from "./Button";
+import Button from "@design-systems/Button/Button";
 
 figma.connect(Button, "<url of the Figma node>", {
   props: {

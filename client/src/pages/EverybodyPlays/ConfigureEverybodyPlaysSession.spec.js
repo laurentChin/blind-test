@@ -1,10 +1,10 @@
 import React from "react";
 import { render, fireEvent, waitFor } from "@testing-library/react";
 
-import { ConfigureEverybodyPlaysSession } from "./ConfigureEverybodyPlaysSession";
-import { useMusicProvider } from "../../contexts/MusicProvider";
+import { ConfigureEverybodyPlaysSession } from "@pages/EverybodyPlays/ConfigureEverybodyPlaysSession";
+import { useMusicProvider } from "@contexts/MusicProvider";
 
-jest.mock("../../contexts/MusicProvider", () => ({
+jest.mock("@contexts/MusicProvider", () => ({
   useMusicProvider: jest.fn(),
 }));
 

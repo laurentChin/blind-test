@@ -1,4 +1,4 @@
-import LogoMusicProvider, { MUSIC_PROVIDER_IDS } from "./LogoMusicProvider";
+import LogoMusicProvider, { MUSIC_PROVIDER_IDS } from "@design-systems/LogoMusicProvider/LogoMusicProvider";
 
 export default {
   title: "Design system/Logos/LogoMusicProvider",

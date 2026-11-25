@@ -1,7 +1,7 @@
 import { useContext } from "react";
 
-import { SpotifyContext } from "./Spotify";
-import { AppleMusicContext } from "./AppleMusic";
+import { SpotifyContext } from "@contexts/Spotify";
+import { AppleMusicContext } from "@contexts/AppleMusic";
 
 const MUSIC_PROVIDERS = {
   SPOTIFY: "spotify",

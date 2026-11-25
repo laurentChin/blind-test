@@ -2,7 +2,7 @@ import React from "react";
 import PropTypes from "prop-types";
 import { FaCrown, FaUsers } from "react-icons/fa";
 
-import "./ModeSelect.css";
+import "@pages/CreateSession/ModeSelect.css";
 
 const MODES = [
   {

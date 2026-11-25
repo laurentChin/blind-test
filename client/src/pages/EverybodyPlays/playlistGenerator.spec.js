@@ -1,5 +1,5 @@
-import { selectCandidates, titleKey } from "./playlistGenerator";
-import { THEMES, buildCustomTheme } from "./themes";
+import { selectCandidates, titleKey } from "@pages/EverybodyPlays/playlistGenerator";
+import { THEMES, buildCustomTheme } from "@pages/EverybodyPlays/themes";
 
 const theme = (id) => THEMES.find((preset) => preset.id === id);
 

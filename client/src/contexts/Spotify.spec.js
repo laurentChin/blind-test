@@ -6,7 +6,7 @@ import { render } from "@testing-library/react";
 // set up beforehand.
 function loadSpotifyContext() {
   jest.resetModules();
-  const { SpotifyContext } = require("./Spotify");
+  const { SpotifyContext } = require("@contexts/Spotify");
 
   let captured;
   function Capture() {

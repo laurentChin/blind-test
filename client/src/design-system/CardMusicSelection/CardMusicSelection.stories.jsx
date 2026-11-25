@@ -1,10 +1,10 @@
 import { useState } from "react";
 
-import CardMusicSelection from "./CardMusicSelection";
+import CardMusicSelection from "@design-systems/CardMusicSelection/CardMusicSelection";
 import {
   MUSIC_PROVIDER_IDS,
   MUSIC_PROVIDER_NAMES,
-} from "../LogoMusicProvider/LogoMusicProvider";
+} from "@design-systems/LogoMusicProvider/LogoMusicProvider";
 
 // The card fills the width it is given, so every story puts it in the grid of
 // sources it belongs to rather than letting it span the docs page.

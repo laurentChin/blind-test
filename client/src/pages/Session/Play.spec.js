@@ -1,6 +1,6 @@
 import React from "react";
 import { render, act, fireEvent } from "@testing-library/react";
-import { Play } from "./Play";
+import { Play } from "@pages/Session/Play";
 
 let mockListeners = {};
 let mockSocket = {};
