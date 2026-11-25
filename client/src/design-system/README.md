@@ -27,11 +27,12 @@ design-system/
 A component's images go in its own `assets/` folder, all in the same format and all at the same
 size — twice the size the component renders them at, so they stay sharp on a dense screen.
 
-The logo is the exception: a vector, so one file covers every size. It comes out of Figma at around
-46 KB, almost all of it a dot grid written as 441 separate circles, and goes through
-[`config/svg/optimise-logo.py`](../../config/svg/optimise-logo.py) — which tiles that grid as a
-`<pattern>` and runs SVGO with every geometry-rewriting plugin turned off. That leaves a tenth of
-the export, 1.3 KB over the wire, with no pixel off by more than 11/255 at the sizes the mark is
+The logo assets are the exception: vectors, so one file covers every size. There are two, the mark
+and the wordmark, and the lockup is composed from them rather than exported flat. The mark comes
+out of Figma at around 46 KB, almost all of it a dot grid written as 441 separate circles, and goes
+through [`config/svg/optimise-logo.py`](../../config/svg/optimise-logo.py) — which tiles that grid
+as a `<pattern>` and runs SVGO with every geometry-rewriting plugin turned off. That leaves a tenth
+of the export, 1.3 KB over the wire, with no pixel off by more than 11/255 at the sizes the mark is
 drawn and none at all at whole-number scales. **Re-run it on a fresh export**: Figma writes the 441
 circles again every time.
 
@@ -100,11 +101,20 @@ whether very large screens get their own `-wide` tokens.
 Every component here takes all of its values from these tokens, and no raw value goes in a component
 file. A value the tokens don't carry yet is added to `tokens/` first.
 
-[`LogoApp`](LogoApp) is the one component that binds no token at all, and the exception is the
-point: the logo is a specific element rather than a systemic one. Its gradient, hues and corner
-radius live inside its asset, so nothing recolors it, and its size is the host's — `100%` on both
-axes with `object-fit: contain` — so the same mark serves a splash screen and a top bar without a
-size of its own. A component that is _not_ a logo takes its size from the image scale above.
+[`LogoApp`](LogoApp) and [`LogoAppLockup`](LogoAppLockup) are the two components that bind no token
+at all, and the exception is the point: the logo is a specific element rather than a systemic one.
+Its gradient, hues and corner radius live inside its asset, so nothing recolors it, and its size is
+the host's — `100%` on both axes with `object-fit: contain` — so the same mark serves a splash
+screen and a top bar without a size of its own. A component that is _not_ a logo takes its size
+from the image scale above.
+
+The lockup composes rather than duplicates: it renders `LogoApp` next to a wordmark asset, the way
+the Figma component places an instance of `Logo/App` beside the `C-KOI` vector. Its numbers are
+ratios, never lengths — the box carries the aspect ratio of the Figma frame, the two children take
+a share of it, and the gap is what `space-between` leaves over. A fixed `gap` would be right at one
+size and wrong at every other, and those proportions are part of the logo. Sizing the mark inside
+that layout is what the `--logo-app-inline-size` / `--logo-app-block-size` custom properties on
+`LogoApp` are for; nothing else sets them.
 
 [`.storybook/preview.js`](../../.storybook/preview.js) imports `tokens/index.css` last, so the
 stories render with them. The app doesn't import them yet, and does not need to while no screen
@@ -264,7 +274,7 @@ of the asset in [`Icon/assets`](Icon/assets).
 | Component         | Figma name            | Variants / states                                         | Status |
 | ----------------- | --------------------- | --------------------------------------------------------- | ------ |
 | LogoApp           | `Logo/App`            | — (no size: fills its host)                               | ✅     |
-| LogoAppLockup     | `Logo/App lockup`     | —                                                         | ⬜     |
+| LogoAppLockup     | `Logo/App lockup`     | 2 orientations (vertical, horizontal)                     | ✅     |
 | LogoMusicProvider | `Logo/Music provider` | 4 providers (Spotify, Deezer, Apple Music, YouTube Music) | ✅     |
 
 ### Templates
