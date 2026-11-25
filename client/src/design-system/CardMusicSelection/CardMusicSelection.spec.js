@@ -2,8 +2,8 @@ import React from "react";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
-import CardMusicSelection from "./CardMusicSelection";
-import { MUSIC_PROVIDER_IDS } from "../LogoMusicProvider/LogoMusicProvider";
+import CardMusicSelection from "@design-systems/CardMusicSelection/CardMusicSelection";
+import { MUSIC_PROVIDER_IDS } from "@design-systems/LogoMusicProvider/LogoMusicProvider";
 
 describe("CardMusicSelection", () => {
   it("is a button named after the provider", () => {

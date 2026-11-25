@@ -2,10 +2,10 @@ import React, { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import io from "socket.io-client";
 
-import "./Session.css";
-import { JoinForm } from "./JoinForm";
-import { Play } from "./Play";
-import { useToast } from "../../components/Toast/Toast";
+import "@pages/Session/Session.css";
+import { JoinForm } from "@pages/Session/JoinForm";
+import { Play } from "@pages/Session/Play";
+import { useToast } from "@components/Toast/Toast";
 
 const socket = io(process.env.REACT_APP_SOCKET_URI);
 

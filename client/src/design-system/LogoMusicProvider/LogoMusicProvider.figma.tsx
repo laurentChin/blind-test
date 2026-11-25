@@ -1,5 +1,5 @@
 import figma from "@figma/code-connect";
-import LogoMusicProvider from "./LogoMusicProvider";
+import LogoMusicProvider from "@design-systems/LogoMusicProvider/LogoMusicProvider";
 
 figma.connect(
   LogoMusicProvider,

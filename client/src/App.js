@@ -1,14 +1,14 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
-import { CreateSession } from "./pages/CreateSession/CreateSession";
-import { Master } from "./pages/Master/Master";
-import { EverybodyPlaysHost } from "./pages/EverybodyPlays/EverybodyPlaysHost";
+import { CreateSession } from "@pages/CreateSession/CreateSession";
+import { Master } from "@pages/Master/Master";
+import { EverybodyPlaysHost } from "@pages/EverybodyPlays/EverybodyPlaysHost";
 
-import "./App.css";
-import { Session } from "./pages/Session/Session";
-import { Board } from "./pages/Board/Board";
-import { ToastProvider } from "./components/Toast/Toast";
+import "@/App.css";
+import { Session } from "@pages/Session/Session";
+import { Board } from "@pages/Board/Board";
+import { ToastProvider } from "@components/Toast/Toast";
 
 function App() {
   return (

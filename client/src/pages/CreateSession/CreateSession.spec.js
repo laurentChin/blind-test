@@ -2,14 +2,14 @@ import React from "react";
 import { render, fireEvent } from "@testing-library/react";
 import { useNavigate } from "react-router-dom";
 
-import { CreateSession } from "./CreateSession";
-import { useMusicProvider } from "../../contexts/MusicProvider";
+import { CreateSession } from "@pages/CreateSession/CreateSession";
+import { useMusicProvider } from "@contexts/MusicProvider";
 
 jest.mock("react-router-dom", () => ({
   useNavigate: jest.fn(),
 }));
 
-jest.mock("../../contexts/MusicProvider", () => ({
+jest.mock("@contexts/MusicProvider", () => ({
   getSelectedProvider: jest.fn().mockReturnValue(""),
   useMusicProvider: jest.fn().mockReturnValue({
     isAuthenticated: false,
@@ -17,7 +17,7 @@ jest.mock("../../contexts/MusicProvider", () => ({
   }),
 }));
 
-jest.mock("../../components/ProviderSelect/ProviderSelect", () => ({
+jest.mock("@components/ProviderSelect/ProviderSelect", () => ({
   // eslint-disable-next-line react/prop-types
   ProviderSelect: ({ setProvider }) => (
     <button data-testid="mock-provider-select" onClick={() => setProvider("spotify")}>
@@ -26,7 +26,7 @@ jest.mock("../../components/ProviderSelect/ProviderSelect", () => ({
   ),
 }));
 
-jest.mock("./ModeSelect", () => ({
+jest.mock("@pages/CreateSession/ModeSelect", () => ({
   // eslint-disable-next-line react/prop-types
   ModeSelect: ({ onSelect }) => (
     <button data-testid="mock-mode-select" onClick={() => onSelect("classic")}>

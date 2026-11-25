@@ -1,4 +1,4 @@
-import { MUSIC_PROVIDERS, setSelectedProvider } from "./MusicProvider";
+import { MUSIC_PROVIDERS, setSelectedProvider } from "@contexts/MusicProvider";
 
 describe("setSelectedProvider", () => {
   beforeEach(() => {

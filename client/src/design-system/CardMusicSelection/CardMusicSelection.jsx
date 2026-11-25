@@ -3,9 +3,9 @@ import PropTypes from "prop-types";
 import LogoMusicProvider, {
   MUSIC_PROVIDER_IDS,
   MUSIC_PROVIDER_NAMES,
-} from "../LogoMusicProvider/LogoMusicProvider";
+} from "@design-systems/LogoMusicProvider/LogoMusicProvider";
 
-import "./CardMusicSelection.css";
+import "@design-systems/CardMusicSelection/CardMusicSelection.css";
 
 // What the band writes, which is not always the brand name: "YouTube Music"
 // runs onto a second line at the width of the card, so the band says

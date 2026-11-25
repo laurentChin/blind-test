@@ -1,6 +1,6 @@
 import React from "react";
 import { render, fireEvent, act } from "@testing-library/react";
-import { ToastProvider, useToast, TOAST_DURATION } from "./Toast";
+import { ToastProvider, useToast, TOAST_DURATION } from "@components/Toast/Toast";
 
 const Trigger = () => {
   const showToast = useToast();

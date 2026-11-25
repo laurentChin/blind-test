@@ -1,10 +1,10 @@
 import React from "react";
 import { render, fireEvent, act } from "@testing-library/react";
 
-import { useMusicProvider } from "../../../contexts/MusicProvider";
-import { ManageSession } from "./ManageSession";
+import { useMusicProvider } from "@contexts/MusicProvider";
+import { ManageSession } from "@pages/Master/steps/ManageSession";
 
-jest.mock("../../../contexts/MusicProvider");
+jest.mock("@contexts/MusicProvider");
 jest.mock('react-router-dom', () => ({
   useNavigate: () => jest.fn()
 }))

@@ -1,7 +1,7 @@
 import React from "react";
 import { render, within } from "@testing-library/react";
 
-import { TrackListDebug } from "./TrackListDebug";
+import { TrackListDebug } from "@components/TrackListDebug/TrackListDebug";
 
 describe("<TrackListDebug />", () => {
   it("should list every selected track in play order with its source and weight", () => {

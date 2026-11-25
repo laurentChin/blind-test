@@ -1,7 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 
-import "./ColorPicker.css";
+import "@components/ColorPicker/ColorPicker.css";
 
 const ColorPicker = ({ colors, value, onChange, legend = "Color" }) => (
   <fieldset className="ColorPicker colors">

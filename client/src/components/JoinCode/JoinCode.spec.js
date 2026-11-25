@@ -3,7 +3,7 @@ import { render, fireEvent } from "@testing-library/react";
 
 jest.mock("qrcode");
 
-import { JoinCode } from "./JoinCode";
+import { JoinCode } from "@components/JoinCode/JoinCode";
 
 describe("<JoinCode />", () => {
   it("should display the QR code with the enlarge dialog closed", () => {

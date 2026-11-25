@@ -1,15 +1,15 @@
 import React, { useEffect, useRef, useState } from "react";
 import PropTypes from "prop-types";
 
-import { CreateOrSelectPlaylist } from "./steps/CreateOrSelectPlaylist";
-import { ManageTracks } from "./steps/ManageTracks";
+import { CreateOrSelectPlaylist } from "@pages/Master/steps/CreateOrSelectPlaylist";
+import { ManageTracks } from "@pages/Master/steps/ManageTracks";
 import {
   ChallengeTimerConfig,
   DEFAULT_TIMER_SECONDS,
   DEFAULT_COOLDOWN_SECONDS,
-} from "../../components/ChallengeTimerConfig/ChallengeTimerConfig";
+} from "@components/ChallengeTimerConfig/ChallengeTimerConfig";
 
-import "./ConfigureSession.css";
+import "@pages/Master/ConfigureSession.css";
 
 const MIN_TRACKS = 5;
 

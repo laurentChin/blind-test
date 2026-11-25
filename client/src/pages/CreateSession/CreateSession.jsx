@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { ProviderSelect } from "../../components/ProviderSelect/ProviderSelect";
-import { ModeSelect } from "./ModeSelect";
-import { getSelectedProvider, useMusicProvider } from "../../contexts/MusicProvider";
-import { useProviderAuth } from "../../hooks/useProviderAuth";
+import { ProviderSelect } from "@components/ProviderSelect/ProviderSelect";
+import { ModeSelect } from "@pages/CreateSession/ModeSelect";
+import { getSelectedProvider, useMusicProvider } from "@contexts/MusicProvider";
+import { useProviderAuth } from "@/hooks/useProviderAuth";
 
-import "./CreateSession.css";
+import "@pages/CreateSession/CreateSession.css";
 
 const CreateSession = () => {
   const navigate = useNavigate();

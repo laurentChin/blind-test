@@ -2,12 +2,12 @@ import React, { useEffect, useRef, useState } from "react";
 
 import io from "socket.io-client";
 import { useNavigate, useParams } from "react-router-dom";
-import { getGif } from "../../helpers/Giphy";
-import { ChallengerList } from "../../components/ChallengerList/ChallengerList";
-import { JoinCode } from "../../components/JoinCode/JoinCode";
-import { useToast } from "../../components/Toast/Toast";
+import { getGif } from "@helpers/Giphy";
+import { ChallengerList } from "@components/ChallengerList/ChallengerList";
+import { JoinCode } from "@components/JoinCode/JoinCode";
+import { useToast } from "@components/Toast/Toast";
 
-import "./Board.css";
+import "@pages/Board/Board.css";
 
 let socket = io(process.env.REACT_APP_SOCKET_URI);
 

@@ -1,5 +1,5 @@
 import figma from "@figma/code-connect";
-import CardMusicSelection from "./CardMusicSelection";
+import CardMusicSelection from "@design-systems/CardMusicSelection/CardMusicSelection";
 
 figma.connect(
   CardMusicSelection,

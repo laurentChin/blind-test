@@ -1,4 +1,4 @@
-import Icon, { ICON_NAMES, ICON_SIZES } from "./Icon";
+import Icon, { ICON_NAMES, ICON_SIZES } from "@design-systems/Icon/Icon";
 
 // The icon has no color of its own: every story has to sit on a surface that
 // gives it one, through the text token of that surface.

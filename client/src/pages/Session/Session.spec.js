@@ -1,8 +1,8 @@
 import React from "react";
 import { createEvent, render, fireEvent, act } from "@testing-library/react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Session } from "./Session";
-import { ToastProvider } from "../../components/Toast/Toast";
+import { Session } from "@pages/Session/Session";
+import { ToastProvider } from "@components/Toast/Toast";
 
 const listeners = {};
 let joinAfterRefreshResponseOverrides = {};

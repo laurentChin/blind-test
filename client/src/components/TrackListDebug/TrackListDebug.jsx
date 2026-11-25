@@ -1,7 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 
-import "./TrackListDebug.css";
+import "@components/TrackListDebug/TrackListDebug.css";
 
 const TRACK_LIST_DEBUG_ID = "track-list-debug-panel";
 

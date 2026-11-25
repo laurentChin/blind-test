@@ -1,10 +1,10 @@
 import React, { useId, useState } from "react";
 import PropTypes from "prop-types";
 import { FiDelete } from "react-icons/fi";
-import { Result } from "../Result/Result";
-import { useMusicProvider } from "../../contexts/MusicProvider";
+import { Result } from "@components/Result/Result";
+import { useMusicProvider } from "@contexts/MusicProvider";
 
-import "./Search.css";
+import "@components/Search/Search.css";
 
 const Search = ({ excludedTracks, addTrackCallback }) => {
   const musicProvider = useMusicProvider();

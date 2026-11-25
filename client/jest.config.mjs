@@ -1,3 +1,14 @@
+// Keep in sync with resolve.alias in rsbuild.config.mjs and jsconfig.json.
+const aliases = {
+  "@": "src",
+  "@components": "src/components",
+  "@contexts": "src/contexts",
+  "@design-systems": "src/design-system",
+  "@helpers": "src/helpers",
+  "@pages": "src/pages",
+  "@styles": "src/styles",
+};
+
 export default {
   roots: ["<rootDir>/src"],
   testEnvironment: "jsdom",
@@ -16,10 +27,24 @@ export default {
     "^.+\\.svg$": "<rootDir>/config/jest/svgrTransform.cjs",
   },
   moduleNameMapper: {
+    // Order matters: stylesheets must be stubbed before the aliases resolve them.
     "\\.css$": "identity-obj-proxy",
     // Jest resolves a module path, not a bundler query: drop the `?react` the
-    // SVGR plugin matches on so the file itself is found, then transformed.
+    // SVGR plugin matches on so the file itself is found, then transformed. A
+    // mapped path is not mapped again, so each alias needs its own rule.
+    ...Object.fromEntries(
+      Object.entries(aliases).map(([alias, dir]) => [
+        `^${alias}/(.*)\\.svg\\?react$`,
+        `<rootDir>/${dir}/$1.svg`,
+      ]),
+    ),
     "^(.*)\\.svg\\?react$": "$1.svg",
+    ...Object.fromEntries(
+      Object.entries(aliases).map(([alias, dir]) => [
+        `^${alias}/(.*)$`,
+        `<rootDir>/${dir}/$1`,
+      ]),
+    ),
   },
   setupFilesAfterEnv: ["<rootDir>/src/setupTests.js"],
   testMatch: [

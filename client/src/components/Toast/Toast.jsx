@@ -9,7 +9,7 @@ import React, {
 import PropTypes from "prop-types";
 import { MdClose } from "react-icons/md";
 
-import "./Toast.css";
+import "@components/Toast/Toast.css";
 
 const TOAST_DURATION = 6000;
 

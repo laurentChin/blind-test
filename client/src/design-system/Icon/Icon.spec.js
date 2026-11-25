@@ -3,7 +3,7 @@ import path from "node:path";
 import React from "react";
 import { render } from "@testing-library/react";
 
-import Icon, { ICON_NAMES, ICON_SIZES } from "./Icon";
+import Icon, { ICON_NAMES, ICON_SIZES } from "@design-systems/Icon/Icon";
 
 const ASSETS_DIR = path.join(__dirname, "assets");
 

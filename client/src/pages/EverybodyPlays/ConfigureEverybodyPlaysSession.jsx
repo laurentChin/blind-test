@@ -1,20 +1,20 @@
 import React, { useEffect, useId, useState } from "react";
 import PropTypes from "prop-types";
 
-import { ColorPicker } from "../../components/ColorPicker/ColorPicker";
-import { useMusicProvider } from "../../contexts/MusicProvider";
-import { useAsyncAction } from "../../hooks/useAsyncAction";
-import { MIN_TRACKS } from "../Master/ConfigureSession";
+import { ColorPicker } from "@components/ColorPicker/ColorPicker";
+import { useMusicProvider } from "@contexts/MusicProvider";
+import { useAsyncAction } from "@/hooks/useAsyncAction";
+import { MIN_TRACKS } from "@pages/Master/ConfigureSession";
 import {
   ChallengeTimerConfig,
   DEFAULT_TIMER_SECONDS,
   DEFAULT_COOLDOWN_SECONDS,
-} from "../../components/ChallengeTimerConfig/ChallengeTimerConfig";
+} from "@components/ChallengeTimerConfig/ChallengeTimerConfig";
 import {
   AnswerScoreConfig,
   DEFAULT_ALMOST_POINTS,
   DEFAULT_FULL_POINTS,
-} from "../../components/AnswerScoreConfig/AnswerScoreConfig";
+} from "@components/AnswerScoreConfig/AnswerScoreConfig";
 import {
   THEMES,
   THEME_GROUPS,
@@ -22,10 +22,10 @@ import {
   GENRES,
   YEARS,
   buildCustomTheme,
-} from "./themes";
-import { generateThemesPlaylist } from "./playlistGenerator";
+} from "@pages/EverybodyPlays/themes";
+import { generateThemesPlaylist } from "@pages/EverybodyPlays/playlistGenerator";
 
-import "./ConfigureEverybodyPlaysSession.css";
+import "@pages/EverybodyPlays/ConfigureEverybodyPlaysSession.css";
 
 const MAX_TRACKS = 60;
 const TRACK_COUNT_PRESETS = [10, 20, 40];

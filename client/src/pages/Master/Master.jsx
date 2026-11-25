@@ -3,10 +3,10 @@ import { v4 } from "uuid";
 import io from "socket.io-client";
 import { Navigate } from "react-router-dom";
 
-import { getSelectedProvider, useMusicProvider } from "../../contexts/MusicProvider";
-import { useProviderAuth } from "../../hooks/useProviderAuth";
-import { ConfigureSession } from "./ConfigureSession";
-import { ManageSession } from "./steps/ManageSession";
+import { getSelectedProvider, useMusicProvider } from "@contexts/MusicProvider";
+import { useProviderAuth } from "@/hooks/useProviderAuth";
+import { ConfigureSession } from "@pages/Master/ConfigureSession";
+import { ManageSession } from "@pages/Master/steps/ManageSession";
 
 const SESSION_UUID = v4();
 

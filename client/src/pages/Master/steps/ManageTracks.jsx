@@ -8,11 +8,11 @@ import {
   MdKeyboardArrowDown,
 } from "react-icons/md";
 
-import { Search } from "../../../components/Search/Search";
-import { useMusicProvider } from "../../../contexts/MusicProvider";
-import { useConfirmAction } from "../../../hooks/useConfirmAction";
+import { Search } from "@components/Search/Search";
+import { useMusicProvider } from "@contexts/MusicProvider";
+import { useConfirmAction } from "@/hooks/useConfirmAction";
 
-import "./ManageTracks.css";
+import "@pages/Master/steps/ManageTracks.css";
 
 const TrackRow = ({
   track,

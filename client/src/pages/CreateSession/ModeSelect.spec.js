@@ -1,7 +1,7 @@
 import React from "react";
 import { render, fireEvent } from "@testing-library/react";
 
-import { ModeSelect } from "./ModeSelect";
+import { ModeSelect } from "@pages/CreateSession/ModeSelect";
 
 describe("<ModeSelect />", () => {
   it("should call onSelect with 'classic' when the classic tile is clicked", () => {

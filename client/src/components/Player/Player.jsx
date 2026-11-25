@@ -3,9 +3,9 @@ import PropTypes from "prop-types";
 import { FaRegPlayCircle, FaRegPauseCircle } from "react-icons/fa";
 import { MdSkipNext } from "react-icons/md";
 
-import { useMusicProvider } from "../../contexts/MusicProvider";
+import { useMusicProvider } from "@contexts/MusicProvider";
 
-import "./Player.css";
+import "@components/Player/Player.css";
 
 const Player = ({ nextTrackCallback, onPlaybackStateChange, onTrackChange, tracks = [] }) => {
   const { getPlayer, setPlayerStateChangeCb } = useMusicProvider();

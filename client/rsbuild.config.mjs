@@ -10,6 +10,7 @@ const { publicVars } = loadEnv({ prefixes: ["REACT_APP_"] });
 // Locally-trusted certificate generated with `mkcert` (see README), so the
 // dev server doesn't trigger a browser security warning. Falls back to the
 // self-signed pluginBasicSsl certificate when it hasn't been generated.
+const srcDir = path.join(import.meta.dirname, "src");
 const certDir = path.join(import.meta.dirname, ".certs");
 const certPath = path.join(certDir, "localhost.pem");
 const keyPath = path.join(certDir, "localhost-key.pem");
@@ -37,6 +38,20 @@ export default defineConfig({
   },
   html: {
     template: "./public/index.html",
+  },
+  resolve: {
+    // "@/" maps to src/ and "@<folder>" to its main subfolders, so imports never
+    // need to be relative. Keep in sync with jest.config.mjs
+    // (moduleNameMapper) and jsconfig.json (editor).
+    alias: {
+      "@": srcDir,
+      "@components": path.join(srcDir, "components"),
+      "@contexts": path.join(srcDir, "contexts"),
+      "@design-systems": path.join(srcDir, "design-system"),
+      "@helpers": path.join(srcDir, "helpers"),
+      "@pages": path.join(srcDir, "pages"),
+      "@styles": path.join(srcDir, "styles"),
+    },
   },
   source: {
     define: publicVars,

@@ -1,10 +1,10 @@
 import React from "react";
 import { render, fireEvent } from "@testing-library/react";
 
-import { ProviderSelect } from "./ProviderSelect";
-import { MUSIC_PROVIDERS, setSelectedProvider } from "../../contexts/MusicProvider";
+import { ProviderSelect } from "@components/ProviderSelect/ProviderSelect";
+import { MUSIC_PROVIDERS, setSelectedProvider } from "@contexts/MusicProvider";
 
-jest.mock("../../contexts/MusicProvider", () => ({
+jest.mock("@contexts/MusicProvider", () => ({
   MUSIC_PROVIDERS: { SPOTIFY: "spotify", APPLE_MUSIC: "appleMusic" },
   setSelectedProvider: jest.fn(),
 }));

@@ -1,9 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
 import PropTypes from "prop-types";
-import { useMusicProvider } from "../../../contexts/MusicProvider";
-import { useAsyncAction } from "../../../hooks/useAsyncAction";
+import { useMusicProvider } from "@contexts/MusicProvider";
+import { useAsyncAction } from "@/hooks/useAsyncAction";
 
-import "./CreateOrSelectPlaylist.css";
+import "@pages/Master/steps/CreateOrSelectPlaylist.css";
 
 const CreateOrSelectPlaylist = ({
   isAuthenticated,

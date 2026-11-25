@@ -13,15 +13,15 @@ import {
 } from "react-router-dom";
 
 jest.mock("qrcode");
-jest.mock("../../helpers/Giphy", () => ({
+jest.mock("@helpers/Giphy", () => ({
   getGif: jest.fn().mockResolvedValue({
     images: { original: { url: "https://example.com/gif.gif" } },
     ratio: 1.5,
   }),
 }));
 
-import { Board } from "./Board";
-import { ToastProvider } from "../../components/Toast/Toast";
+import { Board } from "@pages/Board/Board";
+import { ToastProvider } from "@components/Toast/Toast";
 
 describe("<Board />", () => {
   it("should display the QR code without the join url next to it", () => {

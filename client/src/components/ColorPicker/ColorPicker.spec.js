@@ -1,7 +1,7 @@
 import React from "react";
 import { render, fireEvent } from "@testing-library/react";
 
-import { ColorPicker } from "./ColorPicker";
+import { ColorPicker } from "@components/ColorPicker/ColorPicker";
 
 const COLORS = [
   { background: "1, 2, 3" },

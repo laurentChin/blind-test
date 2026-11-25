@@ -1,7 +1,7 @@
 import React, { useEffect, useId, useState } from "react";
 import PropTypes from "prop-types";
 
-import "./ChallengeTimerConfig.css";
+import "@components/ChallengeTimerConfig/ChallengeTimerConfig.css";
 
 const DEFAULT_TIMER_SECONDS = 5;
 const DEFAULT_COOLDOWN_SECONDS = 2;

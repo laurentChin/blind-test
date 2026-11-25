@@ -7,10 +7,10 @@ import {
   screen,
   within,
 } from "@testing-library/react";
-import { useMusicProvider } from "../../../contexts/MusicProvider";
-import { ManageTracks } from "./ManageTracks";
+import { useMusicProvider } from "@contexts/MusicProvider";
+import { ManageTracks } from "@pages/Master/steps/ManageTracks";
 
-jest.mock("../../../contexts/MusicProvider");
+jest.mock("@contexts/MusicProvider");
 
 describe("<ManageTracks />", () => {
   afterEach(() => {
