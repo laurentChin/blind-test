@@ -14,9 +14,14 @@
   /* Both axes, so a host with a definite height gets a logo that fits it. In
      a host whose height is left to the content, the percentage has nothing to
      resolve against and behaves as `auto`: the logo then follows the width and
-     keeps its square ratio. */
-  inline-size: 100%;
-  block-size: 100%;
+     keeps its square ratio.
+
+     The two custom properties are the component's sizing API, for the one case
+     the default does not cover: a component that embeds the mark in a layout
+     of its own — `LogoAppLockup` — and needs it to take one axis and derive
+     the other. They are set on the host, never here. */
+  inline-size: var(--logo-app-inline-size, 100%);
+  block-size: var(--logo-app-block-size, 100%);
   /* The asset is square. `contain` is what keeps it square in a host that
      isn't — the mark is centred and letterboxed instead of stretched. */
   object-fit: contain;

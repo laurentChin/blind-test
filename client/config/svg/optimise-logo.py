@@ -2,12 +2,19 @@
 """Shrink a Figma logo export without moving a pixel of it.
 
     python3 config/svg/optimise-logo.py src/design-system/LogoApp/assets/app.svg
-    python3 config/svg/optimise-logo.py \
-        src/design-system/LogoAppLockup/assets/app-lockup.svg --wordmark-below 145
 
-Run it on a fresh export: Figma writes the dot grid as 441 separate circles
-every time, so a re-export undoes what this does. Needs `npx` (it shells out to
-`svgo`), nothing installed.
+Run it on a fresh export of the mark: Figma writes the dot grid as 441 separate
+circles every time, so a re-export undoes what this does. Needs `npx` (it
+shells out to `svgo`), nothing installed.
+
+Not for the wordmark. `app-wordmark.svg` is nothing but letters, and step 3
+would rewrite their outlines for a few hundred bytes. It gets the tidy pass on
+its own instead, which leaves every path byte for byte as exported:
+
+    npx svgo --config config/svg/svgo-tidy.mjs -i <wordmark> -o <wordmark>
+
+`--wordmark-below` is there for an export that mixes a drawing and letters in
+one file.
 
 Three steps:
 

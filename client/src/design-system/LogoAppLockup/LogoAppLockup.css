@@ -1,0 +1,68 @@
+/* Logo/App lockup.
+
+   The mark is `LogoApp` itself, not a copy of it, so this file only has to
+   place two elements and keep them in proportion. Like `LogoApp` it binds no
+   token: a logo is a specific element, and the numbers below are the Figma
+   nodes, not decisions this design system gets to make.
+
+   Every one of them is a ratio rather than a length, because the lockup is
+   drawn at sizes that range from a top bar to a splash screen. The box carries
+   the aspect ratio of the Figma frame and the two children take a share of it;
+   the gap is then whatever is left over, handed to `space-between`. That is
+   why there is no `gap` here: a fixed one would be right at a single size and
+   wrong at every other, and the proportions of a lockup are part of the
+   logo. */
+
+.logo-app-lockup {
+  display: flex;
+  align-items: center;
+  /* Mark, then the space the design leaves, then the name. */
+  justify-content: space-between;
+  /* The host owns the width; the height follows from the aspect ratio, so the
+     lockup never distorts. A host with a definite height should size this
+     element through its width, or the two will disagree. */
+  inline-size: 100%;
+  block-size: auto;
+}
+
+/* The wordmark is white in the asset, like the letters in the Figma vector;
+   it keeps its own ratio from its intrinsic size. */
+.logo-app-lockup-wordmark {
+  display: block;
+  block-size: auto;
+}
+
+/* Vertical — Figma 138 x 172.198: the mark 138 square, 12.55 of gap, the name
+   93.41 wide. The name is 67.686% of the mark, and the ratio of the box is
+   what leaves exactly that gap between them. */
+.logo-app-lockup[data-orientation="vertical"] {
+  flex-direction: column;
+  aspect-ratio: 138 / 172.198;
+}
+
+.logo-app-lockup[data-orientation="vertical"] .logo-app {
+  /* The mark takes the full width and derives its square height. */
+  --logo-app-inline-size: 100%;
+  --logo-app-block-size: auto;
+}
+
+.logo-app-lockup[data-orientation="vertical"] .logo-app-lockup-wordmark {
+  inline-size: 67.686%;
+}
+
+/* Horizontal — Figma 129.676 x 37: the mark 37 square, 13.73 of gap, the name
+   78.95 wide. Here the mark takes the height and derives its width, so the
+   name is given its share of the box instead. */
+.logo-app-lockup[data-orientation="horizontal"] {
+  flex-direction: row;
+  aspect-ratio: 129.676 / 37;
+}
+
+.logo-app-lockup[data-orientation="horizontal"] .logo-app {
+  --logo-app-inline-size: auto;
+  --logo-app-block-size: 100%;
+}
+
+.logo-app-lockup[data-orientation="horizontal"] .logo-app-lockup-wordmark {
+  inline-size: 60.884%;
+}
