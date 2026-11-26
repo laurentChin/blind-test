@@ -28,11 +28,12 @@ A component's images go in its own `assets/` folder, all in the same format and 
 size — twice the size the component renders them at, so they stay sharp on a dense screen.
 
 The logo is the exception: a vector, so one file covers every size. It comes out of Figma at around
-100 KB, mostly a dot grid written as 441 separate circles, and goes through
+46 KB, almost all of it a dot grid written as 441 separate circles, and goes through
 [`config/svg/optimise-logo.py`](../../config/svg/optimise-logo.py) — which tiles that grid as a
-`<pattern>` and runs SVGO with every geometry-rewriting plugin turned off. It takes it under 40% of
-the export with no pixel off by more than 6/255, all of it anti-aliasing fringe. **Re-run it on a
-fresh export**: Figma writes the 441 circles again every time.
+`<pattern>` and runs SVGO with every geometry-rewriting plugin turned off. That leaves a tenth of
+the export, 1.3 KB over the wire, with no pixel off by more than 11/255 at the sizes the mark is
+drawn and none at all at whole-number scales. **Re-run it on a fresh export**: Figma writes the 441
+circles again every time.
 
 Grouped Figma families (`Icon/*`, `Logo/*`, `Card/*`…) keep the family as a prefix in the folder
 name — `IconClose`, `CardMusicSelection` — so the file tree stays flat and greppable.
