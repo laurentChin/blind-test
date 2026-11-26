@@ -39,6 +39,11 @@ export default {
       ]),
     ),
     "^(.*)\\.svg\\?react$": "$1.svg",
+    // Any other SVG import is a URL, like a PNG: it stands in for one here
+    // rather than being transformed into a component. It has to sit above the
+    // aliases, which would otherwise resolve it to the file itself and hand it
+    // to `svgrTransform` after all.
+    "\\.svg$": "<rootDir>/config/jest/svgUrlStub.cjs",
     ...Object.fromEntries(
       Object.entries(aliases).map(([alias, dir]) => [
         `^${alias}/(.*)$`,

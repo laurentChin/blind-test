@@ -1,0 +1,23 @@
+/* Logo/App.
+
+   The only component here that takes no size token: the logo is a specific
+   element, not a systemic one, and its size changes with the place it sits in
+   — splash screen, top bar, lockup. So the parent owns the size and the logo
+   fills what it is given.
+
+   Its colors are specific too: the gradient, the brand hues and the corner
+   radius live inside the asset rather than in a token, so no component ever
+   recolors the logo. */
+
+.logo-app {
+  display: block;
+  /* Both axes, so a host with a definite height gets a logo that fits it. In
+     a host whose height is left to the content, the percentage has nothing to
+     resolve against and behaves as `auto`: the logo then follows the width and
+     keeps its square ratio. */
+  inline-size: 100%;
+  block-size: 100%;
+  /* The asset is square. `contain` is what keeps it square in a host that
+     isn't — the mark is centred and letterboxed instead of stretched. */
+  object-fit: contain;
+}
